@@ -1,0 +1,47 @@
+# Render.com deployment configuration — LTC Engineering Tools
+#
+# One web service: Express API + built React SPA served from the same process.
+#
+# Setup steps:
+#   1. Connect your GitHub repo in Render Dashboard → New → Web Service
+#   2. Render auto-detects this file and pre-fills the settings
+#   3. Add the five secret environment variables (see envVars below)
+#   4. Click "Deploy"
+
+services:
+  - type: web
+    name: ltc-engineering
+    runtime: node
+    plan: free
+
+    # Build: compile lib type declarations, then build the API server (esbuild)
+    # and the React web app (Vite). PORT and BASE_PATH are required by the
+    # Vite config at build time — they don't affect the production output.
+    buildCommand: >-
+      pnpm install &&
+      pnpm run typecheck:libs &&
+      pnpm --filter @workspace/api-server run build &&
+      BASE_PATH=/ PORT=3000 pnpm --filter @workspace/web run build
+
+    # Start: run only the Express server. It serves both /api/* and the React
+    # SPA static files when NODE_ENV=production (see artifacts/api-server/src/app.ts).
+    startCommand: node artifacts/api-server/dist/index.mjs
+
+    envVars:
+      # Render injects PORT automatically — do not set it here.
+
+      - key: NODE_ENV
+        value: production
+
+      # Backblaze B2 credentials — add these as secret values in the Render dashboard.
+      # All five are required; the server will fail to start if any are missing.
+      - key: B2_APPLICATION_KEY
+        sync: false   # secret — enter value in Render dashboard
+      - key: B2_BUCKET_NAME
+        sync: false
+      - key: B2_ENDPOINT
+        sync: false   # e.g. s3.us-east-005.backblazeb2.com
+      - key: B2_KEY_ID
+        sync: false
+      - key: SESSION_SECRET
+        sync: false   # any long random string, e.g. from `openssl rand -hex 32`

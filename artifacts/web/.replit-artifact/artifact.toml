@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "LTC Engineering Tools — Web"
+description = "A React/Vite web app for LTC crane technicians. Four pages: Instrument (LICCON daycode generator and unit converters), Fleet (browse/filter the crane fleet), Docs (reference document library with B2 pre-signed PDF links), and Maintenance (manufacturer → crane → maintenance docs and file upload). Intended as the primary product for deployment on Render.com, served by the shared Express API server."
+version = "1.0.0"
+id = "artifacts/web"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 22333
+
+[services.development]
+run = "pnpm --filter @workspace/web run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/web", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/web/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "22333"
+BASE_PATH = "/"

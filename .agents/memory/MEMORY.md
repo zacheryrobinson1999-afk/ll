@@ -1,0 +1,2 @@
+- [B2 upload pipeline](b2-upload-pipeline.md) — Backblaze B2 via S3 client; metadata in JSON file; Metro needs _tmp_ blockList for pnpm installs.
+- [Render.com build for the web artifact](web-app-render-build.md) — Use selective `--filter` builds, not `-r`; Vite needs BASE_PATH and PORT at build time; typecheck:libs must run before web build.
