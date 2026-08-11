@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import {
   Calculator,
   Ruler,
@@ -397,7 +397,7 @@ function ConverterLayout({
 }: {
   title: string;
   description: string;
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   return (
     <div className="space-y-5">
@@ -580,7 +580,3 @@ export default function ToolsPage() {
     </div>
   );
 }
-
-Then commit that file. No Terex card or Terex code is displayed anywhere on the page.
-
-When you're ready to add the Terex functionality, we can add it behind the existing Manufacturer Tools structure without changing the engineering calculators.
