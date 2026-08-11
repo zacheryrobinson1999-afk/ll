@@ -8,10 +8,10 @@ import { Layout } from '@/components/layout';
 import FleetPage from '@/pages/fleet';
 import DocsPage from '@/pages/docs';
 import MaintenancePage from '@/pages/maintenance';
+import HomePage from '@/pages/home';
 import {
   Route,
   Switch,
-  Redirect,
   useLocation,
   Router as WouterRouter,
 } from 'wouter';
