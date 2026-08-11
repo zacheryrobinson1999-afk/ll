@@ -7,7 +7,7 @@ import NotFound from '@/pages/not-found';
 import { Layout } from '@/components/layout';
 import FleetPage from '@/pages/fleet';
 import DocsPage from '@/pages/docs';
-
+import ToolsPage from '@/pages/tools';
 import MaintenancePage from '@/pages/maintenance';
 import HomePage from '@/pages/home';
 import {
@@ -26,7 +26,7 @@ function Router() {
         <Switch>
           <Route path="/" component={HomePage} />
           <Route path="/fleet" component={FleetPage} />
-        
+          <Route path="/tools" component={ToolsPage} />
           <Route path="/docs" component={DocsPage} />
           <Route path="/maintenance" component={MaintenancePage} />
           <Route path="/maintenance/:manufacturer" component={MaintenancePage} />
