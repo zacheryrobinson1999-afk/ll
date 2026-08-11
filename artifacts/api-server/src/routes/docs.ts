@@ -1,21 +1,17 @@
 import { Router } from 'express';
-import { getPresignedUrl } from '../lib/b2Storage.js';
+import { getFromB2 } from '../lib/b2Storage.js';
 
 const router = Router();
 
-/**
- * GET /api/docs/:filename
- *
- * Generates a short-lived pre-signed B2 URL for a reference document and
- * issues a 302 redirect so the client (mobile app or browser) fetches the
- * file directly from B2.
- *
- * B2 key convention: docs/<filename>
- * e.g. /api/docs/liccon1-diagnostics.pdf → B2 key: docs/liccon1-diagnostics.pdf
- */
 router.get('/docs/:filename', async (req, res) => {
   const filename = req.params['filename'];
-  if (!filename || filename.includes('..') || filename.includes('/')) {
+
+  if (
+    !filename ||
+    filename.includes('..') ||
+    filename.includes('/') ||
+    filename.includes('\\')
+  ) {
     res.status(400).json({ error: 'Invalid filename' });
     return;
   }
@@ -23,16 +19,48 @@ router.get('/docs/:filename', async (req, res) => {
   const key = `docs/${filename}`;
 
   try {
-    const url = await getPresignedUrl(key, 3600);
-    res.redirect(302, url);
-} catch (err) {
-  console.error('B2 document error:', err);
+    const result = await getFromB2(key);
 
-  res.status(500).json({
-    error: 'Failed to retrieve document',
-    details: err instanceof Error ? err.message : String(err),
-  });
-}
+    if (!result.Body) {
+      res.status(404).json({ error: 'Document not found' });
+      return;
+    }
+
+    if (result.ContentType) {
+      res.setHeader('Content-Type', result.ContentType);
+    } else {
+      res.setHeader('Content-Type', 'application/pdf');
+    }
+
+    if (result.ContentLength !== undefined) {
+      res.setHeader('Content-Length', String(result.ContentLength));
+    }
+
+    res.setHeader(
+      'Content-Disposition',
+      `inline; filename="${filename.replace(/"/g, '')}"`,
+    );
+
+    const body = result.Body as NodeJS.ReadableStream;
+
+    body.on('error', (err) => {
+      console.error('[B2] document stream error:', err);
+
+      if (!res.headersSent) {
+        res.status(500).json({ error: 'Failed to read document' });
+      } else {
+        res.destroy(err);
+      }
+    });
+
+    body.pipe(res);
+  } catch (err) {
+    console.error('[B2] document error:', err);
+
+    res.status(404).json({
+      error: 'Document not found',
+    });
+  }
 });
 
 export default router;
