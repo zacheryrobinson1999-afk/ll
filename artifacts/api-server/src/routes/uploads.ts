@@ -48,10 +48,10 @@ router.get('/uploads/:craneId', async (req, res) => {
  * through Render to the browser.
  */
 router.get(
-  '/uploads/:craneId/file/*',
+  '/uploads/:craneId/file/*splat',
   async (req, res) => {
     try {
-      const key = String(req.params[0] ?? '');
+      const key = String(req.params.splat ?? '');
 
       if (!key || key.includes('..')) {
         res.status(400).json({
