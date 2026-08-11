@@ -86,7 +86,6 @@ export const TYPE_ICONS: Record<DocType, string> = {
 };
 
 export const TECH_DOCS: TechDoc[] = [
-
   // ===========================================================================
   // LICCON 1
   // ===========================================================================
@@ -286,22 +285,16 @@ export const TECH_DOCS: TechDoc[] = [
     ],
   },
 
-  /*
-   * CORRECTED CLUTCH DOCUMENT
-   *
-   * This was previously incorrectly labelled as:
-   * "Franna Clutch Replacement Procedure".
-   *
-   * The supplied document is actually a Liebherr LICCON clutch CHECK
-   * procedure covering both LICCON 1 and LICCON 2.
-   */
+  // ===========================================================================
+  // LIEBHERR LICCON CLUTCH CHECK
+  // ===========================================================================
 
   {
     id: 'liebherr-liccon-clutch-check',
     system: 'LICCON 1',
     type: 'Procedure',
     title: 'Liebherr LICCON Clutch Check Procedure',
-    subtitle: 'LICCON 1 & LICCON 2 · AS-Tronic Clutch Test',
+    subtitle: 'LICCON 1 & LICCON 2 · Clutch Test',
     pages: 4,
     year: undefined,
     appliesTo: [
@@ -315,40 +308,29 @@ export const TECH_DOCS: TechDoc[] = [
     ],
     craneTypes: ['LTM', 'LG', 'LTR'],
     summary:
-      'Liebherr LICCON clutch inspection procedure covering both LICCON 1 and '
-      + 'LICCON 2 single-engine cranes. The procedure uses the AS-Tronic clutch '
-      + 'measurement value to calculate clutch travel and determine whether the '
-      + 'clutch is within the specified check range.',
+      'Liebherr LICCON clutch checking procedure covering LICCON 1 and LICCON 2 systems. '
+      + 'The supplied procedure contains clutch testing information for Liebherr cranes '
+      + 'using the LICCON diagnostic system.',
     fileName: 'leibherr clutch procedure.pdf',
     cleanFile: 'leibherr clutch procedure.pdf',
     sections: [
       {
         ref: 'LICCON 1',
-        title: 'LICCON 1 Clutch Test',
+        title: 'LICCON 1 Clutch Check',
         summary:
-          'Procedure for entering LICCON 1 service functions and accessing the '
-          + 'AS-Tronic binary measurement value used for the clutch check.',
+          'LICCON 1 clutch checking procedure and associated diagnostic screen information.',
       },
       {
-        ref: 'LICCON 1',
+        ref: 'LICCON 2',
+        title: 'LICCON 2 Clutch Check',
+        summary:
+          'LICCON 2 clutch checking procedure and associated diagnostic screen information.',
+      },
+      {
+        ref: 'AS-Tronic',
         title: 'AS-Tronic Clutch Measurement',
         summary:
-          'Uses the value shown under the AS-Tronic measurement screen and applies '
-          + 'the documented calculation to determine clutch travel.',
-      },
-      {
-        ref: 'LICCON 2',
-        title: 'LICCON 2 Clutch Test — Single Engine',
-        summary:
-          'Procedure for entering the LICCON 2 special system and navigating to '
-          + 'Control → Chassis → Gear AS Tronic → Analogue Test Value.',
-      },
-      {
-        ref: 'LICCON 2',
-        title: 'Clutch Travel Calculation',
-        summary:
-          'Calculate clutch travel from the displayed KUPPLUNGSWEG value using the '
-          + 'procedure supplied in the document.',
+          'Clutch measurement information associated with the AS-Tronic transmission system.',
       },
     ],
   },
@@ -363,291 +345,4 @@ export const TECH_DOCS: TechDoc[] = [
     type: 'Procedure',
     title: 'LICCON 2 — Service Level 1 Access',
     subtitle: 'Service access procedure · 5 pages',
-    pages: 5,
-    year: 2014,
-    appliesTo: [
-      'sl-ltm1750',
-      'sl-ltm1650',
-      'sl-ltm1500',
-      'sl-ltm1350',
-      'cr-lg1750',
-      'cr-lr16002',
-    ],
-    craneTypes: ['LTM', 'LG', 'LTR'],
-    summary:
-      'Service procedure for gaining Level 1 service access on the LICCON 2 control system. '
-      + 'Level 1 access provides access to service menus, calibration, parameter adjustment '
-      + 'and advanced diagnostic screens.',
-    fileName: 'Licon_Two_service_level_one_access._1786350410850.pdf',
-    cleanFile: 'Licon Two service level one access..pdf',
-    sections: [
-      {
-        ref: '—',
-        title: 'Accessing Service Level 1',
-        summary:
-          'Step-by-step procedure for entering the LICCON 2 service menu and authenticating.',
-      },
-      {
-        ref: '—',
-        title: 'Available Functions at Level 1',
-        summary:
-          'Overview of diagnostic and configuration functions available after authentication.',
-      },
-    ],
-  },
-
-  {
-    id: 'liccon2-v04',
-    system: 'LICCON 2',
-    type: 'Reference',
-    title: 'LICCON 2 System Reference — Version 0.4',
-    subtitle: 'Full system documentation · 287 pages',
-    pages: 287,
-    year: 2013,
-    appliesTo: [
-      'sl-ltm1750',
-      'sl-ltm1650',
-      'sl-ltm1500',
-      'sl-ltm1350',
-      'cr-lg1750',
-      'cr-lr16002',
-      'cr-ltr1220',
-    ],
-    craneTypes: ['LTM', 'LG', 'LTR'],
-    summary:
-      'Comprehensive reference document for the LICCON 2 crane control system, '
-      + 'covering architecture, screens, parameters and configuration procedures.',
-    fileName: 'Liccon_2_version_0.4_1786350416190.pdf',
-    cleanFile: 'Liccon 2 version 0.4.pdf',
-    sections: [
-      {
-        ref: '—',
-        title: 'LICCON 2 System Architecture',
-        summary:
-          'Overview of LICCON 2 hardware and software architecture.',
-      },
-      {
-        ref: '—',
-        title: 'Screen Layout & Navigation',
-        summary:
-          'Reference for LICCON 2 display screens and navigation.',
-      },
-      {
-        ref: '—',
-        title: 'Parameter Structure',
-        summary:
-          'Reference for LICCON 2 parameter structures.',
-      },
-      {
-        ref: '—',
-        title: 'Configuration Procedures',
-        summary:
-          'Configuration procedures for commissioning and crane configuration changes.',
-      },
-      {
-        ref: '—',
-        title: 'Error Codes & Diagnostics',
-        summary:
-          'LICCON 2 diagnostic and error-code reference.',
-      },
-    ],
-  },
-
-  // ===========================================================================
-  // ECOS / CCS
-  // ===========================================================================
-
-  {
-    id: 'gmk5150l-service-manual',
-    system: 'ECOS / CCS',
-    type: 'Reference',
-    title: 'GMK 5150L Service Manual',
-    subtitle: 'Grove All-Terrain · 150 t · 169 pages',
-    pages: 169,
-    year: 2026,
-    appliesTo: ['sl-gmk5150l'],
-    craneTypes: ['GMK'],
-    summary:
-      'Full service manual for the Grove GMK 5150L all-terrain crane.',
-    fileName: 'GMK_5150L_service_manual_1786372420560.pdf',
-    cleanFile: 'GMK 5150L service manual.pdf',
-    sections: [
-      {
-        ref: '—',
-        title: 'Full Service Manual',
-        summary:
-          'Complete service manual for the Grove GMK 5150L.',
-      },
-    ],
-  },
-
-  {
-    id: 'ecos-ccs-training',
-    system: 'ECOS / CCS',
-    type: 'Training',
-    title: 'ECOS & CCS Technology Training',
-    subtitle: 'Electronic Crane Operating System · Crane Control System',
-    year: 2016,
-    pages: undefined,
-    appliesTo: [
-      'sl-gmk6450',
-      'sl-gmk6400',
-      'sl-gmk6300l1',
-      'sl-gmk6300l',
-      'sl-gmk6300',
-      'sl-gmk5250xl1',
-      'sl-gmk5250l',
-      'sl-gmk5130',
-      'sl-gmk4100',
-    ],
-    craneTypes: ['GMK'],
-    summary:
-      'Grove / Manitowoc technology training covering ECOS and CCS crane control systems.',
-    fileName: '160829_CH_ECOS_and_CCS_Technology_EN_1786350420447.pptx',
-    cleanFile: '160829_CH_ECOS_and_CCS_Technology_EN.pptx',
-    sections: [
-      {
-        ref: 'Module 01',
-        title: 'PWM Technology',
-        summary:
-          'Pulse Width Modulation technology used for proportional hydraulic control.',
-      },
-      {
-        ref: 'Module 02',
-        title: 'Initial Test',
-        summary:
-          'Pre-training assessment.',
-      },
-      {
-        ref: 'Module 03',
-        title: 'General Overview',
-        summary:
-          'Introduction to ECOS and CCS.',
-      },
-      {
-        ref: 'Module 04',
-        title: 'Introduction — History & Evolution',
-        summary:
-          'Evolution of Grove crane control technology.',
-      },
-      {
-        ref: 'Module 05',
-        title: 'ECOS — Electronic Crane Operating System',
-        summary:
-          'Detailed ECOS platform training.',
-      },
-      {
-        ref: 'Module 06',
-        title: 'CCS — Crane Control System',
-        summary:
-          'Detailed CCS platform training.',
-      },
-      {
-        ref: 'Module 07',
-        title: 'Assessment',
-        summary:
-          'End-of-training assessment.',
-      },
-    ],
-  },
-
-  // ===========================================================================
-  // TEREX / FRANNA
-  // ===========================================================================
-
-  {
-    id: 'at40-hydraulic-schematics',
-    system: 'Terex / Franna',
-    type: 'Reference',
-    title: 'Terex AT40 Hydraulic Schematics',
-    subtitle: 'AT40 Pick & Carry · Drawing T167827 · 8 sheets',
-    docNumber: 'T167827',
-    pages: 8,
-    year: 2020,
-    appliesTo: ['fr-at40'],
-    craneTypes: ['AT'],
-    summary:
-      'Terex AT40 hydraulic schematic set covering the complete hydraulic system of '
-      + 'the AT40 pick & carry crane. Includes the hydraulic oil tank, emergency steering '
-      + 'pumps, variable displacement pump, suspension, steering, telescope, winch, valve '
-      + 'bank and boom luffing hydraulic circuits.',
-    fileName: 'Hydraulic diagram_260810_184311.pdf',
-    cleanFile: 'Hydraulic diagram_260810_184311.pdf',
-    sections: [
-      {
-        ref: '1',
-        title: 'Hydraulic System Overview',
-        summary:
-          'AT40 hydraulic schematic cover and system identification.',
-      },
-      {
-        ref: '2',
-        title: 'Main Hydraulic System',
-        summary:
-          'Hydraulic oil tank, main variable displacement pump, emergency steering pumps '
-          + 'and associated hydraulic connections.',
-      },
-      {
-        ref: '3',
-        title: 'Suspension & Travel',
-        summary:
-          'Hydraulic circuits associated with suspension and travel functions.',
-      },
-      {
-        ref: '4',
-        title: 'Steering System',
-        summary:
-          'AT40 steering hydraulic circuit and associated components.',
-      },
-      {
-        ref: '5',
-        title: 'Rear Suspension',
-        summary:
-          'Rear suspension hydraulic manifold and associated circuits.',
-      },
-      {
-        ref: '6',
-        title: 'Telescope & Winch',
-        summary:
-          'Telescopic cylinder, winch motor, brake valve and valve-bank circuits.',
-      },
-      {
-        ref: '7',
-        title: 'Boom Luffing',
-        summary:
-          'Boom luffing cylinders and associated holding/control valves.',
-      },
-      {
-        ref: '8',
-        title: 'Revision / Change Information',
-        summary:
-          'Revision and drawing change information.',
-      },
-    ],
-  },
-
-  {
-    id: 'at40-electrical-schematics',
-    system: 'Terex / Franna',
-    type: 'Reference',
-    title: 'Terex AT40 Electrical Schematics',
-    subtitle: 'AT40 Pick & Carry · Drawing T172227 · 57 sheets',
-    docNumber: 'T172227',
-    pages: 57,
-    year: 2023,
-    appliesTo: ['fr-at40'],
-    craneTypes: ['AT'],
-    summary:
-      'Complete Terex AT40 electrical schematic set containing 57 sheets and an indexed '
-      + 'circuit/device list. Covers battery and starting circuits, engine controls, '
-      + 'Allison transmission, emergency steering, hydraulic monitoring, lighting, '
-      + 'CAN networks, joystick and keypad circuits, telescope, luffing, hoist, '
-      + 'ABS/WABCO, ZF systems and fuse information.',
-    fileName: 'C_%5CTEMP%5CDOCS%5CT172227B.pdf',
-    cleanFile: 'C_%5CTEMP%5CDOCS%5CT172227B.pdf',
-    sections: [
-      {
-        ref: '1–3',
-        title: 'Electrical Schematic Index',
-        summary:
-          'Indexed
+    pages
