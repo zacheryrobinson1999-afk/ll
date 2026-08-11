@@ -1,5 +1,6 @@
 /**
  * Technical Document Library — web version.
+ *
  * Same data as the mobile app; docUrl() uses a simple relative path
  * since the web app is served from the same origin as the API.
  */
@@ -42,7 +43,9 @@ export type TechDoc = {
   cleanFile: string;
 };
 
-/** Build a full URL to open a document via the API server. */
+/**
+ * Build a full URL to open a document via the API server.
+ */
 export function docUrl(doc: TechDoc): string {
   return `/api/docs/${encodeURIComponent(doc.cleanFile)}`;
 }
@@ -62,7 +65,7 @@ export const SYSTEM_COLORS: Record<DocSystem, string> = {
   'ECOS / CCS': '#0055A5',
   'Terex / Franna': '#E8271A',
   'ZF / WABCO': '#4A4A4A',
-  'KATO': '#E07B00',
+  KATO: '#E07B00',
 };
 
 export const SYSTEM_ICONS: Record<DocSystem, string> = {
@@ -71,7 +74,7 @@ export const SYSTEM_ICONS: Record<DocSystem, string> = {
   'ECOS / CCS': 'EC',
   'Terex / Franna': 'TF',
   'ZF / WABCO': 'ZW',
-  'KATO': 'KT',
+  KATO: 'KT',
 };
 
 export const TYPE_ICONS: Record<DocType, string> = {
@@ -83,7 +86,10 @@ export const TYPE_ICONS: Record<DocType, string> = {
 };
 
 export const TECH_DOCS: TechDoc[] = [
-  // ── LICCON 1 ─────────────────────────────────────────────────────────────
+
+  // ===========================================================================
+  // LICCON 1
+  // ===========================================================================
 
   {
     id: 'liccon1-screen-sim',
@@ -102,10 +108,9 @@ export const TECH_DOCS: TechDoc[] = [
     craneTypes: ['LTM', 'LG', 'LTR'],
     summary:
       'Complete screen-by-screen reference for the LICCON 1 Multi-ZE/CU Test System. '
-      + 'Covers every operator and technician screen available on the LICCON 1 computer in '
-      + 'both German and English. Originally produced for the LTM 1200/1 but applicable '
-      + 'across the LICCON 1 fleet. Includes ZE (central unit) and CU (control unit) monitor '
-      + 'layouts, system mode selectors, LSB readouts, and data-logger screens.',
+      + 'Covers operator and technician screens available on the LICCON 1 computer in '
+      + 'German and English. Includes ZE and CU monitor layouts, system mode selectors, '
+      + 'LSB readouts, and data-logger screens.',
     fileName: 'Liebherr_Licon_screen_simulator_1786350396056.pdf',
     cleanFile: 'Liebherr Licon screen simulator.pdf',
     sections: [
@@ -113,24 +118,22 @@ export const TECH_DOCS: TechDoc[] = [
         ref: '0.0',
         title: 'System Boot / Start Screen',
         summary:
-          'Initial power-on display showing crane model, serial number, system mode (0–3), '
-          + 'group selection, monitor assignment, hardware/firmware/DATAPROM versions, and '
-          + 'language selection (DEUTSCH / ENGLISH).',
+          'Initial power-on display showing crane model, serial number, system mode, '
+          + 'group selection, monitor assignment, hardware/firmware/DATAPROM versions, '
+          + 'and language selection.',
       },
       {
         ref: '0.1',
         title: 'Main Menu — SYSTEM',
         summary:
-          'Top-level navigation menu with tabs: SYSTEM, EPROM Content, CLOCK, '
-          + 'SYSTEM SPECIAL, TEST & ERROR, LSB. Entry point for all diagnostic and '
-          + 'configuration functions.',
+          'Top-level navigation menu including SYSTEM, EPROM Content, CLOCK, '
+          + 'SYSTEM SPECIAL, TEST & ERROR and LSB.',
       },
       {
         ref: '0.7',
         title: 'Engine Superstructure — Test Program / Error Stack',
         summary:
-          'Engine test program for the superstructure. Displays current error stack entries '
-          + 'and allows the technician to step through stored faults.',
+          'Engine test program for the superstructure including current error stack entries.',
       },
       {
         ref: '0.8',
@@ -140,80 +143,69 @@ export const TECH_DOCS: TechDoc[] = [
       },
       {
         ref: '0.24',
-        title: 'Correction Values — Auto-Mode Cylinder / Tele Free (Out/In)',
+        title: 'Correction Values — Auto-Mode Cylinder / Tele Free',
         summary:
-          'Displays and edits correction values for the auto-mode cylinder and tele free '
-          + '(extend/retract) / stretch sequence. Used during commissioning or after '
-          + 'telescope component replacement.',
+          'Correction values for the auto-mode cylinder and telescope extend/retract sequence.',
       },
       {
         ref: '0.27',
         title: 'Data Logger — System Control',
         summary:
-          'Optional data-logger screen for system control events. Records timestamped '
-          + 'control-system activity for post-incident analysis.',
+          'Data logger screen for system-control events.',
       },
       {
         ref: '0.31–0.33',
         title: 'Data Logger — Crane Data 1 / 2 / 3',
         summary:
-          'Three crane-data data-logger screens logging load, radius, boom angle and '
-          + 'other key lift parameters over time.',
+          'Crane-data logging screens covering load, radius, boom angle and other parameters.',
       },
       {
         ref: '1.1',
-        title: 'Set Operating Mode (Level 1)',
+        title: 'Set Operating Mode — Level 1',
         summary:
           'Level-1 operating mode selection screen.',
       },
       {
         ref: '2.1',
-        title: 'Crane Equipment — Set Operating Mode (SLI / Control Stand)',
+        title: 'Crane Equipment — Set Operating Mode',
         summary:
-          'Sets crane equipment configuration including SLI (Safe Load Indicator) mode '
-          + 'and operator control stand assignment.',
+          'Crane equipment configuration including SLI mode and operator control stand.',
       },
       {
         ref: '3.4',
-        title: 'Locking System Boom — Proximity Switch (Switch Position)',
+        title: 'Boom Locking System — Proximity Switch Position',
         summary:
-          'Shows the current switch position of all boom locking proximity switches. '
-          + 'Used to verify bolt engagement before and after telescoping.',
+          'Shows the current switch position of boom-locking proximity switches.',
       },
       {
         ref: '3.5',
-        title: 'Locking System Boom — Proximity Switch (Active on LSB)',
+        title: 'Boom Locking System — Active on LSB',
         summary:
-          'Displays which boom locking proximity switches are active on the '
-          + 'Liebherr System Bus (LSB).',
+          'Displays active boom-locking proximity switches on the Liebherr System Bus.',
       },
       {
         ref: '3.6',
-        title: 'Locking System Boom — Proximity Switch (With Error Active on LSB)',
+        title: 'Boom Locking System — Error Active on LSB',
         summary:
-          'Shows proximity switches that are both active on the LSB and in an error '
-          + 'state. Key diagnostic screen for boom locking faults.',
+          'Shows proximity switches active on the LSB and reporting an error.',
       },
       {
         ref: '3.8',
         title: 'Telescoping Main Picture — 1 Winch',
         summary:
-          'Main telescoping operation screen for cranes with a single winch. Displays '
-          + 'boom section positions, cylinder pressures, and tele sequence status.',
+          'Main telescoping screen for cranes equipped with one winch.',
       },
       {
         ref: '3.13',
         title: 'Telescoping Main Picture — 2 Winches',
         summary:
-          'Main telescoping screen for cranes equipped with two winches. Adds second-winch '
-          + 'rope tension and position data.',
+          'Main telescoping screen for cranes equipped with two winches.',
       },
       {
         ref: 'LSB',
-        title: 'LSB (Liebherr System Bus) Overview Screen',
+        title: 'LSB — Liebherr System Bus Overview',
         summary:
-          'Shows all modules connected to the LSB (LSB1 through LSBn), including CPU, '
-          + 'IPCB, and EP assignments for chassis and superstructure.',
+          'Overview of modules connected to the Liebherr System Bus.',
       },
     ],
   },
@@ -223,7 +215,7 @@ export const TECH_DOCS: TechDoc[] = [
     system: 'LICCON 1',
     type: 'Diagnostics',
     title: 'LICCON 1 Diagnostics — Operating Instructions',
-    subtitle: 'LTM · LG · LTR  |  BAL-No. 99900-03-02',
+    subtitle: 'LTM · LG · LTR · BAL-No. 99900-03-02',
     docNumber: '99900-03-02',
     pages: 215,
     year: undefined,
@@ -237,11 +229,9 @@ export const TECH_DOCS: TechDoc[] = [
     ],
     craneTypes: ['LTM', 'LG', 'LTR'],
     summary:
-      'Official Liebherr-Werk Ehingen operating instructions for LICCON 1 diagnostics. '
-      + 'Covers the full LSB bus topology, error classification and identification, the '
-      + 'Multi-CPU test system, remote diagnostics, disk brake diagnostics, trailing-axle '
-      + 'diagnostics, and the TY-guying test system. Must be carried with the crane at all '
-      + 'times. 215 pages.',
+      'Official Liebherr operating instructions for LICCON 1 diagnostics. '
+      + 'Covers LSB bus topology, error classification, Multi-CPU testing, remote diagnostics, '
+      + 'disk brake diagnostics, trailing axle diagnostics and TY-guying.',
     fileName: 'DIAGNOSTICS_Licon_1_1786350403513.pdf',
     cleanFile: 'DIAGNOSTICS Licon 1.pdf',
     sections: [
@@ -249,39 +239,31 @@ export const TECH_DOCS: TechDoc[] = [
         ref: '20.00',
         title: 'Diagnostics — Overview',
         summary:
-          'Introduction to the LICCON 1 diagnostic philosophy. Explains how errors are '
-          + 'classified (monitor errors, basic module errors, application errors, system '
-          + 'errors, operating errors) and the priority order in which the system checks them.',
+          'Introduction to LICCON 1 diagnostic functions and error classification.',
       },
       {
         ref: '20.01',
         title: 'Bus System Overview',
         summary:
-          'Full LSB (Liebherr System Bus) topology diagram for the crane. Explains CAN '
-          + '(Controller Area Network) and LSB1–LSBn data transmission, CPU, IPCB, and '
-          + 'Power Unit (PU) assignment across chassis and superstructure.',
+          'LSB topology, CAN communication, CPU, IPCB and Power Unit assignment.',
       },
       {
         ref: '20.05',
         title: 'Error Identification — LICCON Computer System',
         summary:
-          'Primary error identification procedure. Describes how to read LICCON Error Codes '
-          + '(LEC) from the monitor and 7-segment display. Covers monitor errors, basic '
-          + 'module errors, application errors, system errors, and operating errors.',
+          'Procedure for reading LICCON Error Codes and identifying system faults.',
       },
       {
         ref: '20.10',
         title: 'Multi-CPU Test System',
         summary:
-          'Instructions for using the LICCON Multi-CPU / Multi-ZE / Multi-CU test system '
-          + 'to diagnose faults across multiple processing units.',
+          'Using the Multi-CPU / Multi-ZE / Multi-CU test system.',
       },
       {
         ref: '20.15',
         title: 'Remote Diagnostics',
         summary:
-          'Procedure for connecting to the crane via remote diagnostics link. Allows '
-          + 'Liebherr customer service to access the LICCON system remotely for fault analysis.',
+          'Procedure for connecting to the crane using remote diagnostics.',
       },
       {
         ref: '20.20',
@@ -299,13 +281,81 @@ export const TECH_DOCS: TechDoc[] = [
         ref: '20.30',
         title: 'Test System — TY-Guying',
         summary:
-          'Test system for the TY-guying (Y-guying) system. Used to verify the guying '
-          + 'geometry sensors and control responses during commissioning or after maintenance.',
+          'Testing of the TY-guying system and associated sensors.',
       },
     ],
   },
 
-  // ── LICCON 2 ─────────────────────────────────────────────────────────────
+  /*
+   * CORRECTED CLUTCH DOCUMENT
+   *
+   * This was previously incorrectly labelled as:
+   * "Franna Clutch Replacement Procedure".
+   *
+   * The supplied document is actually a Liebherr LICCON clutch CHECK
+   * procedure covering both LICCON 1 and LICCON 2.
+   */
+
+  {
+    id: 'liebherr-liccon-clutch-check',
+    system: 'LICCON 1',
+    type: 'Procedure',
+    title: 'Liebherr LICCON Clutch Check Procedure',
+    subtitle: 'LICCON 1 & LICCON 2 · AS-Tronic Clutch Test',
+    pages: 4,
+    year: undefined,
+    appliesTo: [
+      'sl-ltm1750',
+      'sl-ltm1650',
+      'sl-ltm1500',
+      'sl-ltm1350',
+      'cr-lg1750',
+      'cr-lr16002',
+      'cr-ltr1220',
+    ],
+    craneTypes: ['LTM', 'LG', 'LTR'],
+    summary:
+      'Liebherr LICCON clutch inspection procedure covering both LICCON 1 and '
+      + 'LICCON 2 single-engine cranes. The procedure uses the AS-Tronic clutch '
+      + 'measurement value to calculate clutch travel and determine whether the '
+      + 'clutch is within the specified check range.',
+    fileName: 'leibherr clutch procedure.pdf',
+    cleanFile: 'leibherr clutch procedure.pdf',
+    sections: [
+      {
+        ref: 'LICCON 1',
+        title: 'LICCON 1 Clutch Test',
+        summary:
+          'Procedure for entering LICCON 1 service functions and accessing the '
+          + 'AS-Tronic binary measurement value used for the clutch check.',
+      },
+      {
+        ref: 'LICCON 1',
+        title: 'AS-Tronic Clutch Measurement',
+        summary:
+          'Uses the value shown under the AS-Tronic measurement screen and applies '
+          + 'the documented calculation to determine clutch travel.',
+      },
+      {
+        ref: 'LICCON 2',
+        title: 'LICCON 2 Clutch Test — Single Engine',
+        summary:
+          'Procedure for entering the LICCON 2 special system and navigating to '
+          + 'Control → Chassis → Gear AS Tronic → Analogue Test Value.',
+      },
+      {
+        ref: 'LICCON 2',
+        title: 'Clutch Travel Calculation',
+        summary:
+          'Calculate clutch travel from the displayed KUPPLUNGSWEG value using the '
+          + 'procedure supplied in the document.',
+      },
+    ],
+  },
+
+  // ===========================================================================
+  // LICCON 2
+  // ===========================================================================
 
   {
     id: 'liccon2-service-l1',
@@ -323,13 +373,11 @@ export const TECH_DOCS: TechDoc[] = [
       'cr-lg1750',
       'cr-lr16002',
     ],
-    craneTypes: ['LTM', 'LG', 'LTR', 'LG'],
+    craneTypes: ['LTM', 'LG', 'LTR'],
     summary:
-      'Service procedure document for gaining Level 1 service access on the LICCON 2 '
-      + 'control system. Level 1 access unlocks the first tier of service menus beyond '
-      + 'standard operator mode, enabling calibration, parameter adjustments and advanced '
-      + 'diagnostic screens. This is the daily-code-gated access tier that the LTC '
-      + 'daily code generator unlocks. 5 pages. Scanned original (Xerox, 2014).',
+      'Service procedure for gaining Level 1 service access on the LICCON 2 control system. '
+      + 'Level 1 access provides access to service menus, calibration, parameter adjustment '
+      + 'and advanced diagnostic screens.',
     fileName: 'Licon_Two_service_level_one_access._1786350410850.pdf',
     cleanFile: 'Licon Two service level one access..pdf',
     sections: [
@@ -337,15 +385,13 @@ export const TECH_DOCS: TechDoc[] = [
         ref: '—',
         title: 'Accessing Service Level 1',
         summary:
-          'Step-by-step procedure for entering the LICCON 2 service menu and authenticating '
-          + 'with the Level 1 daily access code.',
+          'Step-by-step procedure for entering the LICCON 2 service menu and authenticating.',
       },
       {
         ref: '—',
         title: 'Available Functions at Level 1',
         summary:
-          'Overview of the diagnostic and configuration functions that become available '
-          + 'after Level 1 authentication.',
+          'Overview of diagnostic and configuration functions available after authentication.',
       },
     ],
   },
@@ -369,9 +415,8 @@ export const TECH_DOCS: TechDoc[] = [
     ],
     craneTypes: ['LTM', 'LG', 'LTR'],
     summary:
-      'Comprehensive 287-page reference document for the LICCON 2 crane control system '
-      + '(version 0.4). Covers the full LICCON 2 architecture, screen layouts, parameter '
-      + 'structure, and configuration procedures.',
+      'Comprehensive reference document for the LICCON 2 crane control system, '
+      + 'covering architecture, screens, parameters and configuration procedures.',
     fileName: 'Liccon_2_version_0.4_1786350416190.pdf',
     cleanFile: 'Liccon 2 version 0.4.pdf',
     sections: [
@@ -379,85 +424,38 @@ export const TECH_DOCS: TechDoc[] = [
         ref: '—',
         title: 'LICCON 2 System Architecture',
         summary:
-          'Overview of the LICCON 2 hardware and software architecture.',
+          'Overview of LICCON 2 hardware and software architecture.',
       },
       {
         ref: '—',
         title: 'Screen Layout & Navigation',
         summary:
-          'Reference for all LICCON 2 display screens available in standard operator mode and service mode.',
+          'Reference for LICCON 2 display screens and navigation.',
       },
       {
         ref: '—',
         title: 'Parameter Structure',
         summary:
-          'Documentation of the LICCON 2 parameter set — parameter IDs, value ranges, units, and access level required.',
+          'Reference for LICCON 2 parameter structures.',
       },
       {
         ref: '—',
         title: 'Configuration Procedures',
         summary:
-          'Step-by-step configuration procedures for initial commissioning, reeving changes, and boom/jib configuration changes.',
+          'Configuration procedures for commissioning and crane configuration changes.',
       },
       {
         ref: '—',
         title: 'Error Codes & Diagnostics',
         summary:
-          'LICCON 2 error code reference with descriptions, probable causes, and recommended corrective actions.',
+          'LICCON 2 diagnostic and error-code reference.',
       },
     ],
   },
 
-  // ── LIEBHERR LICCON CLUTCH CHECK ──────────────────────────────────────────
-
-  {
-    id: 'liebherr-liccon-clutch-check',
-    system: 'LICCON 2',
-    type: 'Procedure',
-    title: 'Liebherr LICCON Clutch Check Procedure',
-    subtitle: 'LICCON 1 & LICCON 2 · Clutch Test',
-    year: undefined,
-    pages: 4,
-    appliesTo: [
-      'sl-ltm1750',
-      'sl-ltm1650',
-      'sl-ltm1500',
-      'sl-ltm1350',
-      'cr-lg1750',
-      'cr-lr16002',
-      'cr-ltr1220',
-    ],
-    craneTypes: ['LTM', 'LG', 'LTR'],
-    summary:
-      'Liebherr LICCON clutch checking procedure covering LICCON 1 and LICCON 2 systems. '
-      + 'Includes LICCON 1 clutch testing, LICCON 2 single-engine clutch testing, and '
-      + 'LICCON 2 two-engine clutch testing. The procedure uses the LICCON diagnostic '
-      + 'screens to obtain the clutch measurement and assess clutch condition.',
-    fileName: 'leibherr_clutch_procedure_1786350388906.pdf',
-    cleanFile: 'leibherr clutch procedure.pdf',
-    sections: [
-      {
-        ref: 'LICCON 1',
-        title: 'LICCON 1 Clutch Check',
-        summary:
-          'Procedure for accessing the LICCON diagnostic screens and checking the clutch measurement.',
-      },
-      {
-        ref: 'LICCON 2 — Single Engine',
-        title: 'LICCON 2 Single-Engine Clutch Check',
-        summary:
-          'Procedure for checking the clutch through the LICCON 2 special-system and AS-Tronic diagnostic screens.',
-      },
-      {
-        ref: 'LICCON 2 — Two Engine',
-        title: 'LICCON 2 Two-Engine Clutch Check',
-        summary:
-          'Procedure for checking the clutch on LICCON 2 cranes equipped with two engines.',
-      },
-    ],
-  },
-
-  // ── ECOS / CCS ───────────────────────────────────────────────────────────
+  // ===========================================================================
+  // ECOS / CCS
+  // ===========================================================================
 
   {
     id: 'gmk5150l-service-manual',
@@ -470,16 +468,15 @@ export const TECH_DOCS: TechDoc[] = [
     appliesTo: ['sl-gmk5150l'],
     craneTypes: ['GMK'],
     summary:
-      'Full service manual for the Grove GMK 5150L all-terrain crane. 169-page scanned '
-      + 'document covering maintenance, service procedures, and technical specifications.',
+      'Full service manual for the Grove GMK 5150L all-terrain crane.',
     fileName: 'GMK_5150L_service_manual_1786372420560.pdf',
     cleanFile: 'GMK 5150L service manual.pdf',
     sections: [
       {
         ref: '—',
-        title: 'Full Service Manual (169 pp)',
+        title: 'Full Service Manual',
         summary:
-          'Complete scanned service manual for the Grove GMK 5150L.',
+          'Complete service manual for the Grove GMK 5150L.',
       },
     ],
   },
@@ -505,9 +502,7 @@ export const TECH_DOCS: TechDoc[] = [
     ],
     craneTypes: ['GMK'],
     summary:
-      'Grove / Manitowoc internal technology training presentation covering the full '
-      + 'evolution of electronic crane control from relay technology (1996) through to the '
-      + 'fully integrated CCS (Crane Control System) platform introduced in 2012.',
+      'Grove / Manitowoc technology training covering ECOS and CCS crane control systems.',
     fileName: '160829_CH_ECOS_and_CCS_Technology_EN_1786350420447.pptx',
     cleanFile: '160829_CH_ECOS_and_CCS_Technology_EN.pptx',
     sections: [
@@ -515,267 +510,144 @@ export const TECH_DOCS: TechDoc[] = [
         ref: 'Module 01',
         title: 'PWM Technology',
         summary:
-          'Explains Pulse Width Modulation (PWM) as used to control proportional hydraulic valves.',
+          'Pulse Width Modulation technology used for proportional hydraulic control.',
       },
       {
         ref: 'Module 02',
         title: 'Initial Test',
         summary:
-          'Pre-training assessment module.',
+          'Pre-training assessment.',
       },
       {
         ref: 'Module 03',
         title: 'General Overview',
         summary:
-          'Introduction to the two crane operating systems: ECOS and CCS.',
+          'Introduction to ECOS and CCS.',
       },
       {
         ref: 'Module 04',
         title: 'Introduction — History & Evolution',
         summary:
-          'Timeline of Grove crane control evolution from 1996 relay technology through to the 2012 CCS platform.',
+          'Evolution of Grove crane control technology.',
       },
       {
         ref: 'Module 05',
         title: 'ECOS — Electronic Crane Operating System',
         summary:
-          'Deep dive into the ESX-based ECOS platform used on GMK cranes from 2002.',
+          'Detailed ECOS platform training.',
       },
       {
         ref: 'Module 06',
         title: 'CCS — Crane Control System',
         summary:
-          'Current-generation Grove control platform (2012+). Fully integrated CAN control system covering the entire crane.',
+          'Detailed CCS platform training.',
       },
       {
         ref: 'Module 07',
         title: 'Assessment',
         summary:
-          'End-of-training assessment covering both ECOS and CCS topics.',
+          'End-of-training assessment.',
       },
     ],
   },
 
-  // ── Terex / Franna ────────────────────────────────────────────────────────
+  // ===========================================================================
+  // TEREX / FRANNA
+  // ===========================================================================
 
   {
-    id: 'robway-rci-1502-manual',
+    id: 'at40-hydraulic-schematics',
     system: 'Terex / Franna',
     type: 'Reference',
-    title: 'ROBWAY RCI-1502 Manual',
-    subtitle: 'RCI-1502 Crane Control & Load Monitoring System',
-    year: undefined,
-    pages: undefined,
-    appliesTo: [
-      'fr-at40',
-      'fr-mac25',
-    ],
-    craneTypes: ['AT', 'MAC'],
+    title: 'Terex AT40 Hydraulic Schematics',
+    subtitle: 'AT40 Pick & Carry · Drawing T167827 · 8 sheets',
+    docNumber: 'T167827',
+    pages: 8,
+    year: 2020,
+    appliesTo: ['fr-at40'],
+    craneTypes: ['AT'],
     summary:
-      'ROBWAY RCI-1502 technical manual covering installation, calibration, sensor '
-      + 'verification, user variables, troubleshooting, data logging and crane '
-      + 'configuration information for the RCI-1502 system.',
-    fileName: '602747163-Robway-Franna-Manual-1502.pdf',
-    cleanFile: '602747163-Robway-Franna-Manual-1502.pdf',
+      'Terex AT40 hydraulic schematic set covering the complete hydraulic system of '
+      + 'the AT40 pick & carry crane. Includes the hydraulic oil tank, emergency steering '
+      + 'pumps, variable displacement pump, suspension, steering, telescope, winch, valve '
+      + 'bank and boom luffing hydraulic circuits.',
+    fileName: 'Hydraulic diagram_260810_184311.pdf',
+    cleanFile: 'Hydraulic diagram_260810_184311.pdf',
     sections: [
       {
-        ref: 'Installation',
-        title: 'RCI-1502 Installation',
+        ref: '1',
+        title: 'Hydraulic System Overview',
         summary:
-          'Installation information for the RCI-1502 display, sensors, cabling and associated components.',
+          'AT40 hydraulic schematic cover and system identification.',
       },
       {
-        ref: 'Calibration',
-        title: 'Calibration',
+        ref: '2',
+        title: 'Main Hydraulic System',
         summary:
-          'RCI-1502 calibration procedures and sensor verification.',
+          'Hydraulic oil tank, main variable displacement pump, emergency steering pumps '
+          + 'and associated hydraulic connections.',
       },
       {
-        ref: 'Diagnostics',
-        title: 'Troubleshooting & Diagnostics',
+        ref: '3',
+        title: 'Suspension & Travel',
         summary:
-          'Fault-finding information, error conditions and sensor troubleshooting.',
+          'Hydraulic circuits associated with suspension and travel functions.',
       },
       {
-        ref: 'Data Logger',
-        title: 'Data Logging',
+        ref: '4',
+        title: 'Steering System',
         summary:
-          'Information covering RCI-1502 data logging and retrieval.',
+          'AT40 steering hydraulic circuit and associated components.',
+      },
+      {
+        ref: '5',
+        title: 'Rear Suspension',
+        summary:
+          'Rear suspension hydraulic manifold and associated circuits.',
+      },
+      {
+        ref: '6',
+        title: 'Telescope & Winch',
+        summary:
+          'Telescopic cylinder, winch motor, brake valve and valve-bank circuits.',
+      },
+      {
+        ref: '7',
+        title: 'Boom Luffing',
+        summary:
+          'Boom luffing cylinders and associated holding/control valves.',
+      },
+      {
+        ref: '8',
+        title: 'Revision / Change Information',
+        summary:
+          'Revision and drawing change information.',
       },
     ],
   },
 
   {
-    id: 'mac25-3-hydraulic-mercedes',
+    id: 'at40-electrical-schematics',
     system: 'Terex / Franna',
     type: 'Reference',
-    title: 'MAC25-3 Hydraulic Section — Mercedes',
-    subtitle: 'Hydraulic System & Eaton 420 Mobile Piston Pump',
-    year: 2003,
-    pages: undefined,
-    appliesTo: [
-      'fr-mac25',
-    ],
-    craneTypes: ['MAC'],
+    title: 'Terex AT40 Electrical Schematics',
+    subtitle: 'AT40 Pick & Carry · Drawing T172227 · 57 sheets',
+    docNumber: 'T172227',
+    pages: 57,
+    year: 2023,
+    appliesTo: ['fr-at40'],
+    craneTypes: ['AT'],
     summary:
-      'Hydraulic technical documentation for the MAC25-3 Mercedes configuration. '
-      + 'Includes hydraulic system information, Eaton 420 mobile piston pump data, '
-      + 'installation information, specifications, lubrication and maintenance information.',
-    fileName: '631741372-MAC25-3-HYDRAULIC-SECTION-MERCEDES-v2-pdf.pdf',
-    cleanFile: '631741372-MAC25-3-HYDRAULIC-SECTION-MERCEDES-v2-pdf.pdf',
+      'Complete Terex AT40 electrical schematic set containing 57 sheets and an indexed '
+      + 'circuit/device list. Covers battery and starting circuits, engine controls, '
+      + 'Allison transmission, emergency steering, hydraulic monitoring, lighting, '
+      + 'CAN networks, joystick and keypad circuits, telescope, luffing, hoist, '
+      + 'ABS/WABCO, ZF systems and fuse information.',
+    fileName: 'C_%5CTEMP%5CDOCS%5CT172227B.pdf',
+    cleanFile: 'C_%5CTEMP%5CDOCS%5CT172227B.pdf',
     sections: [
       {
-        ref: 'Hydraulic System',
-        title: 'Hydraulic System Information',
+        ref: '1–3',
+        title: 'Electrical Schematic Index',
         summary:
-          'Hydraulic component and system information for the MAC25-3 Mercedes configuration.',
-      },
-      {
-        ref: 'Eaton 420',
-        title: 'Eaton 420 Mobile Piston Pump',
-        summary:
-          'Pump specifications, installation information, port configuration and technical data.',
-      },
-      {
-        ref: 'Maintenance',
-        title: 'Hydraulic Maintenance',
-        summary:
-          'Maintenance information including lubrication, oil filling, vent plugs and routine checks.',
-      },
-      {
-        ref: 'Troubleshooting',
-        title: 'Hydraulic Troubleshooting',
-        summary:
-          'Troubleshooting information for the hydraulic winch system.',
-      },
-    ],
-  },
-
-  // ── ZF / WABCO ───────────────────────────────────────────────────────────
-
-  {
-    id: 'zf-as-tronic-manual',
-    system: 'ZF / WABCO',
-    type: 'Reference',
-    title: 'ZF AS-Tronic Operating Manual',
-    subtitle: 'Automated Manual Transmission',
-    year: undefined,
-    pages: undefined,
-    appliesTo: [
-      'sl-ltm1750',
-      'sl-ltm1650',
-      'sl-ltm1500',
-      'sl-ltm1350',
-      'sl-gmk6450',
-      'sl-gmk6400',
-    ],
-    craneTypes: ['LTM', 'GMK'],
-    summary:
-      'Operating and maintenance manual for the ZF AS-Tronic automated manual '
-      + 'transmission as fitted to large all-terrain cranes.',
-    fileName: 'ZF-as-Tronic-Operating-Manual.pdf',
-    cleanFile: 'ZF-as-Tronic-Operating-Manual.pdf',
-    sections: [
-      {
-        ref: '—',
-        title: 'System Description',
-        summary:
-          'Overview of the ZF AS-Tronic automated transmission system.',
-      },
-      {
-        ref: '—',
-        title: 'Operation',
-        summary:
-          'Driver interface and normal operation procedures.',
-      },
-      {
-        ref: '—',
-        title: 'Maintenance',
-        summary:
-          'Scheduled maintenance intervals and procedures.',
-      },
-      {
-        ref: '—',
-        title: 'Fault Diagnosis',
-        summary:
-          'Fault codes, diagnostic procedures, and corrective actions.',
-      },
-    ],
-  },
-
-  {
-    id: 'wabco-pan19-manual',
-    system: 'ZF / WABCO',
-    type: 'Reference',
-    title: 'WABCO PAN-19 Product Manual',
-    subtitle: 'Pneumatic Anti-lock Braking System · September 2011',
-    year: 2011,
-    pages: undefined,
-    appliesTo: [
-      'sl-ltm1750',
-      'sl-ltm1650',
-      'sl-ltm1500',
-      'sl-ltm1350',
-      'sl-gmk6450',
-      'sl-gmk6400',
-      'sl-gmk6300l1',
-    ],
-    craneTypes: ['LTM', 'GMK'],
-    summary:
-      'WABCO product manual for the PAN-19 pneumatic ABS system fitted to heavy '
-      + 'commercial vehicles and cranes.',
-    fileName: 'WABCO-PAN-19_Product-Manual_09-2011.pdf',
-    cleanFile: 'WABCO-PAN-19_Product-Manual_09-2011.pdf',
-    sections: [
-      {
-        ref: '—',
-        title: 'System Overview',
-        summary:
-          'PAN-19 system architecture and components.',
-      },
-      {
-        ref: '—',
-        title: 'Installation',
-        summary:
-          'Mounting and connection requirements.',
-      },
-      {
-        ref: '—',
-        title: 'Diagnostics',
-        summary:
-          'Fault identification and diagnostic procedures.',
-      },
-    ],
-  },
-
-  // ── KATO ─────────────────────────────────────────────────────────────────
-
-  {
-    id: 'kato-acs-ms10e',
-    system: 'KATO',
-    type: 'Reference',
-    title: 'KATO ACS MS-10E Service Manual',
-    subtitle: 'Aerial Control System',
-    year: undefined,
-    pages: undefined,
-    appliesTo: [],
-    craneTypes: ['KATO'],
-    summary:
-      'Service manual for the KATO ACS MS-10E Aerial Control System.',
-    fileName: 'KATO ACS MS-10E Service Manual.pdf',
-    cleanFile: 'KATO ACS MS-10E Service Manual.pdf',
-    sections: [
-      {
-        ref: '—',
-        title: 'Full Service Manual',
-        summary:
-          'Complete service manual for the KATO ACS MS-10E system.',
-      },
-    ],
-  },
-];
-
-/** Return all docs that apply to a given fleet model ID. */
-export function getByFleetId(fleetId: string): TechDoc[] {
-  return TECH_DOCS.filter((doc) => doc.appliesTo.includes(fleetId));
-}
+          'Indexed
