@@ -3,6 +3,15 @@ import { getFromB2 } from '../lib/b2Storage.js';
 
 const router = Router();
 
+/**
+ * GET /api/docs/:filename
+ *
+ * Render retrieves the document from Backblaze B2
+ * and streams it directly to the browser.
+ *
+ * B2 key:
+ * docs/<filename>
+ */
 router.get('/docs/:filename', async (req, res) => {
   const filename = req.params['filename'];
 
@@ -22,18 +31,22 @@ router.get('/docs/:filename', async (req, res) => {
     const result = await getFromB2(key);
 
     if (!result.Body) {
-      res.status(404).json({ error: 'Document not found' });
+      res.status(404).json({
+        error: 'Document not found',
+      });
       return;
     }
 
-    if (result.ContentType) {
-      res.setHeader('Content-Type', result.ContentType);
-    } else {
-      res.setHeader('Content-Type', 'application/pdf');
-    }
+    res.setHeader(
+      'Content-Type',
+      result.ContentType || 'application/pdf',
+    );
 
     if (result.ContentLength !== undefined) {
-      res.setHeader('Content-Length', String(result.ContentLength));
+      res.setHeader(
+        'Content-Length',
+        String(result.ContentLength),
+      );
     }
 
     res.setHeader(
@@ -47,7 +60,9 @@ router.get('/docs/:filename', async (req, res) => {
       console.error('[B2] document stream error:', err);
 
       if (!res.headersSent) {
-        res.status(500).json({ error: 'Failed to read document' });
+        res.status(500).json({
+          error: 'Failed to read document',
+        });
       } else {
         res.destroy(err);
       }
