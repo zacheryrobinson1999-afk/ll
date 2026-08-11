@@ -25,9 +25,14 @@ router.get('/docs/:filename', async (req, res) => {
   try {
     const url = await getPresignedUrl(key, 3600);
     res.redirect(302, url);
-  } catch (err) {
-    res.status(404).json({ error: 'Document not found' });
-  }
+} catch (err) {
+  console.error('B2 document error:', err);
+
+  res.status(500).json({
+    error: 'Failed to retrieve document',
+    details: err instanceof Error ? err.message : String(err),
+  });
+}
 });
 
 export default router;
