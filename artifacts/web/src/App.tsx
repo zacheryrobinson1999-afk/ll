@@ -23,7 +23,7 @@ function Router() {
     <RoutedErrorBoundary>
       <Layout>
         <Switch>
-          <Route path="/"><Redirect to="/fleet" /></Route>
+          <Route path="/" component={HomePage} />
           <Route path="/fleet" component={FleetPage} />
           <Route path="/docs" component={DocsPage} />
           <Route path="/maintenance" component={MaintenancePage} />
