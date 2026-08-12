@@ -1,10 +1,7 @@
 import {
   S3Client,
   GetObjectCommand,
-  DeleteObjectCommand,
 } from '@aws-sdk/client-s3';
-import { Upload } from '@aws-sdk/lib-storage';
-import type { Readable } from 'stream';
 
 function makeClient() {
   const endpoint = process.env['B2_ENDPOINT'];
@@ -36,44 +33,11 @@ const BUCKET = () => {
   return b;
 };
 
-export async function uploadToB2(
-  body: Readable | Buffer,
-  key: string,
-  contentType: string,
-): Promise<string> {
-  const client = makeClient();
-
-  const upload = new Upload({
-    client,
-    params: {
-      Bucket: BUCKET(),
-      Key: key,
-      Body: body,
-      ContentType: contentType,
-    },
-  });
-
-  await upload.done();
-
-  return key;
-}
-
 export async function getFromB2(key: string) {
   const client = makeClient();
 
   return client.send(
     new GetObjectCommand({
-      Bucket: BUCKET(),
-      Key: key,
-    }),
-  );
-}
-
-export async function deleteFromB2(key: string): Promise<void> {
-  const client = makeClient();
-
-  await client.send(
-    new DeleteObjectCommand({
       Bucket: BUCKET(),
       Key: key,
     }),

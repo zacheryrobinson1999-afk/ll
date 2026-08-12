@@ -1,17 +1,14 @@
 import { useState } from 'react';
 import { useLocation } from 'wouter';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getManufacturers, getByManufacturer, getByCategory, CATEGORY_ICONS, CATEGORY_COLORS } from '@/data/craneFleet';
+import { getManufacturers, getByManufacturer } from '@/data/craneFleet';
 import { getByFleetId, docUrl } from '@/data/techDocs';
-import { fetchUploadedDocs, uploadDoc, formatBytes } from '@/lib/uploadsApi';
 import { generateDailyCodes, makeLegacyDate } from '@/lib/daycodesApi';
 
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
-import { ChevronLeft, KeyRound, ExternalLink, Upload, File, FileText, ChevronRight, Settings, Loader2 } from 'lucide-react';
+import { ChevronLeft, KeyRound, ExternalLink, FileText, ChevronRight, Settings } from 'lucide-react';
 import { toast } from 'sonner';
 
 const BRAND_COLORS: Record<string, string> = {
@@ -190,9 +187,6 @@ function CraneDetailView({ manufacturer, craneId, onBack }: { manufacturer: stri
               )}
             </CardContent>
           </Card>
-
-          {/* Uploaded Maintenance Docs */}
-          <UploadedDocsSection craneId={crane.id} />
         </div>
 
         <div className="space-y-6">
@@ -240,102 +234,6 @@ function CraneDetailView({ manufacturer, craneId, onBack }: { manufacturer: stri
         </div>
       </div>
     </div>
-  );
-}
-
-function UploadedDocsSection({ craneId }: { craneId: string }) {
-  const queryClient = useQueryClient();
-  const [file, setFile] = useState<File | null>(null);
-
-  const { data: uploads = [], isLoading } = useQuery({
-    queryKey: ['uploads', craneId],
-    queryFn: () => fetchUploadedDocs(craneId),
-  });
-
-  const uploadMut = useMutation({
-    mutationFn: (f: File) => uploadDoc(craneId, f),
-    onSuccess: () => {
-      toast.success('Document uploaded successfully');
-      setFile(null);
-      queryClient.invalidateQueries({ queryKey: ['uploads', craneId] });
-      // Reset file input natively
-      const input = document.getElementById('file-upload') as HTMLInputElement;
-      if (input) input.value = '';
-    },
-    onError: (err: any) => {
-      toast.error(err.message || 'Upload failed');
-    }
-  });
-
-  const handleUpload = () => {
-    if (file) {
-      uploadMut.mutate(file);
-    }
-  };
-
-  return (
-    <Card className="bg-card/50">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Upload className="w-5 h-5 text-muted-foreground" />
-          Field Reports & Certificates
-        </CardTitle>
-        <CardDescription>Upload local maintenance records.</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        <div className="flex items-end gap-3">
-          <div className="flex-1 space-y-2">
-            <Input 
-              id="file-upload"
-              type="file" 
-              accept=".pdf,.doc,.docx,.xls,.xlsx,image/*"
-              onChange={e => setFile(e.target.files?.[0] || null)}
-              className="bg-card cursor-pointer file:text-primary file:font-semibold file:bg-primary/10 file:border-0 file:rounded file:px-3 file:py-1 file:mr-3"
-            />
-          </div>
-          <Button 
-            onClick={handleUpload} 
-            disabled={!file || uploadMut.isPending}
-            className="shrink-0"
-          >
-            {uploadMut.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Upload'}
-          </Button>
-        </div>
-
-        {isLoading ? (
-          <div className="flex justify-center py-8">
-            <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-          </div>
-        ) : uploads.length > 0 ? (
-          <div className="space-y-2">
-            {uploads.map(doc => (
-              <div key={doc.id} className="flex items-center justify-between p-3 rounded-lg bg-secondary/20 border border-border/50">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-background rounded text-muted-foreground">
-                    <File className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <div className="font-medium text-sm">{doc.name}</div>
-                    <div className="text-xs text-muted-foreground flex items-center gap-2 mt-0.5">
-                      <span>{formatBytes(doc.size)}</span>
-                      <span>•</span>
-                      <span>{new Date(doc.uploadedAt).toLocaleDateString()}</span>
-                    </div>
-                  </div>
-                </div>
-                <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={() => window.open(doc.url, '_blank')}>
-                  <ExternalLink className="w-4 h-4" />
-                </Button>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-8 text-sm text-muted-foreground border border-dashed rounded-lg bg-secondary/10">
-            No field reports uploaded yet.
-          </div>
-        )}
-      </CardContent>
-    </Card>
   );
 }
 

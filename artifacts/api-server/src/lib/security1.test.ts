@@ -27,6 +27,8 @@ const { hasSameOrigin } = await import('../middleware/sameOrigin');
 const { technicians } = await import('@workspace/db');
 const { generateDailyCodes, validateDailyCodeInput } = await import('./dailyCodes');
 const { generateAuditedDaycodes } = await import('./daycodeService');
+const { createDocsRouter } = await import('../routes/docs');
+const { default: apiRouter } = await import('../routes/index');
 
 test('valid access code verifies against a salted scrypt hash', async () => {
   const stored = await hashAccessCode('1234');
@@ -208,4 +210,73 @@ test('invalid authenticated daycode requests are audited without generated codes
     outcome: 'validation_failed',
     reason: 'invalid_input',
   }]);
+});
+
+test('protected document route authenticates before accessing B2', () => {
+  const routerStack = (createDocsRouter() as unknown as { stack: Array<{
+    route?: { path?: string; stack: Array<{ handle: unknown }> };
+  }> }).stack;
+  const documentRoute = routerStack.find((layer) => layer.route?.path === '/docs/:filename')?.route;
+
+  assert.ok(documentRoute);
+  assert.equal(documentRoute.stack[0]?.handle, requireAuth);
+  assert.equal(typeof documentRoute.stack[1]?.handle, 'function');
+});
+
+test('document handler preserves filename validation before B2 retrieval', async () => {
+  let b2Calls = 0;
+  const routerStack = (createDocsRouter(async () => {
+    b2Calls += 1;
+    return { Body: undefined } as never;
+  }) as unknown as { stack: Array<{
+    route?: { path?: string; stack: Array<{ handle: (req: unknown, res: unknown) => Promise<void> }> };
+  }> }).stack;
+  const documentRoute = routerStack.find((layer) => layer.route?.path === '/docs/:filename')?.route;
+  let statusCode = 0;
+  const response = {
+    status(code: number) {
+      statusCode = code;
+      return this;
+    },
+    json() {
+      return this;
+    },
+  };
+
+  await documentRoute?.stack[1]?.handle(
+    { params: { filename: '../private.pdf' } },
+    response,
+  );
+  assert.equal(statusCode, 400);
+  assert.equal(b2Calls, 0);
+});
+
+test('authenticated document handler reaches its B2 retrieval dependency', async () => {
+  let requestedKey = '';
+  const routerStack = (createDocsRouter(async (key) => {
+    requestedKey = key;
+    return { Body: undefined } as never;
+  }) as unknown as { stack: Array<{
+    route?: { path?: string; stack: Array<{ handle: (req: unknown, res: unknown) => Promise<void> }> };
+  }> }).stack;
+  const documentRoute = routerStack.find((layer) => layer.route?.path === '/docs/:filename')?.route;
+  const response = {
+    status() {
+      return this;
+    },
+    json() {
+      return this;
+    },
+  };
+
+  await documentRoute?.stack[1]?.handle(
+    { params: { filename: 'manual.pdf' } },
+    response,
+  );
+  assert.equal(requestedKey, 'docs/manual.pdf');
+});
+
+test('the API router has no mounted upload routes', () => {
+  const serializedStack = JSON.stringify((apiRouter as unknown as { stack: unknown }).stack);
+  assert.doesNotMatch(serializedStack, /uploads/i);
 });
