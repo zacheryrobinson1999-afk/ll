@@ -16,7 +16,7 @@ import {
   generateDailyCodes,
   makeLegacyDate,
   type DailyCodeResult,
-} from '@/lib/dailyCodes';
+} from '@/lib/daycodesApi';
 
 type ToolType =
   | 'liccon'
@@ -395,11 +395,12 @@ function LicconCodeTool() {
   const [date, setDate] = useState(() => makeLegacyDate());
   const [codes, setCodes] = useState<DailyCodeResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const dateValid = /^\d{6}$/.test(date);
   const canGenerate = serial.trim().length > 0 && dateValid;
 
-  const handleGenerate = () => {
+  const handleGenerate = async () => {
     if (!canGenerate) {
       setCodes(null);
       setError(
@@ -411,7 +412,15 @@ function LicconCodeTool() {
     }
 
     setError(null);
-    setCodes(generateDailyCodes(serial, date));
+    setIsGenerating(true);
+    try {
+      setCodes(await generateDailyCodes(serial, date));
+    } catch (generationError) {
+      setCodes(null);
+      setError(generationError instanceof Error ? generationError.message : 'Unable to generate daycodes.');
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   return (
@@ -476,11 +485,11 @@ function LicconCodeTool() {
       <button
         type="button"
         onClick={handleGenerate}
-        disabled={!canGenerate}
+        disabled={!canGenerate || isGenerating}
         className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition hover:opacity-90 disabled:opacity-50"
       >
         <KeyRound className="h-4 w-4" />
-        Generate codes
+        {isGenerating ? 'Generating…' : 'Generate codes'}
       </button>
 
       {error && (

@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getManufacturers, getByManufacturer, getByCategory, CATEGORY_ICONS, CATEGORY_COLORS } from '@/data/craneFleet';
 import { getByFleetId, docUrl } from '@/data/techDocs';
 import { fetchUploadedDocs, uploadDoc, formatBytes } from '@/lib/uploadsApi';
-import { generateDailyCodes, makeLegacyDate } from '@/lib/dailyCodes';
+import { generateDailyCodes, makeLegacyDate } from '@/lib/daycodesApi';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -343,15 +343,19 @@ function LicconInlineWidget() {
   const [serial, setSerial] = useState('');
   const [date, setDate] = useState(makeLegacyDate());
   const [result, setResult] = useState<{first: string, second: string} | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
 
-  const handleGenerate = (e: React.FormEvent) => {
+  const handleGenerate = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsGenerating(true);
     try {
-      const res = generateDailyCodes(serial, date);
+      const res = await generateDailyCodes(serial, date);
       setResult(res);
     } catch (err: any) {
       toast.error(err.message || 'Invalid input');
       setResult(null);
+    } finally {
+      setIsGenerating(false);
     }
   };
 
@@ -377,7 +381,9 @@ function LicconInlineWidget() {
           />
         </div>
       </div>
-      <Button type="submit" size="sm" className="w-full font-bold">Generate</Button>
+      <Button type="submit" size="sm" className="w-full font-bold" disabled={isGenerating}>
+        {isGenerating ? 'Generating…' : 'Generate'}
+      </Button>
       
       {result && (
         <div className="pt-2 animate-in fade-in zoom-in duration-300">
