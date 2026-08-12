@@ -29,16 +29,18 @@ export function Layout({ children }: { children: ReactNode }) {
       {/* Top header */}
       <header className="sticky top-0 z-50 flex h-16 items-center border-b border-border bg-card/95 px-4 backdrop-blur">
         <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-sm font-bold text-primary-foreground">
-            LTC
+          {/* CraneHub logo block */}
+          <div className="flex h-10 w-10 items-center justify-center rounded-md bg-primary text-xs font-black tracking-tight text-primary-foreground shadow-md">
+            CH
           </div>
 
           <div>
-            <h1 className="text-base font-bold leading-tight">
-              Engineering Tools
+            <h1 className="brand-heading text-2xl font-bold uppercase leading-none tracking-wide">
+              CraneHub
             </h1>
-            <p className="hidden text-[10px] uppercase tracking-widest text-muted-foreground sm:block">
-              Technician Toolbox
+
+            <p className="hidden text-[10px] font-medium uppercase tracking-[0.2em] text-muted-foreground sm:block">
+              Technician Hub
             </p>
           </div>
         </div>
@@ -46,7 +48,7 @@ export function Layout({ children }: { children: ReactNode }) {
         {/* Desktop search button */}
         <Link
           href="/"
-          className="ml-auto hidden items-center gap-2 rounded-lg border border-border bg-secondary/50 px-4 py-2 text-sm text-muted-foreground hover:bg-secondary md:flex"
+          className="ml-auto hidden items-center gap-2 rounded-md border border-border bg-secondary/50 px-4 py-2 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground md:flex"
         >
           <Search className="h-4 w-4" />
           Search everything
@@ -94,7 +96,7 @@ export function Layout({ children }: { children: ReactNode }) {
 
           <Link
             href="/"
-            className="flex flex-col items-center justify-center gap-1 px-1 py-3 text-muted-foreground"
+            className="flex flex-col items-center justify-center gap-1 px-1 py-3 text-muted-foreground transition-colors hover:text-foreground"
           >
             <MoreHorizontal className="h-5 w-5" />
             <span className="text-[10px] font-medium uppercase tracking-wider">
@@ -107,7 +109,7 @@ export function Layout({ children }: { children: ReactNode }) {
       {/* Desktop side navigation */}
       <nav className="fixed bottom-0 left-0 top-16 hidden w-64 flex-col gap-2 border-r border-border bg-card/50 p-4 md:flex">
         <div className="mb-2 px-3 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
-          Navigation
+          CraneHub
         </div>
 
         {navItems.map((item) => {
@@ -118,9 +120,9 @@ export function Layout({ children }: { children: ReactNode }) {
             <Link
               key={item.href}
               href={item.href}
-              className={`flex items-center gap-3 rounded-xl px-4 py-3 transition-colors ${
+              className={`flex items-center gap-3 rounded-md px-4 py-3 transition-colors ${
                 active
-                  ? 'bg-primary text-primary-foreground font-semibold'
+                  ? 'bg-primary text-primary-foreground font-semibold shadow-sm'
                   : 'text-muted-foreground hover:bg-secondary hover:text-foreground'
               }`}
             >
@@ -138,7 +140,7 @@ export function Layout({ children }: { children: ReactNode }) {
 
         <Link
           href="/"
-          className="flex items-center gap-3 rounded-xl px-4 py-3 text-muted-foreground hover:bg-secondary hover:text-foreground"
+          className="flex items-center gap-3 rounded-md px-4 py-3 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
         >
           <Search className="h-5 w-5" />
           <span>Search Everything</span>
@@ -182,6 +184,7 @@ function MobileNavItem({
       }`}
     >
       <Icon className="h-5 w-5" />
+
       <span className="text-[10px] font-medium uppercase tracking-wider">
         {label}
       </span>
