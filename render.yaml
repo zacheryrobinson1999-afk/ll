@@ -45,3 +45,7 @@ services:
         sync: false
       - key: SESSION_SECRET
         sync: false   # any long random string, e.g. from `openssl rand -hex 32`
+      - key: ACCESS_CODE_PEPPER
+        sync: false   # separate long random secret for access-code fingerprints
+      - key: DATABASE_URL
+        sync: false   # Render PostgreSQL connection string

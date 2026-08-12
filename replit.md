@@ -36,6 +36,22 @@ The production API requires:
 - `B2_BUCKET_NAME`
 - `B2_ENDPOINT`
 
+## Database migrations
+
+Before deploying any auth-enabled API build, run the database migration explicitly:
+
+`pnpm --filter @workspace/db run migrate`
+
+Migrations are intentionally not run when the API starts.
+
+## Authentication limits
+
+- Five failed attempts for the same normalized technician name from the same IP
+  lock that name/IP pair for 15 minutes.
+- Any IP is throttled after 20 login attempts in a rolling 15-minute window.
+- Login failures always return the same HTTP 401 response to avoid exposing
+  account state.
+
 Never commit secret values to the repository.
 
 ## Stack
