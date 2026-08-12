@@ -9,6 +9,7 @@
     "start": "node --enable-source-maps ./dist/index.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "tsx --test src/**/*.test.ts"
+    ,"bootstrap:admin": "tsx src/scripts/bootstrapAdmin.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1106.0",

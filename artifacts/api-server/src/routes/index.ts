@@ -3,6 +3,7 @@ import healthRouter from "./health";
 import docsRouter from "./docs";
 import authRouter from './auth';
 import daycodesRouter from './daycodes';
+import adminRouter from './admin';
 
 const router: IRouter = Router();
 
@@ -10,5 +11,6 @@ router.use(healthRouter);
 router.use(docsRouter);
 router.use(authRouter);
 router.use(daycodesRouter);
+router.use(adminRouter);
 
 export default router;

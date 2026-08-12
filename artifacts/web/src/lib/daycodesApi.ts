@@ -32,6 +32,7 @@ export async function generateDailyCodes(
 
   if (!response.ok) {
     if (response.status === 401) {
+      window.dispatchEvent(new Event('cranehub:session-expired'));
       throw new Error('Your session has expired. Please sign in again.');
     }
     throw new Error(body && 'error' in body && body.error ? body.error : 'Unable to generate daycodes.');

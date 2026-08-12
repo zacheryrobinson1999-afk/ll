@@ -91,3 +91,10 @@ export async function revokeSession(token: string | undefined): Promise<void> {
       ),
     );
 }
+
+export async function revokeTechnicianSessions(technicianId: string): Promise<void> {
+  await db
+    .update(sessions)
+    .set({ revokedAt: new Date() })
+    .where(and(eq(sessions.technicianId, technicianId), isNull(sessions.revokedAt)));
+}

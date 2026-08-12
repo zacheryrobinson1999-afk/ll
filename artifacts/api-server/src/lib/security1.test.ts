@@ -29,6 +29,10 @@ const { generateDailyCodes, validateDailyCodeInput } = await import('./dailyCode
 const { generateAuditedDaycodes } = await import('./daycodeService');
 const { createDocsRouter } = await import('../routes/docs');
 const { default: apiRouter } = await import('../routes/index');
+const { readTechnicianInput, readTechnicianPatch } = await import('./adminService');
+const { assertAdministratorUpdateAllowed, shouldRevokeTechnicianSessions, toSafeTechnician } = await import('./adminService');
+const { readBootstrapAdminInput } = await import('./bootstrapAdmin');
+const { default: adminRouter } = await import('../routes/admin');
 
 test('valid access code verifies against a salted scrypt hash', async () => {
   const stored = await hashAccessCode('1234');
@@ -279,4 +283,45 @@ test('authenticated document handler reaches its B2 retrieval dependency', async
 test('the API router has no mounted upload routes', () => {
   const serializedStack = JSON.stringify((apiRouter as unknown as { stack: unknown }).stack);
   assert.doesNotMatch(serializedStack, /uploads/i);
+});
+
+test('admin account input normalizes names and only accepts four-digit codes', () => {
+  assert.deepEqual(readTechnicianInput({ name: '  Ada   Crane ', accessCode: '1234', role: 'admin' }), {
+    name: 'Ada Crane', normalizedName: 'ada crane', accessCode: '1234', role: 'admin',
+  });
+  assert.throws(() => readTechnicianInput({ name: 'Ada', accessCode: '12345' }));
+  assert.throws(() => readTechnicianPatch({ active: 'yes' }));
+});
+
+test('admin responses omit access-code material and admin changes revoke sessions when required', () => {
+  const safe = toSafeTechnician({ id: 'id', name: 'Ada', normalizedName: 'ada', role: 'technician', active: true, accessCodeHash: 'hash', accessCodeSalt: 'salt', accessCodeFingerprint: 'fingerprint', createdAt: new Date(), updatedAt: new Date() } as never);
+  assert.doesNotMatch(JSON.stringify(safe), /hash|salt|fingerprint/);
+  assert.equal(shouldRevokeTechnicianSessions({ active: false }), true);
+  assert.equal(shouldRevokeTechnicianSessions({ codeReset: true }), true);
+  assert.equal(shouldRevokeTechnicianSessions({ active: true }), false);
+});
+
+test('administrator lockout policy protects self and the last active administrator', () => {
+  const self = { id: 'admin-1', role: 'admin' as const, active: true };
+  assert.throws(() => assertAdministratorUpdateAllowed({ actorId: 'admin-1', target: self, patch: { active: false }, activeAdminCount: 2 }), /cannot disable your own/);
+  assert.throws(() => assertAdministratorUpdateAllowed({ actorId: 'admin-2', target: self, patch: { active: false }, activeAdminCount: 1 }), /At least one active administrator/);
+  assert.throws(() => assertAdministratorUpdateAllowed({ actorId: 'admin-2', target: self, patch: { role: 'technician' }, activeAdminCount: 1 }), /At least one active administrator/);
+});
+
+test('administrator lockout policy permits safe admin and technician status changes', () => {
+  assert.doesNotThrow(() => assertAdministratorUpdateAllowed({ actorId: 'admin-2', target: { id: 'admin-1', role: 'admin', active: true }, patch: { active: false }, activeAdminCount: 2 }));
+  assert.doesNotThrow(() => assertAdministratorUpdateAllowed({ actorId: 'admin-1', target: { id: 'tech-1', role: 'technician', active: true }, patch: { active: false }, activeAdminCount: 1 }));
+});
+
+test('bootstrap admin requires explicit values and normalizes its name', () => {
+  assert.throws(() => readBootstrapAdminInput({}));
+  assert.deepEqual(readBootstrapAdminInput({ BOOTSTRAP_ADMIN_NAME: '  First  Admin ', BOOTSTRAP_ADMIN_CODE: '5678' }), {
+    name: 'First Admin', normalizedName: 'first admin', accessCode: '5678',
+  });
+});
+
+test('every admin endpoint has authentication and administrator middleware first', () => {
+  const stack = (adminRouter as unknown as { stack: Array<{ handle: unknown }> }).stack;
+  assert.equal(stack[0]?.handle, requireAuth);
+  assert.equal(stack[1]?.handle, requireAdmin);
 });

@@ -9,10 +9,14 @@ import {
   Search,
   MoreHorizontal,
   User,
+  Shield,
 } from 'lucide-react';
+import { useAuth } from '@/lib/auth-context';
 
 export function Layout({ children }: { children: ReactNode }) {
   const [location] = useLocation();
+  const [, setLocation] = useLocation();
+  const { user, logout } = useAuth();
 
   const navItems = [
     { href: '/', label: 'Home', icon: Home },
@@ -108,9 +112,12 @@ export function Layout({ children }: { children: ReactNode }) {
               type="button"
               className="hidden h-10 w-10 items-center justify-center rounded-md border border-border bg-card hover:border-primary/50 hover:bg-secondary sm:flex"
               aria-label="User"
+              onClick={() => void logout().then(() => setLocation('/login'))}
+              title="Sign out"
             >
               <User className="h-5 w-5" />
             </button>
+            {user?.role === 'admin' && <Link href="/admin" className="flex h-10 w-10 items-center justify-center rounded-md border border-border bg-card hover:border-primary/50" aria-label="Administration"><Shield className="h-5 w-5" /></Link>}
           </div>
         </div>
       </header>
