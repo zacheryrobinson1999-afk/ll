@@ -7,7 +7,6 @@ import {
   BookOpen,
   Calculator,
   ArrowRight,
-  Clock3,
   FileText,
   X,
   ChevronRight,
@@ -48,6 +47,33 @@ const quickLinks = [
     description: 'Calculators and engineering tools',
     icon: Calculator,
     href: '/tools',
+  },
+];
+
+const technicianTools = [
+  {
+    title: 'Daily Code',
+    description: 'Generate access codes for supported crane systems',
+    icon: Calculator,
+    href: '/tools',
+  },
+  {
+    title: 'Crane Lookup',
+    description: 'Find fleet specifications and unit information',
+    icon: Truck,
+    href: '/fleet',
+  },
+  {
+    title: 'Document Search',
+    description: 'Search technical manuals and reference material',
+    icon: Search,
+    href: '/docs',
+  },
+  {
+    title: 'Maintenance',
+    description: 'Open service and inspection procedures',
+    icon: Wrench,
+    href: '/maintenance',
   },
 ];
 
@@ -183,28 +209,67 @@ export default function HomePage() {
               </p>
             </div>
 
-            {/* Crane visual */}
+            {/* Mobile crane visual */}
             <div className="relative hidden min-h-[260px] lg:block">
               <div className="absolute inset-0 bg-gradient-to-l from-primary/10 via-transparent to-transparent" />
 
-              <div className="absolute bottom-4 right-0 text-right">
-                <div className="brand-heading text-8xl font-bold uppercase leading-none text-primary/10">
-                  CRANE
+              <svg
+                viewBox="0 0 620 330"
+                role="img"
+                aria-label="Stylised yellow mobile crane"
+                className="absolute inset-0 h-full w-full"
+              >
+                <defs>
+                  <linearGradient id="crane-yellow" x1="0" x2="1">
+                    <stop stopColor="hsl(var(--primary))" />
+                    <stop offset="1" stopColor="#d79a00" />
+                  </linearGradient>
+                  <linearGradient id="crane-steel" x1="0" x2="1">
+                    <stop stopColor="#263341" />
+                    <stop offset="1" stopColor="#111923" />
+                  </linearGradient>
+                </defs>
+
+                <g opacity="0.18" stroke="hsl(var(--primary))" strokeWidth="1">
+                  <path d="M54 60H570M54 120H570M54 180H570M54 240H570" />
+                  <path d="M120 28V285M240 28V285M360 28V285M480 28V285" />
+                </g>
+
+                <path d="M52 277H575" stroke="hsl(var(--border))" strokeWidth="4" />
+                <path d="M72 269H555" stroke="hsl(var(--primary))" strokeWidth="2" strokeDasharray="8 9" opacity="0.7" />
+
+                <g stroke="hsl(var(--background))" strokeWidth="5" strokeLinejoin="round">
+                  <path d="M173 226H366L401 257H142L173 226Z" fill="url(#crane-steel)" />
+                  <path d="M176 201H328L365 226H158L176 201Z" fill="url(#crane-yellow)" />
+                  <path d="M208 166H303L331 201H178L208 166Z" fill="url(#crane-steel)" />
+                  <path d="M255 142H315V167H248L255 142Z" fill="url(#crane-yellow)" />
+                  <path d="M292 143L472 50L485 69L324 176Z" fill="url(#crane-yellow)" />
+                  <path d="M310 151L475 66" stroke="#fff0b5" strokeWidth="3" opacity="0.6" />
+                  <path d="M470 49L548 30L554 47L484 70Z" fill="url(#crane-steel)" />
+                  <path d="M542 42V150" stroke="hsl(var(--primary))" strokeWidth="3" />
+                  <path d="M542 148L530 169H554L542 148Z" fill="url(#crane-yellow)" />
+                  <path d="M142 257H401L421 273H123L142 257Z" fill="url(#crane-yellow)" />
+                </g>
+
+                <g fill="hsl(var(--background))" stroke="hsl(var(--primary))" strokeWidth="6">
+                  <circle cx="184" cy="276" r="24" />
+                  <circle cx="337" cy="276" r="24" />
+                </g>
+                <g fill="hsl(var(--muted-foreground))">
+                  <circle cx="184" cy="276" r="8" />
+                  <circle cx="337" cy="276" r="8" />
+                </g>
+
+                <g fill="hsl(var(--primary))">
+                  <path d="M112 250H139V265H104Z" />
+                  <path d="M397 250H425L437 265H397Z" />
+                </g>
+              </svg>
+
+              <div className="absolute bottom-2 right-0 text-right">
+                <div className="brand-heading text-6xl font-bold uppercase leading-none text-primary/10">
+                  MOBILE CRANE
                 </div>
-
-                <div className="mt-2 text-sm font-bold uppercase tracking-[0.35em] text-muted-foreground/50">
-                  ENGINEERING
-                </div>
-              </div>
-
-              <div className="absolute right-0 top-10 h-48 w-72 rotate-[-8deg]">
-                <div className="absolute right-0 top-1/2 h-5 w-64 origin-right -translate-y-1/2 rotate-[-14deg] bg-primary shadow-[0_0_30px_rgba(255,190,0,0.15)]" />
-
-                <div className="absolute right-0 top-[38%] h-24 w-20 rounded-sm border-2 border-primary/70 bg-card" />
-
-                <div className="absolute bottom-0 right-4 h-16 w-36 border-b-4 border-primary/50" />
-
-                <div className="absolute right-8 bottom-[-10px] h-3 w-3 rounded-full bg-primary" />
               </div>
             </div>
           </div>
@@ -348,41 +413,87 @@ export default function HomePage() {
           />
 
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {TECH_DOCS.slice(0, 4).map((doc) => (
-              <Link
-                key={doc.id}
-                href="/docs"
-                className="group overflow-hidden border border-border bg-card transition-all hover:-translate-y-0.5 hover:border-primary/50"
-              >
-                {/* Resource image/visual */}
-                <div className="relative flex h-32 items-center justify-center overflow-hidden bg-gradient-to-br from-secondary to-background">
-                  <BookOpen className="h-14 w-14 text-primary/30 transition-transform group-hover:scale-110" />
+            {TECH_DOCS.slice(0, 4).map((doc) => {
+              const reference = doc.pages
+                ? `${doc.pages} pages`
+                : doc.docNumber || 'Technical document';
 
-                  <div className="absolute left-3 top-3 rounded-sm bg-primary px-2 py-1 text-[9px] font-bold uppercase tracking-wider text-primary-foreground">
-                    {doc.type}
+              return (
+                <Link
+                  key={doc.id}
+                  href="/docs"
+                  className="group flex min-h-[270px] flex-col overflow-hidden border border-border bg-card transition-all hover:-translate-y-0.5 hover:border-primary/50"
+                >
+                  <div className="relative flex h-24 items-center justify-center overflow-hidden border-b border-border bg-gradient-to-br from-secondary to-background">
+                    <BookOpen className="h-12 w-12 text-primary/35 transition-transform group-hover:scale-110" />
+
+                    <div className="absolute left-3 top-3 flex flex-wrap gap-2">
+                      <span className="rounded-sm bg-primary px-2 py-1 text-[9px] font-bold uppercase tracking-wider text-primary-foreground">
+                        {doc.type}
+                      </span>
+                      <span className="rounded-sm border border-border bg-background/80 px-2 py-1 text-[9px] font-bold uppercase tracking-wider text-muted-foreground">
+                        {doc.system}
+                      </span>
+                    </div>
                   </div>
-                </div>
 
-                <div className="p-4">
-                  <h3 className="truncate font-bold">
-                    {doc.title}
+                  <div className="flex flex-1 flex-col p-4">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-primary">
+                      {reference}
+                    </p>
+
+                    <h3 className="mt-2 line-clamp-2 text-base font-bold leading-5">
+                      {doc.title}
+                    </h3>
+
+                    <p className="mt-2 line-clamp-2 text-sm leading-5 text-muted-foreground">
+                      {doc.subtitle}
+                    </p>
+
+                    <div className="mt-auto flex items-center justify-between border-t border-border pt-3 text-xs font-bold uppercase tracking-wider text-primary">
+                      <span>Open Resource</span>
+                      <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                    </div>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        </section>
+
+        {/* TECHNICIAN TOOLS */}
+        <section className="py-8">
+          <SectionHeading title="Technician Tools" />
+
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {technicianTools.map((item) => {
+              const Icon = item.icon;
+
+              return (
+                <Link
+                  key={item.title}
+                  href={item.href}
+                  className="group border border-border bg-card p-5 transition-all hover:-translate-y-0.5 hover:border-primary/50 hover:bg-secondary"
+                >
+                  <div className="mb-5 flex h-11 w-11 items-center justify-center rounded-md bg-primary/10 text-primary">
+                    <Icon className="h-5 w-5" />
+                  </div>
+
+                  <h3 className="font-bold uppercase tracking-wide">
+                    {item.title}
                   </h3>
 
-                  <p className="mt-1 truncate text-sm text-muted-foreground">
-                    {doc.subtitle}
+                  <p className="mt-2 min-h-[40px] text-sm leading-5 text-muted-foreground">
+                    {item.description}
                   </p>
 
-                  <div className="mt-4 flex items-center justify-between border-t border-border pt-3">
-                    <span className="flex items-center gap-2 text-xs font-semibold uppercase text-muted-foreground">
-                      <FileText className="h-4 w-4" />
-                      Document
-                    </span>
-
-                    <ArrowRight className="h-4 w-4 text-primary transition-transform group-hover:translate-x-1" />
+                  <div className="mt-5 flex items-center gap-1 text-xs font-bold uppercase tracking-wider text-primary">
+                    Open Tool
+                    <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
                   </div>
-                </div>
-              </Link>
-            ))}
+                </Link>
+              );
+            })}
           </div>
         </section>
 
