@@ -11,6 +11,8 @@ export type DocSystem =
   | 'ECOS / CCS'
   | 'Terex / Franna'
   | 'ZF / WABCO'
+  | 'Mercedes-Benz'
+  | 'Dana / Spicer'
   | 'KATO';
 
 export type DocType =
@@ -56,6 +58,8 @@ export const DOC_SYSTEMS: DocSystem[] = [
   'ECOS / CCS',
   'Terex / Franna',
   'ZF / WABCO',
+  'Mercedes-Benz',
+  'Dana / Spicer',
   'KATO',
 ];
 
@@ -65,6 +69,8 @@ export const SYSTEM_COLORS: Record<DocSystem, string> = {
   'ECOS / CCS': '#0055A5',
   'Terex / Franna': '#E8271A',
   'ZF / WABCO': '#4A4A4A',
+  'Mercedes-Benz': '#222222',
+  'Dana / Spicer': '#005DAA',
   KATO: '#E07B00',
 };
 
@@ -74,6 +80,8 @@ export const SYSTEM_ICONS: Record<DocSystem, string> = {
   'ECOS / CCS': 'EC',
   'Terex / Franna': 'TF',
   'ZF / WABCO': 'ZW',
+  'Mercedes-Benz': 'MB',
+  'Dana / Spicer': 'DS',
   KATO: 'KT',
 };
 
@@ -796,6 +804,50 @@ export const TECH_DOCS: TechDoc[] = [
   // ZF / WABCO
   // ===========================================================================
 
+    {
+    id: 'zf-vg750-transfer-case',
+    system: 'ZF / WABCO',
+    type: 'Reference',
+    title: 'ZF VG 750 Transfer Case Repair Manual',
+    subtitle: 'VG 750 · Repair Manual · Edition 1999',
+    docNumber: '5871 871 002',
+    pages: 72,
+    year: 1999,
+    appliesTo: [],
+    craneTypes: ['LTM', 'GMK'],
+    summary:
+      'ZF repair manual for the VG 750 transfer case. Covers technical data, '
+      + 'cross-sections, exploded views, tightening torques, adjustment data '
+      + 'and complete repair procedures.',
+    fileName: 'ZF VG750 Transfer Case Repair Manual.pdf',
+    cleanFile: 'ZF VG750 Transfer Case Repair Manual.pdf',
+    sections: [
+      {
+        ref: 'Technical Data',
+        title: 'Technical Data',
+        summary:
+          'Technical specifications and reference data for the ZF VG 750 transfer case.',
+      },
+      {
+        ref: 'Cross-Sections',
+        title: 'Cross-Sections & Exploded Views',
+        summary:
+          'Component identification using sectional and exploded-view drawings.',
+      },
+      {
+        ref: 'Torques',
+        title: 'Tightening Torques & Adjustment Data',
+        summary:
+          'Specified tightening torques and adjustment values used during repair.',
+      },
+      {
+        ref: 'Repair',
+        title: 'Repair Procedures',
+        summary:
+          'Disassembly, inspection, repair, adjustment and reassembly procedures.',
+      },
+    ],
+  },
   {
     id: 'zf-as-tronic-manual',
     system: 'ZF / WABCO',
@@ -909,6 +961,120 @@ export const TECH_DOCS: TechDoc[] = [
         title: 'Full Service Manual',
         summary:
           'Complete service manual for the KATO ACS MS-10E system.',
+      },
+    ],
+  },
+    // ===========================================================================
+  // MERCEDES-BENZ
+  // ===========================================================================
+
+  {
+    id: 'mercedes-om904-om906-engine',
+    system: 'Mercedes-Benz',
+    type: 'Reference',
+    title: 'Mercedes-Benz OM 904 LA / OM 906 LA Engine Service Manual',
+    subtitle: 'OM 904 LA · OM 906 LA · Engine Service & Repair',
+    pages: 398,
+    appliesTo: [],
+    craneTypes: ['MAC', 'LTM', 'GMK'],
+    summary:
+      'Comprehensive Mercedes-Benz service and repair manual for the OM 904 LA '
+      + 'and OM 906 LA diesel engines. Covers engine technical data, cylinder '
+      + 'head, pistons, crankshaft, valve gear, fuel injection, turbocharger, '
+      + 'lubrication and cooling systems.',
+    fileName: 'Mercedes OM904 OM906 Engine Service Manual.pdf',
+    cleanFile: 'Mercedes OM904 OM906 Engine Service Manual.pdf',
+    sections: [
+      {
+        ref: 'Engine',
+        title: 'Engine Technical Data',
+        summary:
+          'Technical specifications and service information for OM 904 LA and OM 906 LA engines.',
+      },
+      {
+        ref: 'Cylinder Head',
+        title: 'Cylinder Head & Valve Gear',
+        summary:
+          'Cylinder head, valves, valve train and associated repair procedures.',
+      },
+      {
+        ref: 'Crankshaft',
+        title: 'Crankshaft, Pistons & Connecting Rods',
+        summary:
+          'Inspection and repair procedures for the crankshaft, pistons and connecting rods.',
+      },
+      {
+        ref: 'Fuel',
+        title: 'Fuel Injection System',
+        summary:
+          'Fuel injection system components, servicing and repair information.',
+      },
+      {
+        ref: 'Turbocharger',
+        title: 'Turbocharger',
+        summary:
+          'Turbocharger inspection, removal, installation and service information.',
+      },
+      {
+        ref: 'Lubrication',
+        title: 'Lubrication System',
+        summary:
+          'Engine lubrication system components and service procedures.',
+      },
+      {
+        ref: 'Cooling',
+        title: 'Cooling System',
+        summary:
+          'Cooling-system components, inspection and repair procedures.',
+      },
+    ],
+  },
+
+  // ===========================================================================
+  // DANA / SPICER
+  // ===========================================================================
+
+  {
+    id: 'spicer-life-series-driveshaft',
+    system: 'Dana / Spicer',
+    type: 'Reference',
+    title: 'Spicer Life Series Driveshaft Service Manual',
+    subtitle: 'Life Series 55 · 70 · 90 · 100 · 140 · 170 · 250',
+    docNumber: 'DSSM-0100',
+    pages: 36,
+    year: 2016,
+    appliesTo: [],
+    craneTypes: ['LTM', 'GMK', 'MAC', 'AT'],
+    summary:
+      'Spicer Life Series driveshaft service manual covering inspection, '
+      + 'lubrication, removal and installation procedures for Life Series '
+      + '55, 70, 90, 100, 140, 170 and 250 driveshaft assemblies.',
+    fileName: 'Spicer Life Series Driveshaft Service Manual.pdf',
+    cleanFile: 'Spicer Life Series Driveshaft Service Manual.pdf',
+    sections: [
+      {
+        ref: 'Inspection',
+        title: 'Driveshaft Inspection',
+        summary:
+          'Inspection procedures for driveshaft assemblies and related components.',
+      },
+      {
+        ref: 'Lubrication',
+        title: 'Lubrication',
+        summary:
+          'Lubrication requirements and service procedures for Spicer Life Series driveshafts.',
+      },
+      {
+        ref: 'Removal',
+        title: 'Driveshaft Removal',
+        summary:
+          'Procedures and precautions for removing driveshaft assemblies.',
+      },
+      {
+        ref: 'Installation',
+        title: 'Driveshaft Installation',
+        summary:
+          'Installation procedures and service requirements for driveshaft assemblies.',
       },
     ],
   },
