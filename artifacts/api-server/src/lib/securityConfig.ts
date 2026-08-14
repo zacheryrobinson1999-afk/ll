@@ -2,7 +2,6 @@ const MIN_SECRET_LENGTH = 32;
 
 export type SecurityConfig = {
   sessionSecret: string;
-  accessCodePepper: string;
   sessionDurationMs: number;
 };
 
@@ -12,7 +11,7 @@ function isObviouslyWeakSecret(value: string): boolean {
 
 function requireSecret(
   env: NodeJS.ProcessEnv,
-  name: 'SESSION_SECRET' | 'ACCESS_CODE_PEPPER',
+  name: 'SESSION_SECRET',
 ): string {
   const value = env[name];
 
@@ -35,14 +34,8 @@ export function validateSecurityConfig(env: NodeJS.ProcessEnv = process.env): Se
   }
 
   const sessionSecret = requireSecret(env, 'SESSION_SECRET');
-  const accessCodePepper = requireSecret(env, 'ACCESS_CODE_PEPPER');
-  if (sessionSecret === accessCodePepper) {
-    throw new Error('SESSION_SECRET and ACCESS_CODE_PEPPER must be different secrets');
-  }
-
   return {
     sessionSecret,
-    accessCodePepper,
     sessionDurationMs: 8 * 60 * 60 * 1000,
   };
 }

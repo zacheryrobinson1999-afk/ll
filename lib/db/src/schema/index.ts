@@ -37,7 +37,9 @@ export const technicians = pgTable(
     active: boolean('active').notNull().default(true),
     accessCodeHash: text('access_code_hash').notNull(),
     accessCodeSalt: text('access_code_salt').notNull(),
-    accessCodeFingerprint: text('access_code_fingerprint').notNull(),
+    // Legacy column retained for a safe rollout. Passwords never receive a
+    // reversible or deterministic fingerprint; new rows store NULL here.
+    accessCodeFingerprint: text('access_code_fingerprint'),
     createdAt: timestamp('created_at', { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -48,9 +50,6 @@ export const technicians = pgTable(
   },
   (table) => [
     uniqueIndex('technicians_normalized_name_unique').on(table.normalizedName),
-    uniqueIndex('technicians_access_code_fingerprint_unique').on(
-      table.accessCodeFingerprint,
-    ),
   ],
 );
 

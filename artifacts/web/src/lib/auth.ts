@@ -9,9 +9,9 @@ export async function getSession(): Promise<SessionResponse | null> {
   if (!response.ok) throw new Error('Unable to check your session.');
   return response.json() as Promise<SessionResponse>;
 }
-export async function login(name: string, accessCode: string): Promise<SessionResponse> {
-  const response = await fetch('/api/auth/login', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, accessCode }) });
-  if (!response.ok) { await body(response); throw new Error('Invalid name or access code'); }
+export async function login(username: string, password: string): Promise<SessionResponse> {
+  const response = await fetch('/api/auth/login', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username, password }) });
+  if (!response.ok) { await body(response); throw new Error('Invalid username or password'); }
   return response.json() as Promise<SessionResponse>;
 }
 export async function logout(): Promise<void> {

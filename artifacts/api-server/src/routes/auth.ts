@@ -4,10 +4,10 @@ import { db, loginAttempts, technicians } from '@workspace/db';
 
 import {
   hashClientIp,
-  normalizeTechnicianName,
-  performDummyAccessCodeVerification,
-  verifyAccessCode,
-} from '../lib/accessCodes';
+  normalizeUsername,
+  performDummyPasswordVerification,
+  verifyPassword,
+} from '../lib/passwords';
 import {
   SESSION_COOKIE_NAME,
   createSession,
@@ -32,19 +32,19 @@ function requestIp(req: Request): string {
   return req.ip || 'unknown';
 }
 
-function readLoginBody(body: unknown): { name: string; accessCode: string } | null {
+export function readLoginBody(body: unknown): { username: string; password: string } | null {
   if (
     !body ||
     typeof body !== 'object' ||
-    typeof (body as Record<string, unknown>).name !== 'string' ||
-    typeof (body as Record<string, unknown>).accessCode !== 'string'
+    typeof (body as Record<string, unknown>).username !== 'string' ||
+    typeof (body as Record<string, unknown>).password !== 'string'
   ) {
     return null;
   }
 
-  const { name, accessCode } = body as { name: string; accessCode: string };
-  if (name.length > 160 || accessCode.length > 32) return null;
-  return { name, accessCode };
+  const { username, password } = body as { username: string; password: string };
+  if (!username || username.length > 160 || !password || password.length > 128) return null;
+  return { username, password };
 }
 
 async function recordAttempt(
@@ -144,11 +144,11 @@ function clearSessionCookie(res: Response): void {
 router.post('/auth/login', async (req, res, next) => {
   try {
     const input = readLoginBody(req.body);
-    const normalizedName = input ? normalizeTechnicianName(input.name) : '';
+    const normalizedName = input ? normalizeUsername(input.username) : '';
     const ipHash = hashClientIp(requestIp(req));
 
     if (!input || !normalizedName) {
-      await performDummyAccessCodeVerification();
+      await performDummyPasswordVerification();
       await recordAttempt(normalizedName || 'invalid', ipHash, 'failed');
       res.status(INVALID_LOGIN_STATUS).json(INVALID_LOGIN_RESPONSE);
       return;
@@ -165,14 +165,14 @@ router.post('/auth/login', async (req, res, next) => {
       ipAttemptsInWindow(ipHash),
     ]);
     if (locked || isIpThrottled(ipThrottled)) {
-      await performDummyAccessCodeVerification();
+      await performDummyPasswordVerification();
       await recordAttempt(normalizedName, ipHash, 'locked', technician?.id);
       res.status(INVALID_LOGIN_STATUS).json(INVALID_LOGIN_RESPONSE);
       return;
     }
 
     if (!technician) {
-      await performDummyAccessCodeVerification();
+      await performDummyPasswordVerification();
       const failures = await failedAttemptsSinceLastSuccess(normalizedName, ipHash);
       await recordAttempt(
         normalizedName,
@@ -184,19 +184,19 @@ router.post('/auth/login', async (req, res, next) => {
     }
 
     if (!technician.active) {
-      await performDummyAccessCodeVerification();
+      await performDummyPasswordVerification();
       await recordAttempt(normalizedName, ipHash, 'disabled', technician.id);
       res.status(INVALID_LOGIN_STATUS).json(INVALID_LOGIN_RESPONSE);
       return;
     }
 
-    const validCode = await verifyAccessCode(
-      input.accessCode,
+    const validPassword = await verifyPassword(
+      input.password,
       technician.accessCodeHash,
       technician.accessCodeSalt,
     );
 
-    if (!validCode) {
+    if (!validPassword) {
       const failures = await failedAttemptsSinceLastSuccess(normalizedName, ipHash);
       await recordAttempt(
         normalizedName,

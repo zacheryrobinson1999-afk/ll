@@ -1,15 +1,16 @@
 import assert from 'node:assert/strict';
+import { scryptSync } from 'node:crypto';
 import test from 'node:test';
 
 process.env.SESSION_SECRET = 'session-test-secret-7f42a9c8d1e0b6f5a4c3d2e1';
-process.env.ACCESS_CODE_PEPPER = 'pepper-test-secret-c9e8d7f6a5b4c3d2e1f0a9b8';
 process.env.DATABASE_URL = 'postgresql://test:test@localhost:5432/test';
 
 const {
-  hashAccessCode,
-  performDummyAccessCodeVerification,
-  verifyAccessCode,
-} = await import('./accessCodes');
+  hashPassword,
+  isValidPassword,
+  performDummyPasswordVerification,
+  verifyPassword,
+} = await import('./passwords');
 const { validateSecurityConfig } = await import('./securityConfig');
 const {
   INVALID_LOGIN_RESPONSE,
@@ -25,6 +26,7 @@ const {
 const { requireAdmin, requireAuth } = await import('../middleware/auth');
 const { hasSameOrigin } = await import('../middleware/sameOrigin');
 const { technicians } = await import('@workspace/db');
+const { getTableConfig } = await import('drizzle-orm/pg-core');
 const { generateDailyCodes, validateDailyCodeInput } = await import('./dailyCodes');
 const { generateAuditedDaycodes } = await import('./daycodeService');
 const { createDocsRouter } = await import('../routes/docs');
@@ -33,35 +35,65 @@ const { readTechnicianInput, readTechnicianPatch } = await import('./adminServic
 const { assertAdministratorUpdateAllowed, shouldRevokeTechnicianSessions, toSafeTechnician } = await import('./adminService');
 const { readBootstrapAdminInput } = await import('./bootstrapAdmin');
 const { default: adminRouter } = await import('../routes/admin');
+const { default: daycodesRouter } = await import('../routes/daycodes');
+const { readLoginBody } = await import('../routes/auth');
 
-test('valid access code verifies against a salted scrypt hash', async () => {
-  const stored = await hashAccessCode('1234');
+test('valid password verifies against a salted scrypt hash', async () => {
+  const stored = await hashPassword('correct horse battery staple');
 
-  assert.notEqual(stored.hash, '1234');
-  assert.notEqual(stored.salt, '1234');
-  assert.equal(await verifyAccessCode('1234', stored.hash, stored.salt), true);
+  assert.notEqual(stored.hash, 'correct horse battery staple');
+  assert.notEqual(stored.salt, 'correct horse battery staple');
+  assert.equal(await verifyPassword('correct horse battery staple', stored.hash, stored.salt), true);
 });
 
-test('wrong access code is rejected', async () => {
-  const stored = await hashAccessCode('1234');
+test('wrong password is rejected', async () => {
+  const stored = await hashPassword('correct horse battery staple');
 
-  assert.equal(await verifyAccessCode('9999', stored.hash, stored.salt), false);
+  assert.equal(await verifyPassword('incorrect password', stored.hash, stored.salt), false);
 });
 
 test('dummy scrypt verification runs for early login failures', async () => {
-  await assert.doesNotReject(performDummyAccessCodeVerification());
-  const stored = await hashAccessCode('1234');
-  assert.equal(await verifyAccessCode('not-a-pin', stored.hash, stored.salt), false);
+  await assert.doesNotReject(performDummyPasswordVerification());
+  const stored = await hashPassword('a proper password');
+  assert.equal(await verifyPassword('', stored.hash, stored.salt), false);
 });
 
-test('identical and obviously repeated secrets are rejected', () => {
+test('password policy accepts long and symbolic passwords without complexity rules', async () => {
+  assert.equal(isValidPassword('123456789'), false);
+  assert.equal(isValidPassword('1234567890'), true);
+  assert.equal(isValidPassword('spaces & symbols !@#$%^&*() are valid'), true);
+  assert.equal(isValidPassword('x'.repeat(128)), true);
+  assert.equal(isValidPassword('x'.repeat(129)), false);
+});
+
+test('two accounts may use the same password without deterministic fingerprints', async () => {
+  const first = await hashPassword('shared password!');
+  const second = await hashPassword('shared password!');
+  assert.notEqual(first.salt, second.salt);
+  assert.notEqual(first.hash, second.hash);
+  assert.deepEqual(Object.keys(first).sort(), ['hash', 'salt']);
+});
+
+test('legacy four-digit credentials remain verifiable during migration', async () => {
+  const salt = 'legacy-admin-salt';
+  const hash = scryptSync('1234', salt, 64).toString('base64url');
+  assert.equal(await verifyPassword('1234', hash, salt), true);
+});
+
+test('resetting a password makes the previous password unusable', async () => {
+  const oldCredential = await hashPassword('previous password');
+  const newCredential = await hashPassword('replacement password');
+  assert.equal(await verifyPassword('previous password', oldCredential.hash, oldCredential.salt), true);
+  assert.equal(await verifyPassword('previous password', newCredential.hash, newCredential.salt), false);
+  assert.equal(await verifyPassword('replacement password', newCredential.hash, newCredential.salt), true);
+});
+
+test('obviously weak session secrets are rejected', () => {
   const base = {
     DATABASE_URL: 'postgresql://test:test@localhost:5432/test',
     SESSION_SECRET: 'session-validation-secret-7f42a9c8d1e0b6f5a4c3d2e1',
-    ACCESS_CODE_PEPPER: 'pepper-validation-secret-c9e8d7f6a5b4c3d2e1f0a9b8',
   };
 
-  assert.throws(() => validateSecurityConfig({ ...base, ACCESS_CODE_PEPPER: base.SESSION_SECRET }));
   assert.throws(() => validateSecurityConfig({ ...base, SESSION_SECRET: 'x'.repeat(48) }));
 });
 
@@ -77,7 +109,9 @@ test('per-IP throttle begins at the documented 20 attempts per 15 minutes', () =
 
 test('all login failures share one generic status and response policy', () => {
   assert.equal(INVALID_LOGIN_STATUS, 401);
-  assert.deepEqual(INVALID_LOGIN_RESPONSE, { error: 'Invalid name or access code' });
+  assert.deepEqual(INVALID_LOGIN_RESPONSE, { error: 'Invalid username or password' });
+  assert.deepEqual(readLoginBody({ username: 'known', password: 'wrong' }), { username: 'known', password: 'wrong' });
+  assert.deepEqual(readLoginBody({ username: 'unknown', password: 'wrong' }), { username: 'unknown', password: 'wrong' });
 });
 
 test('disabled, expired, and revoked sessions are unusable', () => {
@@ -227,6 +261,21 @@ test('protected document route authenticates before accessing B2', () => {
   assert.equal(typeof documentRoute.stack[1]?.handle, 'function');
 });
 
+test('normalized usernames remain uniquely indexed and password fingerprints are not', () => {
+  const uniqueIndexNames = getTableConfig(technicians).indexes
+    .filter((index) => index.config.unique)
+    .map((index) => index.config.name);
+  assert.deepEqual(uniqueIndexNames, ['technicians_normalized_name_unique']);
+});
+
+test('daycode generation authenticates before invoking its handler', () => {
+  const route = (daycodesRouter as unknown as { stack: Array<{
+    route?: { path?: string; stack: Array<{ handle: unknown }> };
+  }> }).stack.find((layer) => layer.route?.path === '/daycodes/generate')?.route;
+  assert.ok(route);
+  assert.equal(route.stack[0]?.handle, requireAuth);
+});
+
 test('document handler preserves filename validation before B2 retrieval', async () => {
   let b2Calls = 0;
   const routerStack = (createDocsRouter(async () => {
@@ -285,19 +334,19 @@ test('the API router has no mounted upload routes', () => {
   assert.doesNotMatch(serializedStack, /uploads/i);
 });
 
-test('admin account input normalizes names and only accepts four-digit codes', () => {
-  assert.deepEqual(readTechnicianInput({ name: '  Ada   Crane ', accessCode: '1234', role: 'admin' }), {
-    name: 'Ada Crane', normalizedName: 'ada crane', accessCode: '1234', role: 'admin',
+test('admin account input normalizes usernames and requires proper passwords', () => {
+  assert.deepEqual(readTechnicianInput({ username: '  Ada   Crane ', password: 'long password!', role: 'admin' }), {
+    name: 'Ada Crane', normalizedName: 'ada crane', password: 'long password!', role: 'admin',
   });
-  assert.throws(() => readTechnicianInput({ name: 'Ada', accessCode: '12345' }));
+  assert.throws(() => readTechnicianInput({ username: 'Ada', password: 'short' }));
   assert.throws(() => readTechnicianPatch({ active: 'yes' }));
 });
 
-test('admin responses omit access-code material and admin changes revoke sessions when required', () => {
+test('admin responses omit password material and admin changes revoke sessions when required', () => {
   const safe = toSafeTechnician({ id: 'id', name: 'Ada', normalizedName: 'ada', role: 'technician', active: true, accessCodeHash: 'hash', accessCodeSalt: 'salt', accessCodeFingerprint: 'fingerprint', createdAt: new Date(), updatedAt: new Date() } as never);
   assert.doesNotMatch(JSON.stringify(safe), /hash|salt|fingerprint/);
   assert.equal(shouldRevokeTechnicianSessions({ active: false }), true);
-  assert.equal(shouldRevokeTechnicianSessions({ codeReset: true }), true);
+  assert.equal(shouldRevokeTechnicianSessions({ passwordReset: true }), true);
   assert.equal(shouldRevokeTechnicianSessions({ active: true }), false);
 });
 
@@ -315,8 +364,8 @@ test('administrator lockout policy permits safe admin and technician status chan
 
 test('bootstrap admin requires explicit values and normalizes its name', () => {
   assert.throws(() => readBootstrapAdminInput({}));
-  assert.deepEqual(readBootstrapAdminInput({ BOOTSTRAP_ADMIN_NAME: '  First  Admin ', BOOTSTRAP_ADMIN_CODE: '5678' }), {
-    name: 'First Admin', normalizedName: 'first admin', accessCode: '5678',
+  assert.deepEqual(readBootstrapAdminInput({ BOOTSTRAP_ADMIN_NAME: '  First  Admin ', BOOTSTRAP_ADMIN_PASSWORD: 'bootstrap password' }), {
+    name: 'First Admin', normalizedName: 'first admin', password: 'bootstrap password',
   });
 });
 

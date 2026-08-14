@@ -1,10 +1,10 @@
-import { isValidAccessCode, normalizeTechnicianName } from './accessCodes';
+import { isValidPassword, normalizeUsername } from './passwords';
 
-export function readBootstrapAdminInput(environment: NodeJS.ProcessEnv): { name: string; normalizedName: string; accessCode: string } {
+export function readBootstrapAdminInput(environment: NodeJS.ProcessEnv): { name: string; normalizedName: string; password: string } {
   const name = environment.BOOTSTRAP_ADMIN_NAME?.trim().replace(/\s+/g, ' ');
-  const accessCode = environment.BOOTSTRAP_ADMIN_CODE;
-  if (!name || !accessCode || !isValidAccessCode(accessCode)) {
-    throw new Error('BOOTSTRAP_ADMIN_NAME and a four-digit BOOTSTRAP_ADMIN_CODE are required');
+  const password = environment.BOOTSTRAP_ADMIN_PASSWORD;
+  if (!name || !password || !isValidPassword(password)) {
+    throw new Error('BOOTSTRAP_ADMIN_NAME and a 10 to 128 character BOOTSTRAP_ADMIN_PASSWORD are required');
   }
-  return { name, normalizedName: normalizeTechnicianName(name), accessCode };
+  return { name, normalizedName: normalizeUsername(name), password };
 }

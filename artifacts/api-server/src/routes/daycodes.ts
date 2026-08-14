@@ -1,6 +1,6 @@
 import { Router } from 'express';
 
-import { hashClientIp } from '../lib/accessCodes';
+import { hashClientIp } from '../lib/passwords';
 import { recordDaycodeUsage } from '../lib/daycodeAudit';
 import { generateAuditedDaycodes } from '../lib/daycodeService';
 import { requireAuth } from '../middleware/auth';
