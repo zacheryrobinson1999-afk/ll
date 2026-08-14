@@ -13,7 +13,11 @@ export type DocSystem =
   | 'ZF / WABCO'
   | 'Mercedes-Benz'
   | 'Dana / Spicer'
-  | 'KATO';
+  | 'KATO'
+  | 'Liebherr'
+  | 'Kobelco'
+  | 'Eaton'
+  | 'SANY';
 
 export type DocType =
   | 'Diagnostics'
@@ -61,6 +65,10 @@ export const DOC_SYSTEMS: DocSystem[] = [
   'Mercedes-Benz',
   'Dana / Spicer',
   'KATO',
+  'Liebherr',
+  'Kobelco',
+  'Eaton',
+  'SANY',
 ];
 
 export const SYSTEM_COLORS: Record<DocSystem, string> = {
@@ -72,6 +80,10 @@ export const SYSTEM_COLORS: Record<DocSystem, string> = {
   'Mercedes-Benz': '#222222',
   'Dana / Spicer': '#005DAA',
   KATO: '#E07B00',
+  Liebherr: '#F7BE21',
+  Kobelco: '#0067B1',
+  Eaton: '#005EB8',
+  SANY: '#E31E24',
 };
 
 export const SYSTEM_ICONS: Record<DocSystem, string> = {
@@ -83,6 +95,10 @@ export const SYSTEM_ICONS: Record<DocSystem, string> = {
   'Mercedes-Benz': 'MB',
   'Dana / Spicer': 'DS',
   KATO: 'KT',
+  Liebherr: 'LH',
+  Kobelco: 'KB',
+  Eaton: 'EA',
+  SANY: 'SY',
 };
 
 export const TYPE_ICONS: Record<DocType, string> = {
@@ -1076,6 +1092,160 @@ export const TECH_DOCS: TechDoc[] = [
         summary:
           'Installation procedures and service requirements for driveshaft assemblies.',
       },
+    ],
+  },
+
+  // ===========================================================================
+  // ENGINE, CRAWLER CRANE & HYDRAULIC SERVICE MANUALS
+  // ===========================================================================
+
+  {
+    id: 'liebherr-d904-926-engine-service',
+    system: 'Liebherr',
+    type: 'Reference',
+    title: 'Liebherr D904/906, D914/916, D924/926 Diesel Engine Service Manual',
+    subtitle: 'Service and repair manual for Liebherr D 904/906, D 914/916 and D 924/926 diesel engines.',
+    appliesTo: [],
+    craneTypes: ['D904', 'D906', 'D914', 'D916', 'D924', 'D926', 'Liebherr diesel engines'],
+    summary:
+      'Technical descriptions and service procedures for Liebherr D904, D906, D914, D916, '
+      + 'D924 and D926 diesel engines. Covers valve adjustment, cylinder heads, pistons and '
+      + 'connecting rods, crankshaft, camshaft and valve drive, lubrication and cooling systems, '
+      + 'fuel injection, starter and alternator, maintenance, troubleshooting and special tools.',
+    fileName: 'liebherr-d904-906-d914-916-d924-926-service-manual.pdf',
+    cleanFile: 'liebherr-d904-906-d914-916-d924-926-service-manual.pdf',
+    sections: [
+      { ref: 'Engine', title: 'Engine Components', summary: 'Cylinder heads, pistons, connecting rods, crankshaft, camshaft and valve drive.' },
+      { ref: 'Systems', title: 'Engine Systems', summary: 'Lubrication, cooling, fuel injection, starter and alternator systems.' },
+      { ref: 'Service', title: 'Maintenance & Troubleshooting', summary: 'Valve adjustment, maintenance, fault diagnosis and special-tool information.' },
+    ],
+  },
+
+  {
+    id: 'kobelco-ck1200-cke1100-service',
+    system: 'Kobelco',
+    type: 'Reference',
+    title: 'Kobelco CK1200 / CKE1100 Service Manual',
+    subtitle: 'Crawler crane service, adjustment and troubleshooting reference.',
+    appliesTo: [],
+    craneTypes: ['CK1200', 'CKE1100', 'Kobelco crawler crane'],
+    summary:
+      'Service manual covering maintenance standards, test procedures, power train, hydraulic, '
+      + 'hoist and boom-hoist systems, swing and propel systems, electrical system, troubleshooting, '
+      + 'load safety device, adjustments and error-code information.',
+    fileName: 'kobelco-ck1200-cke1100-service-manual.pdf',
+    cleanFile: 'kobelco-ck1200-cke1100-service-manual.pdf',
+    sections: [
+      { ref: 'Maintenance', title: 'Maintenance Standards & Tests', summary: 'Maintenance standards, inspection criteria and test procedures.' },
+      { ref: 'Systems', title: 'Crane Systems', summary: 'Power train, hydraulics, hoist, boom hoist, swing and propel systems.' },
+      { ref: 'Diagnostics', title: 'Electrical & Troubleshooting', summary: 'Electrical system, load safety device, adjustments, error codes and troubleshooting.' },
+    ],
+  },
+
+  {
+    id: 'kobelco-cke1800-ck2000-service',
+    system: 'Kobelco',
+    type: 'Reference',
+    title: 'Kobelco CKE1800 / CK2000 Service Manual',
+    subtitle: 'Crawler crane service and troubleshooting manual.',
+    appliesTo: [],
+    craneTypes: ['CKE1800', 'CK2000', 'Kobelco crawler crane'],
+    summary:
+      'Service manual covering maintenance standards, power train, hydraulic circuits and '
+      + 'components, winch and brake systems, boom hoist, swing and propel systems, electrical '
+      + 'schematics, pressure switches and sensors, controller/display system, load safety device '
+      + 'and troubleshooting.',
+    fileName: 'kobelco-cke1800-ck2000-service-manual.pdf',
+    cleanFile: 'kobelco-cke1800-ck2000-service-manual.pdf',
+    sections: [
+      { ref: 'Hydraulics', title: 'Hydraulic & Mechanical Systems', summary: 'Power train, hydraulic circuits, winch, brakes, boom hoist, swing and propel systems.' },
+      { ref: 'Electrical', title: 'Electrical & Control Systems', summary: 'Schematics, switches, sensors, controller/display and load safety device.' },
+      { ref: 'Service', title: 'Maintenance & Troubleshooting', summary: 'Maintenance standards and systematic troubleshooting procedures.' },
+    ],
+  },
+
+  {
+    id: 'kobelco-ck2500ii-cke2500ii-service',
+    system: 'Kobelco',
+    type: 'Reference',
+    title: 'Kobelco CK2500-II / CKE2500-II Service Manual',
+    subtitle: 'Crawler crane service, adjustment and troubleshooting manual.',
+    appliesTo: [],
+    craneTypes: ['CK2500-II', 'CKE2500-II', 'Kobelco crawler crane'],
+    summary:
+      'Service manual covering maintenance standards, engine and pump drive, hydraulic circuits, '
+      + 'hoist and brake systems, boom hoist, swing and propel systems, electrical wiring and '
+      + 'schematics, controller/display systems, load safety device, troubleshooting and adjustments.',
+    fileName: 'kobelco-ck2500ii-cke2500ii-service-manual.pdf',
+    cleanFile: 'kobelco-ck2500ii-cke2500ii-service-manual.pdf',
+    sections: [
+      { ref: 'Drive', title: 'Engine, Pump Drive & Hydraulics', summary: 'Engine and pump drive information plus hydraulic circuits and components.' },
+      { ref: 'Crane', title: 'Crane Operating Systems', summary: 'Hoist, brakes, boom hoist, swing and propel systems.' },
+      { ref: 'Control', title: 'Electrical, Controls & Diagnostics', summary: 'Wiring, schematics, controller/display systems, load safety device, adjustments and troubleshooting.' },
+    ],
+  },
+
+  {
+    id: 'eaton-pvm-piston-pump-service',
+    system: 'Eaton',
+    type: 'Reference',
+    title: 'Eaton PVM Piston Pump Service Manual',
+    subtitle: 'Service, repair and troubleshooting information for Eaton PVM axial piston pumps.',
+    appliesTo: [],
+    craneTypes: ['PVM018', 'PVM020', 'PVM045', 'PVM050', 'PVM057', 'PVM063', 'PVM074', 'PVM081', 'PVM098', 'PVM106', 'PVM131', 'PVM141'],
+    summary:
+      'Service reference for Eaton PVM axial piston pumps covering pump construction and operation, '
+      + 'control types, parts identification, service parts, disassembly, inspection, repair, assembly, '
+      + 'testing, troubleshooting, torque values and required and special tools.',
+    fileName: 'eaton-pvm-piston-pump-service-manual.pdf',
+    cleanFile: 'eaton-pvm-piston-pump-service-manual.pdf',
+    sections: [
+      { ref: 'Models', title: 'PVM Pump Range', summary: 'Coverage for PVM018 through PVM141 axial piston pump models.' },
+      { ref: 'Repair', title: 'Disassembly, Inspection & Assembly', summary: 'Parts identification, service parts, disassembly, inspection, repair and assembly.' },
+      { ref: 'Testing', title: 'Testing & Troubleshooting', summary: 'Operational testing, fault diagnosis, torque values and required tools.' },
+    ],
+  },
+
+  {
+    id: 'sany-crawler-crane-maintenance',
+    system: 'SANY',
+    type: 'Reference',
+    title: 'SANY Crawler Crane Maintenance Manual',
+    subtitle: 'Source document contains SCC500E and SCC1000C model references.',
+    appliesTo: [],
+    craneTypes: ['SCC500E', 'SCC1000C', 'SANY crawler crane'],
+    summary:
+      'SANY crawler crane maintenance reference covering maintenance safety, service fluids and '
+      + 'capacities, lubrication, maintenance schedules, engine and fuel systems, cooling system, '
+      + 'air intake, engine-oil servicing and general crane maintenance. The source identifies '
+      + 'SCC1000C on its cover and SCC500E in its table of contents.',
+    fileName: 'sany-scc500e-crawler-crane-maintenance-manual.pdf',
+    cleanFile: 'sany-scc500e-crawler-crane-maintenance-manual.pdf',
+    sections: [
+      { ref: 'Safety', title: 'Maintenance Safety', summary: 'Safety requirements and precautions for crane servicing.' },
+      { ref: 'Schedules', title: 'Fluids, Lubrication & Schedules', summary: 'Service fluids, capacities, lubrication points and maintenance intervals.' },
+      { ref: 'Engine', title: 'Engine & General Maintenance', summary: 'Fuel, cooling, air-intake and engine-oil service plus general crane maintenance.' },
+    ],
+  },
+
+  {
+    id: 'mercedes-om904-926-bluetec-operating',
+    system: 'Mercedes-Benz',
+    type: 'Reference',
+    title: 'Mercedes-Benz OM904–926 LA / BlueTec Operating Instructions',
+    subtitle: 'Operating, maintenance and technical reference information for Mercedes-Benz OM 904–926 LA engines.',
+    appliesTo: [],
+    craneTypes: ['OM904', 'OM906', 'OM924', 'OM926', 'OM904 LA', 'OM906 LA', 'OM924 LA', 'OM926 LA', 'BlueTec'],
+    summary:
+      'Operating instructions covering engine operation, maintenance and care, service products, '
+      + 'oil and coolant, engine oil and filter replacement, diagnostics, breakdown assistance, '
+      + 'technical data, engine data and capacities, decommissioning and recommissioning.',
+    fileName: 'mercedes-om904-926-la-bluetec-operating-instructions.pdf',
+    cleanFile: 'mercedes-om904-926-la-bluetec-operating-instructions.pdf',
+    sections: [
+      { ref: 'Operation', title: 'Engine Operation', summary: 'Normal engine operation, diagnostics and breakdown assistance.' },
+      { ref: 'Maintenance', title: 'Maintenance & Service Products', summary: 'Maintenance, care, oil, coolant and oil/filter replacement.' },
+      { ref: 'Data', title: 'Technical Data & Storage', summary: 'Engine data, capacities, decommissioning and recommissioning.' },
     ],
   },
 ];
