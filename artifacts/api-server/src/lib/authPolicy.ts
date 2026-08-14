@@ -11,7 +11,7 @@ export function isIpThrottled(attemptCount: number): boolean {
 }
 
 export const INVALID_LOGIN_STATUS = 401;
-export const INVALID_LOGIN_RESPONSE = { error: 'Invalid name or access code' };
+export const INVALID_LOGIN_RESPONSE = { error: 'Invalid username or password' };
 
 export function isSessionUsable(session: {
   active: boolean;

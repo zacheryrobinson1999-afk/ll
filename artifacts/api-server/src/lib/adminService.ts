@@ -1,7 +1,7 @@
 import { and, count, desc, eq, gte, ilike, lte } from 'drizzle-orm';
 import { db, daycodeUsage, technicians } from '@workspace/db';
 
-import { hashAccessCode, isValidAccessCode, normalizeTechnicianName } from './accessCodes';
+import { hashPassword, isValidPassword, normalizeUsername } from './passwords';
 import { revokeTechnicianSessions } from './sessions';
 
 export type TechnicianRole = 'technician' | 'admin';
@@ -15,8 +15,8 @@ export type SafeTechnician = {
   updatedAt: Date;
 };
 
-export function shouldRevokeTechnicianSessions(change: { active?: boolean; codeReset?: boolean }): boolean {
-  return change.active === false || change.codeReset === true;
+export function shouldRevokeTechnicianSessions(change: { active?: boolean; passwordReset?: boolean }): boolean {
+  return change.active === false || change.passwordReset === true;
 }
 
 export function assertAdministratorUpdateAllowed(input: {
@@ -47,16 +47,16 @@ export function toSafeTechnician(row: typeof technicians.$inferSelect): SafeTech
   };
 }
 
-export function readTechnicianInput(body: unknown): { name: string; normalizedName: string; accessCode: string; role: TechnicianRole } {
-  if (!body || typeof body !== 'object') throw new Error('Invalid technician details');
+export function readTechnicianInput(body: unknown): { name: string; normalizedName: string; password: string; role: TechnicianRole } {
+  if (!body || typeof body !== 'object') throw new Error('Invalid account details');
   const value = body as Record<string, unknown>;
-  const name = typeof value.name === 'string' ? value.name.trim().replace(/\s+/g, ' ') : '';
-  const accessCode = typeof value.accessCode === 'string' ? value.accessCode : '';
+  const name = typeof value.username === 'string' ? value.username.trim().replace(/\s+/g, ' ') : '';
+  const password = typeof value.password === 'string' ? value.password : '';
   const role = value.role === 'admin' ? 'admin' : value.role === undefined || value.role === 'technician' ? 'technician' : null;
-  if (!name || name.length > 160 || !role || !isValidAccessCode(accessCode)) {
-    throw new Error('Name, role, and a four-digit access code are required');
+  if (!name || name.length > 160 || !role || !isValidPassword(password)) {
+    throw new Error('Username, role, and a password between 10 and 128 characters are required');
   }
-  return { name, normalizedName: normalizeTechnicianName(name), accessCode, role };
+  return { name, normalizedName: normalizeUsername(name), password, role };
 }
 
 export function readTechnicianPatch(body: unknown): { name?: string; normalizedName?: string; role?: TechnicianRole; active?: boolean } {
@@ -68,7 +68,7 @@ export function readTechnicianPatch(body: unknown): { name?: string; normalizedN
     const name = value.name.trim().replace(/\s+/g, ' ');
     if (!name || name.length > 160) throw new Error('Invalid technician name');
     patch.name = name;
-    patch.normalizedName = normalizeTechnicianName(name);
+    patch.normalizedName = normalizeUsername(name);
   }
   if ('role' in value) {
     if (value.role !== 'technician' && value.role !== 'admin') throw new Error('Invalid technician role');
@@ -83,10 +83,11 @@ export function readTechnicianPatch(body: unknown): { name?: string; normalizedN
 }
 
 export async function createTechnician(input: ReturnType<typeof readTechnicianInput>): Promise<SafeTechnician> {
-  const code = await hashAccessCode(input.accessCode);
+  const password = await hashPassword(input.password);
   const [created] = await db.insert(technicians).values({
     name: input.name, normalizedName: input.normalizedName, role: input.role,
-    accessCodeHash: code.hash, accessCodeSalt: code.salt, accessCodeFingerprint: code.fingerprint,
+    // Database column names are retained for backward-compatible deployment.
+    accessCodeHash: password.hash, accessCodeSalt: password.salt, accessCodeFingerprint: null,
   }).returning();
   return toSafeTechnician(created!);
 }
@@ -105,13 +106,13 @@ export async function updateTechnician(actorId: string, id: string, patch: Retur
   return updated ? toSafeTechnician(updated) : null;
 }
 
-export async function resetTechnicianCode(id: string, accessCode: string): Promise<SafeTechnician | null> {
-  if (!isValidAccessCode(accessCode)) throw new Error('A four-digit access code is required');
-  const code = await hashAccessCode(accessCode);
+export async function resetTechnicianPassword(id: string, passwordValue: string): Promise<SafeTechnician | null> {
+  if (!isValidPassword(passwordValue)) throw new Error('Password must be between 10 and 128 characters');
+  const password = await hashPassword(passwordValue);
   const [updated] = await db.update(technicians).set({
-    accessCodeHash: code.hash, accessCodeSalt: code.salt, accessCodeFingerprint: code.fingerprint,
+    accessCodeHash: password.hash, accessCodeSalt: password.salt, accessCodeFingerprint: null,
   }).where(eq(technicians.id, id)).returning();
-  if (updated && shouldRevokeTechnicianSessions({ codeReset: true })) await revokeTechnicianSessions(id);
+  if (updated && shouldRevokeTechnicianSessions({ passwordReset: true })) await revokeTechnicianSessions(id);
   return updated ? toSafeTechnician(updated) : null;
 }
 
