@@ -41,6 +41,7 @@ export type TechDoc = {
   docNumber?: string;
   pages?: number;
   year?: number;
+  addedAt?: string;
   appliesTo: string[];
   craneTypes: string[];
   summary: string;
@@ -1101,6 +1102,7 @@ export const TECH_DOCS: TechDoc[] = [
 
   {
     id: 'liebherr-d904-926-engine-service',
+    addedAt: '2026-08-08',
     system: 'Liebherr',
     type: 'Reference',
     title: 'Liebherr D904/906, D914/916, D924/926 Diesel Engine Service Manual',
@@ -1123,6 +1125,7 @@ export const TECH_DOCS: TechDoc[] = [
 
   {
     id: 'kobelco-ck1200-cke1100-service',
+    addedAt: '2026-08-09',
     system: 'Kobelco',
     type: 'Reference',
     title: 'Kobelco CK1200 / CKE1100 Service Manual',
@@ -1144,6 +1147,7 @@ export const TECH_DOCS: TechDoc[] = [
 
   {
     id: 'kobelco-cke1800-ck2000-service',
+    addedAt: '2026-08-10',
     system: 'Kobelco',
     type: 'Reference',
     title: 'Kobelco CKE1800 / CK2000 Service Manual',
@@ -1166,6 +1170,7 @@ export const TECH_DOCS: TechDoc[] = [
 
   {
     id: 'kobelco-ck2500ii-cke2500ii-service',
+    addedAt: '2026-08-11',
     system: 'Kobelco',
     type: 'Reference',
     title: 'Kobelco CK2500-II / CKE2500-II Service Manual',
@@ -1187,6 +1192,7 @@ export const TECH_DOCS: TechDoc[] = [
 
   {
     id: 'eaton-pvm-piston-pump-service',
+    addedAt: '2026-08-12',
     system: 'Eaton',
     type: 'Reference',
     title: 'Eaton PVM Piston Pump Service Manual',
@@ -1208,6 +1214,7 @@ export const TECH_DOCS: TechDoc[] = [
 
   {
     id: 'sany-crawler-crane-maintenance',
+    addedAt: '2026-08-13',
     system: 'SANY',
     type: 'Reference',
     title: 'SANY Crawler Crane Maintenance Manual',
@@ -1230,6 +1237,7 @@ export const TECH_DOCS: TechDoc[] = [
 
   {
     id: 'mercedes-om904-926-bluetec-operating',
+    addedAt: '2026-08-14',
     system: 'Mercedes-Benz',
     type: 'Reference',
     title: 'Mercedes-Benz OM904–926 LA / BlueTec Operating Instructions',
