@@ -14,6 +14,7 @@ import LoginPage from '@/pages/login';
 import AdminPage from '@/pages/admin';
 import NotesPage from '@/pages/notes';
 import SearchPage from '@/pages/search';
+import DiaryPage from '@/pages/diary';
 import { AuthProvider, useAuth } from '@/lib/auth-context';
 import {
   Route,
@@ -46,6 +47,7 @@ function Router() {
           <Route path="/docs" component={DocsPage} />
           <Route path="/notes" component={NotesPage} />
           <Route path="/search" component={SearchPage} />
+          <Route path="/diary" component={DiaryPage} />
           <Route path="/maintenance" component={MaintenancePage} />
           <Route path="/maintenance/:manufacturer" component={MaintenancePage} />
           <Route path="/maintenance/:manufacturer/:craneId" component={MaintenancePage} />

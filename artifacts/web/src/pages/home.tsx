@@ -1,16 +1,14 @@
 import { Link } from 'wouter';
 import {
-  Search,
   Truck,
   Wrench,
   BookOpen,
   Calculator,
   ArrowRight,
-  ChevronRight,
 } from 'lucide-react';
 
-import { TECH_DOCS } from '@/data/techDocs';
-import { readSearchRecents, ResultIcon, UnifiedSearchBox } from '@/components/unified-search';
+import { UnifiedSearchBox } from '@/components/unified-search';
+import { DashboardSections } from '@/components/dashboard-sections';
 
 const quickLinks = [
   {
@@ -39,36 +37,7 @@ const quickLinks = [
   },
 ];
 
-const technicianTools = [
-  {
-    title: 'Daily Code',
-    description: 'Generate access codes for supported crane systems',
-    icon: Calculator,
-    href: '/tools',
-  },
-  {
-    title: 'Crane Lookup',
-    description: 'Find fleet specifications and unit information',
-    icon: Truck,
-    href: '/fleet',
-  },
-  {
-    title: 'Document Search',
-    description: 'Search technical manuals and reference material',
-    icon: Search,
-    href: '/docs',
-  },
-  {
-    title: 'Maintenance',
-    description: 'Open service and inspection procedures',
-    icon: Wrench,
-    href: '/maintenance',
-  },
-];
-
 export default function HomePage() {
-  const recent = readSearchRecents();
-
   return (
     <div className="min-h-full bg-background pb-24 lg:pb-0">
       <div className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8">
@@ -177,6 +146,8 @@ export default function HomePage() {
           <UnifiedSearchBox />
         </section>
 
+        <DashboardSections />
+
         {/* QUICK ACCESS */}
         <section className="py-6">
           <SectionHeading title="Quick Access" />
@@ -213,138 +184,6 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* POPULAR RESOURCES */}
-        <section className="py-8">
-          <SectionHeading
-            title="Popular Resources"
-            action={
-              <Link
-                href="/docs"
-                className="flex items-center gap-1 text-sm font-bold uppercase text-primary hover:underline"
-              >
-                View All
-                <ChevronRight className="h-4 w-4" />
-              </Link>
-            }
-          />
-
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {TECH_DOCS.slice(0, 4).map((doc) => {
-              const reference = doc.pages
-                ? `${doc.pages} pages`
-                : doc.docNumber || 'Technical document';
-
-              return (
-                <Link
-                  key={doc.id}
-                  href="/docs"
-                  className="group flex min-h-[270px] flex-col overflow-hidden border border-border bg-card transition-all hover:-translate-y-0.5 hover:border-primary/50"
-                >
-                  <div className="relative flex h-24 items-center justify-center overflow-hidden border-b border-border bg-gradient-to-br from-secondary to-background">
-                    <BookOpen className="h-12 w-12 text-primary/35 transition-transform group-hover:scale-110" />
-
-                    <div className="absolute left-3 top-3 flex flex-wrap gap-2">
-                      <span className="rounded-sm bg-primary px-2 py-1 text-[9px] font-bold uppercase tracking-wider text-primary-foreground">
-                        {doc.type}
-                      </span>
-                      <span className="rounded-sm border border-border bg-background/80 px-2 py-1 text-[9px] font-bold uppercase tracking-wider text-muted-foreground">
-                        {doc.system}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-1 flex-col p-4">
-                    <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-primary">
-                      {reference}
-                    </p>
-
-                    <h3 className="mt-2 line-clamp-2 text-base font-bold leading-5">
-                      {doc.title}
-                    </h3>
-
-                    <p className="mt-2 line-clamp-2 text-sm leading-5 text-muted-foreground">
-                      {doc.subtitle}
-                    </p>
-
-                    <div className="mt-auto flex items-center justify-between border-t border-border pt-3 text-xs font-bold uppercase tracking-wider text-primary">
-                      <span>Open Resource</span>
-                      <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-                    </div>
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
-        </section>
-
-        {/* TECHNICIAN TOOLS */}
-        <section className="py-8">
-          <SectionHeading title="Technician Tools" />
-
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {technicianTools.map((item) => {
-              const Icon = item.icon;
-
-              return (
-                <Link
-                  key={item.title}
-                  href={item.href}
-                  className="group border border-border bg-card p-5 transition-all hover:-translate-y-0.5 hover:border-primary/50 hover:bg-secondary"
-                >
-                  <div className="mb-5 flex h-11 w-11 items-center justify-center rounded-md bg-primary/10 text-primary">
-                    <Icon className="h-5 w-5" />
-                  </div>
-
-                  <h3 className="font-bold uppercase tracking-wide">
-                    {item.title}
-                  </h3>
-
-                  <p className="mt-2 min-h-[40px] text-sm leading-5 text-muted-foreground">
-                    {item.description}
-                  </p>
-
-                  <div className="mt-5 flex items-center gap-1 text-xs font-bold uppercase tracking-wider text-primary">
-                    Open Tool
-                    <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
-        </section>
-
-        {/* RECENTLY VIEWED */}
-        {recent.length > 0 && (
-          <section className="pb-12 pt-4">
-            <SectionHeading title="Recently Viewed" />
-
-            <div className="overflow-hidden border border-border bg-card">
-              {recent.map((item) => (
-                <Link
-                  key={item.id}
-                  href={item.href}
-                  className="flex items-center gap-4 border-b border-border p-4 last:border-b-0 hover:bg-secondary"
-                >
-                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md bg-secondary">
-                    <ResultIcon type={item.type} />
-                  </div>
-
-                  <div className="min-w-0 flex-1">
-                    <div className="truncate font-semibold">
-                      {item.title}
-                    </div>
-
-                    <div className="truncate text-sm text-muted-foreground">
-                      {item.subtitle}
-                    </div>
-                  </div>
-
-                  <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" />
-                </Link>
-              ))}
-            </div>
-          </section>
-        )}
       </div>
     </div>
   );

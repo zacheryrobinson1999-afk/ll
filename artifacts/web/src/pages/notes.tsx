@@ -44,6 +44,7 @@ export default function NotesPage() {
   }, [loading, location, notes]);
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
+    if (params.has('new')) { openCreate(); window.history.replaceState(null, '', `${import.meta.env.BASE_URL}notes`); return; }
     const documentId = params.get('document');
     if (!documentId) return;
     const document = TECH_DOCS.find((item) => item.id === documentId);
