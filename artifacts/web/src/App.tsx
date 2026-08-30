@@ -12,6 +12,7 @@ import MaintenancePage from '@/pages/maintenance';
 import HomePage from '@/pages/home';
 import LoginPage from '@/pages/login';
 import AdminPage from '@/pages/admin';
+import NotesPage from '@/pages/notes';
 import { AuthProvider, useAuth } from '@/lib/auth-context';
 import {
   Route,
@@ -42,6 +43,7 @@ function Router() {
           <Route path="/fleet" component={FleetPage} />
           <Route path="/tools" component={ToolsPage} />
           <Route path="/docs" component={DocsPage} />
+          <Route path="/notes" component={NotesPage} />
           <Route path="/maintenance" component={MaintenancePage} />
           <Route path="/maintenance/:manufacturer" component={MaintenancePage} />
           <Route path="/maintenance/:manufacturer/:craneId" component={MaintenancePage} />
