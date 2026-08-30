@@ -10,6 +10,7 @@ import {
   User,
   Shield,
   StickyNote,
+  CalendarDays,
 } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { Button } from '@/components/ui/button';
@@ -27,6 +28,7 @@ export function Layout({ children }: { children: ReactNode }) {
     { href: '/maintenance', label: 'Maintenance', icon: Wrench },
     { href: '/docs', label: 'Documents', icon: BookOpen },
     { href: '/notes', label: 'Workshop Notes', icon: StickyNote },
+    { href: '/diary', label: 'Diary', icon: CalendarDays },
     { href: '/tools', label: 'Tools', icon: Calculator },
   ];
 
@@ -66,7 +68,7 @@ export function Layout({ children }: { children: ReactNode }) {
           </Link>
 
           {/* Desktop navigation */}
-          <nav className="ml-auto hidden items-center gap-1 lg:flex">
+          <nav className="ml-auto hidden items-center gap-1 xl:flex">
             {navItems.map((item) => {
               const Icon = item.icon;
               const active = isActive(item.href);
@@ -94,7 +96,7 @@ export function Layout({ children }: { children: ReactNode }) {
           </nav>
 
           {/* Header actions */}
-          <div className="ml-auto flex items-center gap-2 lg:ml-4">
+          <div className="ml-auto flex items-center gap-2 xl:ml-4">
             <Link
               href="/#search"
               className="flex h-10 w-10 items-center justify-center rounded-md border border-border bg-card hover:border-primary/50 hover:bg-secondary"
@@ -118,12 +120,12 @@ export function Layout({ children }: { children: ReactNode }) {
       </header>
 
       {/* Main */}
-      <main className="min-h-[calc(100dvh-72px)]">
+      <main className="min-h-[calc(100dvh-72px)] pb-[calc(68px+env(safe-area-inset-bottom))] xl:pb-0">
         {children}
       </main>
 
       {/* Mobile navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-card/98 backdrop-blur lg:hidden">
+      <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-card/98 backdrop-blur xl:hidden">
         <div className="grid grid-cols-5 pb-[env(safe-area-inset-bottom)]">
           {mobileNavItems.map((item) => {
             const Icon = item.icon;
@@ -156,6 +158,7 @@ export function Layout({ children }: { children: ReactNode }) {
         <SheetContent side="bottom" className="rounded-t-xl pb-[calc(1.5rem+env(safe-area-inset-bottom))]">
           <SheetHeader className="text-left"><SheetTitle>Account</SheetTitle><SheetDescription>Signed in as {user?.name}</SheetDescription></SheetHeader>
           <div className="mt-5 grid gap-3">
+            <Button asChild variant="outline" className="h-12"><Link href="/diary" onClick={() => setAccountOpen(false)}><CalendarDays className="mr-2 h-5 w-5" />Technician Diary</Link></Button>
             {user?.role === 'admin' && <Button asChild variant="outline" className="h-12"><Link href="/admin" onClick={() => setAccountOpen(false)}><Shield className="mr-2 h-5 w-5" />Administration</Link></Button>}
             <Button variant="destructive" className="h-12" onClick={() => void logout().then(() => setLocation('/login'))}>Sign out</Button>
           </div>

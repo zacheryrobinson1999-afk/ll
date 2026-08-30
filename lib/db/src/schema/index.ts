@@ -1,10 +1,13 @@
 import {
   boolean,
+  date,
   index,
+  integer,
   pgEnum,
   pgTable,
   text,
   timestamp,
+  time,
   uniqueIndex,
   uuid,
 } from 'drizzle-orm/pg-core';
@@ -158,5 +161,38 @@ export const workshopNotes = pgTable(
       table.updatedAt,
     ),
     index('workshop_notes_document_id_idx').on(table.documentId),
+  ],
+);
+
+export const diaryEntries = pgTable(
+  'diary_entries',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    technicianId: uuid('technician_id').notNull().references(() => technicians.id, { onDelete: 'cascade' }),
+    workDate: date('work_date', { mode: 'string' }).notNull(),
+    startTime: time('start_time'),
+    endTime: time('end_time'),
+    durationMinutes: integer('duration_minutes'),
+    title: text('title').notNull(),
+    craneModel: text('crane_model'),
+    craneId: text('crane_id'),
+    systemCategory: text('system_category'),
+    faultSymptom: text('fault_symptom'),
+    diagnosis: text('diagnosis'),
+    workPerformed: text('work_performed').notNull(),
+    partsUsed: text('parts_used'),
+    outcome: text('outcome'),
+    followUpRequired: boolean('follow_up_required').notNull().default(false),
+    followUpNotes: text('follow_up_notes'),
+    documentId: text('document_id'),
+    workshopNoteId: uuid('workshop_note_id').references(() => workshopNotes.id, { onDelete: 'set null' }),
+    tags: text('tags').array().notNull().default([]),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
+  },
+  (table) => [
+    index('diary_entries_technician_work_date_idx').on(table.technicianId, table.workDate),
+    index('diary_entries_technician_updated_at_idx').on(table.technicianId, table.updatedAt),
+    index('diary_entries_workshop_note_id_idx').on(table.workshopNoteId),
   ],
 );
