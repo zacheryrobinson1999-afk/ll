@@ -5,6 +5,8 @@
  * since the web app is served from the same origin as the API.
  */
 
+import { MANUAL_EXPANSION_DOCS } from './manualExpansion';
+
 export type DocSystem =
   | 'LICCON 1'
   | 'LICCON 2'
@@ -48,6 +50,11 @@ export type TechDoc = {
   sections: DocSection[];
   fileName: string;
   cleanFile: string;
+  manufacturer?: string;
+  sourceSystem?: string;
+  documentType?: string;
+  preparedFilename?: string;
+  revision?: string;
 };
 
 /**
@@ -1256,6 +1263,7 @@ export const TECH_DOCS: TechDoc[] = [
       { ref: 'Data', title: 'Technical Data & Storage', summary: 'Engine data, capacities, decommissioning and recommissioning.' },
     ],
   },
+  ...MANUAL_EXPANSION_DOCS,
 ];
 
 /**

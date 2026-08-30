@@ -62,7 +62,8 @@ export function rankDocuments(query: string, documents: TechDoc[]): UnifiedSearc
     const score = scoreFields(query, [
       { value: doc.docNumber, weight: 140 }, { value: doc.title, weight: 120 }, { value: doc.subtitle, weight: 75 },
       ...doc.craneTypes.map((value) => ({ value, weight: 110 })), ...doc.appliesTo.map((value) => ({ value, weight: 85 })),
-      { value: doc.system, weight: 70 }, { value: doc.type, weight: 55 }, { value: doc.summary, weight: 25 },
+      { value: doc.manufacturer, weight: 90 }, { value: doc.system, weight: 70 },
+      { value: doc.documentType, weight: 60 }, { value: doc.type, weight: 55 }, { value: doc.summary, weight: 25 },
       ...doc.sections.flatMap((item) => [{ value: item.ref, weight: 110 }, { value: item.title, weight: 85 }, { value: item.summary, weight: 25 }]),
     ]);
     return { type: 'manual' as const, id: doc.id, title: doc.title, subtitle: `${doc.type} · ${doc.system}${doc.craneTypes[0] ? ` · ${doc.craneTypes[0]}` : ''}`, detail: section?.score ? `${section.item.ref} · ${section.item.title}` : doc.docNumber ? `Document ${doc.docNumber}` : undefined, href: `/docs?document=${encodeURIComponent(doc.id)}`, score };
