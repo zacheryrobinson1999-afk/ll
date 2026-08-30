@@ -31,7 +31,7 @@ const mutation = (method: string, body?: NoteInput): RequestInit => ({
   body: body ? JSON.stringify(body) : undefined,
 });
 
-export async function listNotes() { return (await request<{ notes: WorkshopNote[] }>('/api/notes')).notes; }
+export async function listNotes(query = '') { return (await request<{ notes: WorkshopNote[] }>(`/api/notes${query ? `?q=${encodeURIComponent(query)}` : ''}`)).notes; }
 export async function createNote(input: NoteInput) { return (await request<{ note: WorkshopNote }>('/api/notes', mutation('POST', input))).note; }
 export async function updateNote(id: string, input: NoteInput) { return (await request<{ note: WorkshopNote }>(`/api/notes/${encodeURIComponent(id)}`, mutation('PUT', input))).note; }
 export async function deleteNote(id: string) { await request<void>(`/api/notes/${encodeURIComponent(id)}`, mutation('DELETE')); }

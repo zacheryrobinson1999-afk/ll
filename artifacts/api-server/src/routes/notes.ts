@@ -46,9 +46,18 @@ export function readNoteInput(value: unknown): NoteInput | null {
 
 router.get('/notes', requireAuth, async (req, res, next) => {
   try {
-    const notes = await db.select().from(workshopNotes)
+    const query = typeof req.query.q === 'string' ? req.query.q.trim() : '';
+    if (query.length > 200) { res.status(400).json({ error: 'Search query is too long' }); return; }
+    const ownedNotes = await db.select().from(workshopNotes)
       .where(eq(workshopNotes.technicianId, req.auth!.technicianId))
       .orderBy(desc(workshopNotes.updatedAt));
+    const terms = query.toLocaleLowerCase().normalize('NFKD').replace(/[^a-z0-9]+/g, ' ').trim().split(/\s+/).filter(Boolean);
+    const notes = query && !terms.length ? [] : terms.length ? ownedNotes.filter((note) => {
+      const values = [note.title, note.body, note.craneModel, note.systemCategory, note.documentTitle, note.pageReference, ...note.tags];
+      const searchable = values.filter(Boolean).join(' ').toLocaleLowerCase().normalize('NFKD').replace(/[^a-z0-9]+/g, ' ');
+      const compact = searchable.replace(/\s+/g, '');
+      return terms.every((term) => searchable.includes(term) || compact.includes(term));
+    }) : ownedNotes;
     res.json({ notes });
   } catch (error) { next(error); }
 });

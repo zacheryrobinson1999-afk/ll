@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { FLEET, CATEGORIES, CATEGORY_COLORS, CATEGORY_ICONS, type CraneModel, type Category } from '@/data/craneFleet';
 import { loadCustomCranes, saveCustomCrane, deleteCustomCrane, isCustomCrane } from '@/lib/customFleet';
 import { Card, CardContent } from '@/components/ui/card';
@@ -14,6 +14,7 @@ import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { Search, Weight, Maximize2, MoveHorizontal, Info, Settings2, Truck, Plus, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useLocation } from 'wouter';
 
 type FormState = {
   manufacturer: string;
@@ -40,6 +41,7 @@ const EMPTY_FORM: FormState = {
 };
 
 export default function FleetPage() {
+  const [location, navigate] = useLocation();
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<Category | null>(null);
   const [selectedCrane, setSelectedCrane] = useState<CraneModel | null>(null);
@@ -48,6 +50,11 @@ export default function FleetPage() {
   const [customCranes, setCustomCranes] = useState<CraneModel[]>(() => loadCustomCranes());
 
   const allCranes = useMemo(() => [...FLEET, ...customCranes], [customCranes]);
+
+  useEffect(() => {
+    const id = new URLSearchParams(location.split('?')[1] ?? '').get('crane');
+    setSelectedCrane(id ? allCranes.find((crane) => crane.id === id) ?? null : null);
+  }, [allCranes, location]);
 
   const filteredFleet = useMemo(() => {
     return allCranes.filter(crane => {
@@ -152,7 +159,7 @@ export default function FleetPage() {
             <Card
               key={crane.id}
               className="bg-card/50 hover:bg-card/80 transition-all cursor-pointer border-border/50 hover:border-primary/50 group"
-              onClick={() => setSelectedCrane(crane)}
+              onClick={() => navigate(`/fleet?crane=${encodeURIComponent(crane.id)}`)}
             >
               <CardContent className="p-5 space-y-4">
                 <div className="flex justify-between items-start">
@@ -193,7 +200,7 @@ export default function FleetPage() {
       </div>
 
       {/* Detail sheet */}
-      <Sheet open={!!selectedCrane} onOpenChange={(open) => !open && setSelectedCrane(null)}>
+      <Sheet open={!!selectedCrane} onOpenChange={(open) => !open && navigate('/fleet', { replace: true })}>
         <SheetContent className="w-full sm:max-w-md overflow-y-auto bg-card border-l-border">
           {selectedCrane && (
             <div className="space-y-6 pt-6">
