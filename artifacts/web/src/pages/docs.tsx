@@ -1,4 +1,4 @@
-import { useMemo, useState, type MouseEvent } from 'react';
+import { useEffect, useMemo, useState, type MouseEvent } from 'react';
 import { TECH_DOCS, SYSTEM_COLORS, SYSTEM_ICONS, docUrl, type TechDoc } from '@/data/techDocs';
 import { useDocumentLibrary } from '@/hooks/useDocumentLibrary';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -9,35 +9,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
 import { Search, ExternalLink, FileText, Layers, Star, X, StickyNote } from 'lucide-react';
-import { Link } from 'wouter';
+import { Link, useLocation } from 'wouter';
 import { Separator } from '@/components/ui/separator';
+import { rankDocuments } from '@/lib/search';
 
 const ALL = 'all';
-
-function normalizeSearch(value: string) {
-  return value.toLocaleLowerCase().normalize('NFKD').replace(/[^a-z0-9]+/g, '');
-}
-
-function searchableText(doc: TechDoc) {
-  return [
-    doc.title,
-    doc.subtitle,
-    doc.system,
-    doc.type,
-    doc.docNumber,
-    ...doc.appliesTo,
-    ...doc.craneTypes,
-    doc.summary,
-    ...doc.sections.flatMap((section) => [section.ref, section.title, section.summary]),
-  ].filter(Boolean).join(' ');
-}
-
-function matchesSearch(doc: TechDoc, query: string) {
-  const terms = query.trim().split(/\s+/).map(normalizeSearch).filter(Boolean);
-  if (!terms.length) return true;
-  const haystack = normalizeSearch(searchableText(doc));
-  return terms.every((term) => haystack.includes(term));
-}
 
 type DocumentCardProps = {
   doc: TechDoc;
@@ -91,6 +67,7 @@ function DocumentCard({ doc, favourite, onSelect, onOpen, onToggleFavourite, com
 }
 
 export default function DocsPage() {
+  const [location, navigate] = useLocation();
   const [search, setSearch] = useState('');
   const [systemFilter, setSystemFilter] = useState(ALL);
   const [typeFilter, setTypeFilter] = useState(ALL);
@@ -107,13 +84,21 @@ export default function DocsPage() {
   const recentlyAdded = useMemo(() => TECH_DOCS.filter((doc) => doc.addedAt).sort((a, b) => (b.addedAt ?? '').localeCompare(a.addedAt ?? '')).slice(0, 7), []);
   const hasFilters = Boolean(search.trim()) || systemFilter !== ALL || typeFilter !== ALL || equipmentFilter !== ALL || favouritesOnly;
 
-  const filteredDocs = useMemo(() => TECH_DOCS.filter((doc) =>
-    matchesSearch(doc, search)
+  useEffect(() => {
+    const id = new URLSearchParams(location.split('?')[1] ?? '').get('document');
+    setSelectedDoc(id ? TECH_DOCS.find((doc) => doc.id === id) ?? null : null);
+  }, [location]);
+
+  const filteredDocs = useMemo(() => {
+    const rankedIds = search.trim() ? new Map(rankDocuments(search, TECH_DOCS).map((result, index) => [result.id, index])) : null;
+    return TECH_DOCS.filter((doc) =>
+    (!rankedIds || rankedIds.has(doc.id))
     && (systemFilter === ALL || doc.system === systemFilter)
     && (typeFilter === ALL || doc.type === typeFilter)
     && (equipmentFilter === ALL || doc.craneTypes.includes(equipmentFilter))
     && (!favouritesOnly || favouriteIds.includes(doc.id)),
-  ), [search, systemFilter, typeFilter, equipmentFilter, favouritesOnly, favouriteIds]);
+  ).sort((a, b) => rankedIds ? (rankedIds.get(a.id) ?? 9999) - (rankedIds.get(b.id) ?? 9999) : 0);
+  }, [search, systemFilter, typeFilter, equipmentFilter, favouritesOnly, favouriteIds]);
 
   const clearFilters = () => {
     setSearch('');
@@ -128,7 +113,8 @@ export default function DocsPage() {
     window.open(docUrl(doc), '_blank', 'noopener,noreferrer');
   };
 
-  const cardProps = (doc: TechDoc) => ({ doc, favourite: favouriteIds.includes(doc.id), onSelect: setSelectedDoc, onOpen: openDocument, onToggleFavourite: toggleFavourite });
+  const selectDocument = (doc: TechDoc) => navigate(`/docs?document=${encodeURIComponent(doc.id)}`);
+  const cardProps = (doc: TechDoc) => ({ doc, favourite: favouriteIds.includes(doc.id), onSelect: selectDocument, onOpen: openDocument, onToggleFavourite: toggleFavourite });
 
   return (
     <div className="mx-auto flex min-h-full w-full max-w-[1400px] flex-col gap-6 p-4 pb-24 sm:p-6 sm:pb-24 md:p-8 lg:pb-8">
@@ -172,7 +158,7 @@ export default function DocsPage() {
         )}
       </section>
 
-      <Sheet open={Boolean(selectedDoc)} onOpenChange={(open) => !open && setSelectedDoc(null)}>
+      <Sheet open={Boolean(selectedDoc)} onOpenChange={(open) => !open && navigate('/docs', { replace: true })}>
         <SheetContent className="flex w-full flex-col overflow-y-auto border-l-border bg-card p-0 sm:max-w-md">
           {selectedDoc && <><div className="space-y-5 p-4 sm:p-6"><SheetHeader><div className="mb-2 flex flex-wrap gap-2"><Badge variant="outline" style={{ borderColor: SYSTEM_COLORS[selectedDoc.system], color: SYSTEM_COLORS[selectedDoc.system] }}>{selectedDoc.system}</Badge><Badge variant="secondary">{selectedDoc.type}</Badge></div><SheetTitle className="text-2xl leading-tight">{selectedDoc.title}</SheetTitle><SheetDescription className="text-base font-medium">{selectedDoc.subtitle}</SheetDescription></SheetHeader><p className="text-sm leading-relaxed text-muted-foreground">{selectedDoc.summary}</p><div className="flex flex-wrap gap-2">{selectedDoc.craneTypes.map((model) => <Badge key={model} variant="outline" className="bg-secondary/20">{model}</Badge>)}{selectedDoc.year && <Badge variant="outline">{selectedDoc.year}</Badge>}{selectedDoc.pages && <Badge variant="outline">{selectedDoc.pages} pages</Badge>}{selectedDoc.docNumber && <Badge variant="outline">No. {selectedDoc.docNumber}</Badge>}</div></div><Separator /><div className="flex-1 space-y-4 p-4 sm:p-6"><h4 className="flex items-center gap-2 font-semibold"><Layers className="h-4 w-4 text-primary" />Document Sections</h4><Accordion type="multiple">{selectedDoc.sections.map((section, index) => <AccordionItem key={`${section.ref}-${index}`} value={`section-${index}`}><AccordionTrigger className="min-h-12 text-left text-sm hover:text-primary hover:no-underline"><span className="mr-3 shrink-0 font-mono text-muted-foreground">{section.ref}</span><span>{section.title}</span></AccordionTrigger><AccordionContent className="ml-2 border-l border-border/50 pl-4 text-sm leading-relaxed text-muted-foreground sm:pl-6">{section.summary}</AccordionContent></AccordionItem>)}</Accordion></div><div className="sticky bottom-0 z-10 grid gap-2 border-t border-border bg-card/95 p-4 backdrop-blur sm:p-6"><Button className="h-12 w-full font-bold" onClick={() => openDocument(selectedDoc)}><ExternalLink className="mr-2 h-4 w-4" />Open Manual</Button><Button asChild variant="outline" className="h-12 w-full font-bold"><Link href={`/notes?document=${encodeURIComponent(selectedDoc.id)}`}><StickyNote className="mr-2 h-4 w-4" />Add workshop note</Link></Button></div></>}
         </SheetContent>

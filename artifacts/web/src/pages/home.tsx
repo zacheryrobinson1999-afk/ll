@@ -1,4 +1,3 @@
-import { useMemo, useState } from 'react';
 import { Link } from 'wouter';
 import {
   Search,
@@ -7,21 +6,11 @@ import {
   BookOpen,
   Calculator,
   ArrowRight,
-  FileText,
-  X,
   ChevronRight,
 } from 'lucide-react';
 
-import { FLEET } from '@/data/craneFleet';
 import { TECH_DOCS } from '@/data/techDocs';
-
-type SearchResult = {
-  type: 'crane' | 'document';
-  id: string;
-  title: string;
-  subtitle: string;
-  href: string;
-};
+import { readSearchRecents, ResultIcon, UnifiedSearchBox } from '@/components/unified-search';
 
 const quickLinks = [
   {
@@ -77,100 +66,8 @@ const technicianTools = [
   },
 ];
 
-function saveRecent(item: SearchResult) {
-  try {
-    const existing: SearchResult[] = JSON.parse(
-      localStorage.getItem('cranehub-recent') || '[]',
-    );
-
-    const updated = [
-      item,
-      ...existing.filter((entry) => entry.id !== item.id),
-    ].slice(0, 6);
-
-    localStorage.setItem('cranehub-recent', JSON.stringify(updated));
-  } catch {
-    // Local storage is optional.
-  }
-}
-
-function getRecent(): SearchResult[] {
-  try {
-    return JSON.parse(
-      localStorage.getItem('cranehub-recent') || '[]',
-    );
-  } catch {
-    return [];
-  }
-}
-
 export default function HomePage() {
-  const [query, setQuery] = useState('');
-  const [recent, setRecent] = useState<SearchResult[]>(getRecent);
-
-  const results = useMemo<SearchResult[]>(() => {
-    const search = query.trim().toLowerCase();
-
-    if (!search) return [];
-
-    const craneResults: SearchResult[] = FLEET
-      .filter((crane) =>
-        [
-          crane.manufacturer,
-          crane.model,
-          crane.category,
-          crane.notes,
-          crane.id,
-        ]
-          .join(' ')
-          .toLowerCase()
-          .includes(search),
-      )
-      .slice(0, 8)
-      .map((crane) => ({
-        type: 'crane',
-        id: `crane-${crane.id}`,
-        title: crane.model,
-        subtitle: `${crane.manufacturer} · ${crane.category} · ${crane.maxCapacity} t`,
-        href: '/fleet',
-      }));
-
-    const documentResults: SearchResult[] = TECH_DOCS
-      .filter((doc) =>
-        [
-          doc.title,
-          doc.subtitle,
-          doc.system,
-          doc.type,
-          doc.summary,
-          ...doc.appliesTo,
-          ...doc.craneTypes,
-        ]
-          .join(' ')
-          .toLowerCase()
-          .includes(search),
-      )
-      .slice(0, 8)
-      .map((doc) => ({
-        type: 'document',
-        id: `doc-${doc.id}`,
-        title: doc.title,
-        subtitle: `${doc.type} · ${doc.system}`,
-        href: '/docs',
-      }));
-
-    return [...craneResults, ...documentResults].slice(0, 10);
-  }, [query]);
-
-  function openResult(result: SearchResult) {
-    saveRecent(result);
-    setRecent(getRecent());
-    setQuery('');
-  }
-
-  function clearSearch() {
-    setQuery('');
-  }
+  const recent = readSearchRecents();
 
   return (
     <div className="min-h-full bg-background pb-24 lg:pb-0">
@@ -277,89 +174,7 @@ export default function HomePage() {
 
         {/* SEARCH */}
         <section className="relative -mt-1 py-6">
-          <div className="relative">
-            <div className="flex min-h-[62px] items-center gap-3 rounded-md border border-border bg-card p-2 shadow-xl">
-              <Search className="ml-3 h-6 w-6 shrink-0 text-muted-foreground" />
-
-              <input
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                id="search"
-                placeholder="Search cranes, manuals, procedures..."
-                className="min-w-0 flex-1 bg-transparent px-1 text-base outline-none placeholder:text-muted-foreground"
-                aria-label="Search cranes, manuals and procedures"
-              />
-
-              {query && (
-                <button
-                  type="button"
-                  onClick={clearSearch}
-                  className="flex h-10 w-10 items-center justify-center rounded-md text-muted-foreground hover:bg-secondary hover:text-foreground"
-                  aria-label="Clear search"
-                >
-                  <X className="h-5 w-5" />
-                </button>
-              )}
-
-              <button
-                type="button"
-                onClick={() => document.querySelector<HTMLInputElement>('input')?.focus()}
-                className="hidden h-11 rounded-md bg-primary px-6 text-sm font-bold uppercase tracking-wider text-primary-foreground transition-opacity hover:opacity-90 sm:block"
-              >
-                Search
-              </button>
-            </div>
-
-            {/* Search results */}
-            {query && (
-              <div className="absolute left-0 right-0 top-full z-40 mt-2 overflow-hidden rounded-md border border-border bg-card shadow-2xl">
-                {results.length > 0 ? (
-                  <div className="max-h-[60vh] overflow-y-auto p-2">
-                    {results.map((result) => (
-                      <Link
-                        key={result.id}
-                        href={result.href}
-                        onClick={() => openResult(result)}
-                        className="flex items-center gap-3 rounded-md p-3 hover:bg-secondary"
-                      >
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
-                          {result.type === 'crane' ? (
-                            <Truck className="h-5 w-5" />
-                          ) : (
-                            <FileText className="h-5 w-5" />
-                          )}
-                        </div>
-
-                        <div className="min-w-0 flex-1">
-                          <div className="truncate font-semibold">
-                            {result.title}
-                          </div>
-
-                          <div className="truncate text-sm text-muted-foreground">
-                            {result.subtitle}
-                          </div>
-                        </div>
-
-                        <ArrowRight className="h-4 w-4 text-muted-foreground" />
-                      </Link>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="p-6 text-center">
-                    <Search className="mx-auto mb-2 h-7 w-7 text-muted-foreground" />
-
-                    <p className="font-medium">
-                      No results found
-                    </p>
-
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      Try a crane model, manufacturer, system or document name.
-                    </p>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
+          <UnifiedSearchBox />
         </section>
 
         {/* QUICK ACCESS */}
@@ -511,11 +326,7 @@ export default function HomePage() {
                   className="flex items-center gap-4 border-b border-border p-4 last:border-b-0 hover:bg-secondary"
                 >
                   <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md bg-secondary">
-                    {item.type === 'crane' ? (
-                      <Truck className="h-5 w-5 text-primary" />
-                    ) : (
-                      <FileText className="h-5 w-5 text-primary" />
-                    )}
+                    <ResultIcon type={item.type} />
                   </div>
 
                   <div className="min-w-0 flex-1">
