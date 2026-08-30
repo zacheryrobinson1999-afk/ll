@@ -284,6 +284,7 @@ export default function HomePage() {
               <input
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
+                id="search"
                 placeholder="Search cranes, manuals, procedures..."
                 className="min-w-0 flex-1 bg-transparent px-1 text-base outline-none placeholder:text-muted-foreground"
                 aria-label="Search cranes, manuals and procedures"

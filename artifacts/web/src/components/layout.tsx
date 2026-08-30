@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import { ReactNode, useState } from 'react';
 import { Link, useLocation } from 'wouter';
 import {
   Home,
@@ -7,23 +7,34 @@ import {
   BookOpen,
   Calculator,
   Search,
-  MoreHorizontal,
   User,
   Shield,
+  StickyNote,
 } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
+import { Button } from '@/components/ui/button';
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 
 export function Layout({ children }: { children: ReactNode }) {
   const [location] = useLocation();
   const [, setLocation] = useLocation();
   const { user, logout } = useAuth();
+  const [accountOpen, setAccountOpen] = useState(false);
 
   const navItems = [
     { href: '/', label: 'Home', icon: Home },
     { href: '/fleet', label: 'Fleet', icon: Truck },
     { href: '/maintenance', label: 'Maintenance', icon: Wrench },
     { href: '/docs', label: 'Documents', icon: BookOpen },
+    { href: '/notes', label: 'Workshop Notes', icon: StickyNote },
     { href: '/tools', label: 'Tools', icon: Calculator },
+  ];
+
+  const mobileNavItems = [
+    { href: '/', label: 'Home', icon: Home },
+    { href: '/docs', label: 'Manuals', icon: BookOpen },
+    { href: '/notes', label: 'Notes', icon: StickyNote },
+    { href: '/#search', label: 'Search', icon: Search },
   ];
 
   const isActive = (href: string) => {
@@ -36,15 +47,6 @@ export function Layout({ children }: { children: ReactNode }) {
       {/* Header */}
       <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur">
         <div className="mx-auto flex h-[72px] max-w-[1400px] items-center px-4 sm:px-6 lg:px-8">
-          {/* Mobile menu */}
-          <button
-            type="button"
-            className="mr-3 flex h-10 w-10 items-center justify-center rounded-md text-muted-foreground hover:bg-secondary hover:text-foreground lg:hidden"
-            aria-label="Menu"
-          >
-            <MoreHorizontal className="h-6 w-6" />
-          </button>
-
           {/* Logo */}
           <Link href="/" className="flex items-center gap-3">
             <div className="flex h-11 w-11 items-center justify-center rounded-md bg-primary text-sm font-black text-primary-foreground shadow-lg">
@@ -89,19 +91,12 @@ export function Layout({ children }: { children: ReactNode }) {
               );
             })}
 
-            <button
-              type="button"
-              className="flex items-center gap-2 px-4 py-6 text-xs font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground"
-            >
-              <MoreHorizontal className="h-4 w-4" />
-              More
-            </button>
           </nav>
 
           {/* Header actions */}
           <div className="ml-auto flex items-center gap-2 lg:ml-4">
             <Link
-              href="/"
+              href="/#search"
               className="flex h-10 w-10 items-center justify-center rounded-md border border-border bg-card hover:border-primary/50 hover:bg-secondary"
               aria-label="Search"
             >
@@ -129,8 +124,8 @@ export function Layout({ children }: { children: ReactNode }) {
 
       {/* Mobile navigation */}
       <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-card/98 backdrop-blur lg:hidden">
-        <div className="grid grid-cols-5">
-          {navItems.map((item) => {
+        <div className="grid grid-cols-5 pb-[env(safe-area-inset-bottom)]">
+          {mobileNavItems.map((item) => {
             const Icon = item.icon;
             const active = isActive(item.href);
 
@@ -152,8 +147,20 @@ export function Layout({ children }: { children: ReactNode }) {
               </Link>
             );
           })}
+          <button type="button" className="flex min-h-[68px] flex-col items-center justify-center gap-1 text-muted-foreground hover:text-foreground" onClick={() => setAccountOpen(true)}>
+            <User className="h-5 w-5" /><span className="text-[9px] font-bold uppercase tracking-wider">Account</span>
+          </button>
         </div>
       </nav>
+      <Sheet open={accountOpen} onOpenChange={setAccountOpen}>
+        <SheetContent side="bottom" className="rounded-t-xl pb-[calc(1.5rem+env(safe-area-inset-bottom))]">
+          <SheetHeader className="text-left"><SheetTitle>Account</SheetTitle><SheetDescription>Signed in as {user?.name}</SheetDescription></SheetHeader>
+          <div className="mt-5 grid gap-3">
+            {user?.role === 'admin' && <Button asChild variant="outline" className="h-12"><Link href="/admin" onClick={() => setAccountOpen(false)}><Shield className="mr-2 h-5 w-5" />Administration</Link></Button>}
+            <Button variant="destructive" className="h-12" onClick={() => void logout().then(() => setLocation('/login'))}>Sign out</Button>
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }

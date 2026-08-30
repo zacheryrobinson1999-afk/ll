@@ -128,3 +128,35 @@ export const daycodeUsage = pgTable(
     ),
   ],
 );
+
+export const workshopNotes = pgTable(
+  'workshop_notes',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    technicianId: uuid('technician_id')
+      .notNull()
+      .references(() => technicians.id, { onDelete: 'cascade' }),
+    title: text('title').notNull(),
+    body: text('body').notNull(),
+    craneModel: text('crane_model'),
+    systemCategory: text('system_category'),
+    documentId: text('document_id'),
+    documentTitle: text('document_title'),
+    pageReference: text('page_reference'),
+    tags: text('tags').array().notNull().default([]),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow()
+      .$onUpdate(() => new Date()),
+  },
+  (table) => [
+    index('workshop_notes_technician_updated_at_idx').on(
+      table.technicianId,
+      table.updatedAt,
+    ),
+    index('workshop_notes_document_id_idx').on(table.documentId),
+  ],
+);

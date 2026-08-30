@@ -4,6 +4,7 @@ import docsRouter from "./docs";
 import authRouter from './auth';
 import daycodesRouter from './daycodes';
 import adminRouter from './admin';
+import notesRouter from './notes';
 
 const router: IRouter = Router();
 
@@ -12,5 +13,6 @@ router.use(docsRouter);
 router.use(authRouter);
 router.use(daycodesRouter);
 router.use(adminRouter);
+router.use(notesRouter);
 
 export default router;
