@@ -14,7 +14,8 @@ import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { Search, Weight, Maximize2, MoveHorizontal, Info, Settings2, Truck, Plus, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { useLocation } from 'wouter';
+import { useLocation, useSearch } from 'wouter';
+import { FleetWorkspace } from '@/components/fleet-workspace';
 
 type FormState = {
   manufacturer: string;
@@ -42,6 +43,7 @@ const EMPTY_FORM: FormState = {
 
 export default function FleetPage() {
   const [location, navigate] = useLocation();
+  const query = useSearch();
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<Category | null>(null);
   const [selectedCrane, setSelectedCrane] = useState<CraneModel | null>(null);
@@ -52,9 +54,9 @@ export default function FleetPage() {
   const allCranes = useMemo(() => [...FLEET, ...customCranes], [customCranes]);
 
   useEffect(() => {
-    const id = new URLSearchParams(location.split('?')[1] ?? '').get('crane');
+    const id = new URLSearchParams(query).get('crane');
     setSelectedCrane(id ? allCranes.find((crane) => crane.id === id) ?? null : null);
-  }, [allCranes, location]);
+  }, [allCranes, query]);
 
   const filteredFleet = useMemo(() => {
     return allCranes.filter(crane => {
@@ -245,6 +247,8 @@ export default function FleetPage() {
                   {selectedCrane.notes}
                 </p>
               </div>
+
+              <FleetWorkspace key={selectedCrane.id} crane={selectedCrane} />
 
               {isCustomCrane(selectedCrane) && (
                 <Button

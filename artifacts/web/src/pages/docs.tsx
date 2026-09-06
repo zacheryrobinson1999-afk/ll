@@ -12,6 +12,8 @@ import { Search, ExternalLink, FileText, Layers, Star, X, StickyNote } from 'luc
 import { Link, useLocation } from 'wouter';
 import { Separator } from '@/components/ui/separator';
 import { rankDocuments } from '@/lib/search';
+import { BookmarkButton } from '@/components/bookmark-button';
+import { useSearch } from 'wouter';
 
 const ALL = 'all';
 
@@ -50,6 +52,7 @@ function DocumentCard({ doc, favourite, onSelect, onOpen, onToggleFavourite, com
         </div>
       </CardHeader>
       <CardContent className={`mt-auto ${compact ? 'p-4 pt-1' : 'p-5 pt-1'}`}>
+        <div className="mb-3"><BookmarkButton documentId={doc.id} /></div>
         {!compact && <p className="mb-3 line-clamp-2 text-sm leading-relaxed text-muted-foreground">{doc.summary}</p>}
         <div className="mb-4 flex flex-wrap gap-1.5 text-xs text-muted-foreground">
           {doc.craneTypes.slice(0, compact ? 2 : 4).map((model) => <Badge key={model} variant="outline" className="max-w-full truncate bg-secondary/20 font-normal">{model}</Badge>)}
@@ -68,6 +71,7 @@ function DocumentCard({ doc, favourite, onSelect, onOpen, onToggleFavourite, com
 
 export default function DocsPage() {
   const [location, navigate] = useLocation();
+  const query = useSearch();
   const [search, setSearch] = useState('');
   const [systemFilter, setSystemFilter] = useState(ALL);
   const [typeFilter, setTypeFilter] = useState(ALL);
@@ -85,9 +89,9 @@ export default function DocsPage() {
   const hasFilters = Boolean(search.trim()) || systemFilter !== ALL || typeFilter !== ALL || equipmentFilter !== ALL || favouritesOnly;
 
   useEffect(() => {
-    const id = new URLSearchParams(location.split('?')[1] ?? '').get('document');
+    const id = new URLSearchParams(query).get('document');
     setSelectedDoc(id ? TECH_DOCS.find((doc) => doc.id === id) ?? null : null);
-  }, [location]);
+  }, [query]);
 
   const filteredDocs = useMemo(() => {
     const rankedIds = search.trim() ? new Map(rankDocuments(search, TECH_DOCS).map((result, index) => [result.id, index])) : null;
@@ -121,6 +125,7 @@ export default function DocsPage() {
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Technical Library</h1>
         <p className="mt-1 text-sm text-muted-foreground">Service manuals, screen guides, and reference material.</p>
+        <Link href="/bookmarks" className="inline-flex min-h-11 items-center font-semibold text-primary">Your private bookmarks</Link>
       </div>
 
       <section aria-labelledby="recently-added-heading">
@@ -160,7 +165,7 @@ export default function DocsPage() {
 
       <Sheet open={Boolean(selectedDoc)} onOpenChange={(open) => !open && navigate('/docs', { replace: true })}>
         <SheetContent className="flex w-full flex-col overflow-y-auto border-l-border bg-card p-0 sm:max-w-md">
-          {selectedDoc && <><div className="space-y-5 p-4 sm:p-6"><SheetHeader><div className="mb-2 flex flex-wrap gap-2"><Badge variant="outline" style={{ borderColor: SYSTEM_COLORS[selectedDoc.system], color: SYSTEM_COLORS[selectedDoc.system] }}>{selectedDoc.system}</Badge><Badge variant="secondary">{selectedDoc.type}</Badge></div><SheetTitle className="text-2xl leading-tight">{selectedDoc.title}</SheetTitle><SheetDescription className="text-base font-medium">{selectedDoc.subtitle}</SheetDescription></SheetHeader><p className="text-sm leading-relaxed text-muted-foreground">{selectedDoc.summary}</p><div className="flex flex-wrap gap-2">{selectedDoc.craneTypes.map((model) => <Badge key={model} variant="outline" className="bg-secondary/20">{model}</Badge>)}{selectedDoc.year && <Badge variant="outline">{selectedDoc.year}</Badge>}{selectedDoc.pages && <Badge variant="outline">{selectedDoc.pages} pages</Badge>}{selectedDoc.docNumber && <Badge variant="outline">No. {selectedDoc.docNumber}</Badge>}</div></div><Separator /><div className="flex-1 space-y-4 p-4 sm:p-6"><h4 className="flex items-center gap-2 font-semibold"><Layers className="h-4 w-4 text-primary" />Document Sections</h4><Accordion type="multiple">{selectedDoc.sections.map((section, index) => <AccordionItem key={`${section.ref}-${index}`} value={`section-${index}`}><AccordionTrigger className="min-h-12 text-left text-sm hover:text-primary hover:no-underline"><span className="mr-3 shrink-0 font-mono text-muted-foreground">{section.ref}</span><span>{section.title}</span></AccordionTrigger><AccordionContent className="ml-2 border-l border-border/50 pl-4 text-sm leading-relaxed text-muted-foreground sm:pl-6">{section.summary}</AccordionContent></AccordionItem>)}</Accordion></div><div className="sticky bottom-0 z-10 grid gap-2 border-t border-border bg-card/95 p-4 backdrop-blur sm:p-6"><Button className="h-12 w-full font-bold" onClick={() => openDocument(selectedDoc)}><ExternalLink className="mr-2 h-4 w-4" />Open Manual</Button><Button asChild variant="outline" className="h-12 w-full font-bold"><Link href={`/notes?document=${encodeURIComponent(selectedDoc.id)}`}><StickyNote className="mr-2 h-4 w-4" />Add workshop note</Link></Button></div></>}
+          {selectedDoc && <><div className="space-y-5 p-4 sm:p-6"><SheetHeader><div className="mb-2 flex flex-wrap gap-2"><Badge variant="outline" style={{ borderColor: SYSTEM_COLORS[selectedDoc.system], color: SYSTEM_COLORS[selectedDoc.system] }}>{selectedDoc.system}</Badge><Badge variant="secondary">{selectedDoc.type}</Badge></div><SheetTitle className="text-2xl leading-tight">{selectedDoc.title}</SheetTitle><SheetDescription className="text-base font-medium">{selectedDoc.subtitle}</SheetDescription></SheetHeader><p className="text-sm leading-relaxed text-muted-foreground">{selectedDoc.summary}</p><BookmarkButton documentId={selectedDoc.id} /><div className="flex flex-wrap gap-2">{selectedDoc.craneTypes.map((model) => <Badge key={model} variant="outline" className="bg-secondary/20">{model}</Badge>)}{selectedDoc.year && <Badge variant="outline">{selectedDoc.year}</Badge>}{selectedDoc.pages && <Badge variant="outline">{selectedDoc.pages} pages</Badge>}{selectedDoc.docNumber && <Badge variant="outline">No. {selectedDoc.docNumber}</Badge>}</div></div><Separator /><div className="flex-1 space-y-4 p-4 sm:p-6"><h4 className="flex items-center gap-2 font-semibold"><Layers className="h-4 w-4 text-primary" />Document Sections</h4><Accordion type="multiple">{selectedDoc.sections.map((section, index) => <AccordionItem key={`${section.ref}-${index}`} value={`section-${index}`}><AccordionTrigger className="min-h-12 text-left text-sm hover:text-primary hover:no-underline"><span className="mr-3 shrink-0 font-mono text-muted-foreground">{section.ref}</span><span>{section.title}</span></AccordionTrigger><AccordionContent className="ml-2 border-l border-border/50 pl-4 text-sm leading-relaxed text-muted-foreground sm:pl-6">{section.summary}<div className="mt-3"><BookmarkButton documentId={selectedDoc.id} sectionRef={section.ref} /></div></AccordionContent></AccordionItem>)}</Accordion></div><div className="sticky bottom-0 z-10 grid gap-2 border-t border-border bg-card/95 p-4 backdrop-blur sm:p-6"><Button className="h-12 w-full font-bold" onClick={() => openDocument(selectedDoc)}><ExternalLink className="mr-2 h-4 w-4" />Open Manual</Button><Button asChild variant="outline" className="h-12 w-full font-bold"><Link href={`/notes?document=${encodeURIComponent(selectedDoc.id)}`}><StickyNote className="mr-2 h-4 w-4" />Add workshop note</Link></Button></div></>}
         </SheetContent>
       </Sheet>
     </div>

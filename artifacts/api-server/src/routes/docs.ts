@@ -1,6 +1,8 @@
 import { Router } from 'express';
 import { getFromB2 } from '../lib/b2Storage.js';
 import { requireAuth } from '../middleware/auth.js';
+import { recordActivity } from '../lib/activityService';
+import { TECH_DOCS } from '../lib/catalog/techDocs';
 
 type DocumentGetter = typeof getFromB2;
 
@@ -13,7 +15,7 @@ type DocumentGetter = typeof getFromB2;
  * B2 key:
  * docs/<filename>
  */
-export function createDocsRouter(getDocument: DocumentGetter = getFromB2): Router {
+export function createDocsRouter(getDocument: DocumentGetter = getFromB2, record = recordActivity): Router {
   const docsRouter = Router();
 
   docsRouter.get('/docs/:filename', requireAuth, async (req, res) => {
@@ -74,6 +76,14 @@ export function createDocsRouter(getDocument: DocumentGetter = getFromB2): Route
       }
     });
 
+    const doc = TECH_DOCS.find((item) => item.cleanFile === filename);
+    // HEAD requests, prefetches and failed/incomplete streams are not manual opens.
+    if (doc && req.method === 'GET' && !req.headers['sec-purpose'] && !req.headers.purpose) {
+      res.once('finish', () => {
+        if (res.statusCode === 200) void record(req.auth!.technicianId,
+          { type: 'manual_opened', entityType: 'document', entityId: doc.id }).catch(() => {});
+      });
+    }
     body.pipe(res);
   } catch (err) {
     console.error('[B2] document error:', err);

@@ -4,6 +4,7 @@ import {
   date,
   index,
   integer,
+  jsonb,
   pgEnum,
   pgTable,
   text,
@@ -164,6 +165,36 @@ export const workshopNotes = pgTable(
     index('workshop_notes_document_id_idx').on(table.documentId),
   ],
 );
+
+export const manualBookmarks = pgTable('manual_bookmarks', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  technicianId: uuid('technician_id').notNull().references(() => technicians.id, { onDelete: 'cascade' }),
+  documentId: text('document_id').notNull(),
+  // Empty strings represent a whole-document bookmark, avoiding NULL uniqueness gaps.
+  sectionRef: text('section_ref').notNull().default(''),
+  pageRef: text('page_ref').notNull().default(''),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  uniqueIndex('manual_bookmarks_owner_document_ref_unique').on(table.technicianId, table.documentId, table.sectionRef, table.pageRef),
+  index('manual_bookmarks_owner_created_idx').on(table.technicianId, table.createdAt),
+]);
+
+export const activityEvents = pgTable('activity_events', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  technicianId: uuid('technician_id').notNull().references(() => technicians.id, { onDelete: 'cascade' }),
+  type: text('type').notNull(),
+  entityType: text('entity_type').notNull(),
+  entityId: text('entity_id').notNull(),
+  craneId: text('crane_id'),
+  metadata: jsonb('metadata').$type<Record<string, string>>().notNull().default({}),
+  // Only noisy view events use a fixed five-minute bucket. Other events use their UUID.
+  dedupKey: text('dedup_key').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  uniqueIndex('activity_events_owner_dedup_unique').on(table.technicianId, table.dedupKey),
+  index('activity_events_owner_created_idx').on(table.technicianId, table.createdAt),
+  index('activity_events_owner_crane_created_idx').on(table.technicianId, table.craneId, table.createdAt),
+]);
 
 export const diaryEntries = pgTable(
   'diary_entries',

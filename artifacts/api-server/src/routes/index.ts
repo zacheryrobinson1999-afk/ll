@@ -6,6 +6,7 @@ import daycodesRouter from './daycodes';
 import adminRouter from './admin';
 import notesRouter from './notes';
 import diaryRouter from './diary';
+import workflowRouter from './workflow';
 
 const router: IRouter = Router();
 
@@ -16,5 +17,6 @@ router.use(daycodesRouter);
 router.use(adminRouter);
 router.use(notesRouter);
 router.use(diaryRouter);
+router.use(workflowRouter);
 
 export default router;
