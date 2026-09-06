@@ -63,6 +63,7 @@ export function rankDocuments(query: string, documents: TechDoc[]): UnifiedSearc
       { value: doc.docNumber, weight: 140 }, { value: doc.title, weight: 120 }, { value: doc.subtitle, weight: 75 },
       ...doc.craneTypes.map((value) => ({ value, weight: 110 })), ...doc.appliesTo.map((value) => ({ value, weight: 85 })),
       { value: doc.manufacturer, weight: 90 }, { value: doc.system, weight: 70 },
+      { value: doc.sourceSystem, weight: 70 },
       { value: doc.documentType, weight: 60 }, { value: doc.type, weight: 55 }, { value: doc.summary, weight: 25 },
       ...doc.sections.flatMap((item) => [{ value: item.ref, weight: 110 }, { value: item.title, weight: 85 }, { value: item.summary, weight: 25 }]),
     ]);

@@ -6,6 +6,7 @@
  */
 
 import { MANUAL_EXPANSION_DOCS } from './manualExpansion';
+import { VERIFIED_MANUAL_DOCS } from './verifiedManuals';
 
 export type DocSystem =
   | 'LICCON 1'
@@ -1264,6 +1265,7 @@ export const TECH_DOCS: TechDoc[] = [
     ],
   },
   ...MANUAL_EXPANSION_DOCS,
+  ...VERIFIED_MANUAL_DOCS,
 ];
 
 /**
