@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Search } from 'lucide-react';
-import { useLocation } from 'wouter';
+import { useLocation, useSearch } from 'wouter';
 import { Input } from '@/components/ui/input';
 import { SearchResultRow } from '@/components/unified-search';
 import { useUnifiedSearch } from '@/hooks/useUnifiedSearch';
@@ -10,7 +10,7 @@ type Filter = 'all' | SearchResultType;
 
 export default function SearchPage() {
   const [location, navigate] = useLocation();
-  const query = new URLSearchParams(location.split('?')[1] ?? '').get('q') ?? '';
+  const query = new URLSearchParams(useSearch()).get('q') ?? '';
   const [draft, setDraft] = useState(query);
   const [filter, setFilter] = useState<Filter>('all');
   const { results, notesLoading } = useUnifiedSearch(query);

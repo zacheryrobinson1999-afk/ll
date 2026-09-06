@@ -15,6 +15,8 @@ import AdminPage from '@/pages/admin';
 import NotesPage from '@/pages/notes';
 import SearchPage from '@/pages/search';
 import DiaryPage from '@/pages/diary';
+import BookmarksPage from '@/pages/bookmarks';
+import { BookmarksProvider } from '@/hooks/useBookmarks';
 import { AuthProvider, useAuth } from '@/lib/auth-context';
 import {
   Route,
@@ -38,7 +40,7 @@ function Router() {
   if (!user) return null;
   if (location === '/admin' && user.role !== 'admin') return null;
   return (
-    <RoutedErrorBoundary>
+    <BookmarksProvider key={user.id}><RoutedErrorBoundary>
       <Layout>
         <Switch>
           <Route path="/" component={HomePage} />
@@ -48,6 +50,7 @@ function Router() {
           <Route path="/notes" component={NotesPage} />
           <Route path="/search" component={SearchPage} />
           <Route path="/diary" component={DiaryPage} />
+          <Route path="/bookmarks" component={BookmarksPage} />
           <Route path="/maintenance" component={MaintenancePage} />
           <Route path="/maintenance/:manufacturer" component={MaintenancePage} />
           <Route path="/maintenance/:manufacturer/:craneId" component={MaintenancePage} />
@@ -55,7 +58,7 @@ function Router() {
           <Route component={NotFound} />
         </Switch>
       </Layout>
-    </RoutedErrorBoundary>
+    </RoutedErrorBoundary></BookmarksProvider>
   );
 }
 

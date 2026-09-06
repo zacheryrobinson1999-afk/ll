@@ -3,6 +3,7 @@ import { ArrowRight, FileText, Search, StickyNote, Truck, X } from 'lucide-react
 import { Link, useLocation } from 'wouter';
 import { useUnifiedSearch } from '@/hooks/useUnifiedSearch';
 import type { SearchResultType, UnifiedSearchResult } from '@/lib/search';
+import { BookmarkButton } from '@/components/bookmark-button';
 
 const RECENT_KEY = 'cranehub-search-v2-recent';
 type SafeRecent = Pick<UnifiedSearchResult, 'type' | 'id' | 'title' | 'subtitle' | 'href'>;
@@ -25,11 +26,11 @@ export function ResultIcon({ type }: { type: SearchResultType }) {
 }
 
 export function SearchResultRow({ result, active = false, onOpen }: { result: UnifiedSearchResult | SafeRecent; active?: boolean; onOpen?: () => void }) {
-  return <Link href={result.href} onClick={() => { if ('score' in result) saveSearchRecent(result); onOpen?.(); }} className={`flex min-h-16 items-center gap-3 rounded-md p-3 ${active ? 'bg-secondary ring-1 ring-primary/50' : 'hover:bg-secondary'}`}>
+  return <div className="min-w-0"><Link href={result.href} onClick={() => { if ('score' in result) saveSearchRecent(result); onOpen?.(); }} className={`flex min-h-16 items-center gap-3 rounded-md p-3 ${active ? 'bg-secondary ring-1 ring-primary/50' : 'hover:bg-secondary'}`}>
     <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary"><ResultIcon type={result.type} /></div>
     <div className="min-w-0 flex-1"><div className="flex min-w-0 items-center gap-2"><span className="min-w-0 flex-1 truncate font-semibold">{result.title}</span><span className="shrink-0 text-[10px] font-bold uppercase tracking-wider text-primary">{result.type}</span></div><div className="truncate text-sm text-muted-foreground">{result.subtitle}</div>{'detail' in result && result.detail && <div className="mt-0.5 line-clamp-1 break-words text-xs text-muted-foreground">{result.detail}</div>}</div>
     <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" />
-  </Link>;
+  </Link>{result.type === 'manual' && <div className="px-3 pb-3"><BookmarkButton documentId={result.id} /></div>}</div>;
 }
 
 export function UnifiedSearchBox({ initialQuery = '', autoFocus = false }: { initialQuery?: string; autoFocus?: boolean }) {

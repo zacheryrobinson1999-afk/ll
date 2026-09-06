@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { createNote, deleteNote, listNotes, updateNote, type NoteInput, type WorkshopNote } from '@/lib/notesApi';
-import { useLocation } from 'wouter';
+import { useLocation, useSearch } from 'wouter';
 
 const emptyInput: NoteInput = { title: '', body: '', craneModel: null, systemCategory: null, documentId: null, documentTitle: null, pageReference: null, tags: [] };
 const control = 'h-12 w-full rounded-md border border-input bg-background px-3 text-base';
@@ -21,6 +21,7 @@ function dateTime(value: string) {
 
 export default function NotesPage() {
   const [location, navigate] = useLocation();
+  const query = useSearch();
   const [notes, setNotes] = useState<WorkshopNote[]>([]);
   const [loading, setLoading] = useState(true);
   const [editorOpen, setEditorOpen] = useState(false);
@@ -37,11 +38,11 @@ export default function NotesPage() {
   useEffect(() => { void listNotes().then(setNotes).catch((error: Error) => toast({ title: 'Could not load notes', description: error.message, variant: 'destructive' })).finally(() => setLoading(false)); }, [toast]);
   useEffect(() => {
     if (loading) return;
-    const noteId = new URLSearchParams(location.split('?')[1] ?? '').get('note');
+    const noteId = new URLSearchParams(query).get('note');
     if (!noteId) return;
     const note = notes.find((item) => item.id === noteId);
     if (note) openEdit(note);
-  }, [loading, location, notes]);
+  }, [loading, query, notes]);
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.has('new')) { openCreate(); window.history.replaceState(null, '', `${import.meta.env.BASE_URL}notes`); return; }

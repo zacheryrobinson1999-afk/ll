@@ -1,6 +1,8 @@
 import type { CraneModel } from '@/data/craneFleet';
 import type { TechDoc } from '@/data/techDocs';
 import type { WorkshopNote } from '@/lib/notesApi';
+import { normalizeSearch, compactSearch } from '../../../api-server/src/lib/catalog/searchNormalization';
+export { normalizeSearch, compactSearch };
 
 export type SearchResultType = 'manual' | 'crane' | 'note';
 export type UnifiedSearchResult = {
@@ -14,14 +16,6 @@ export type UnifiedSearchResult = {
 };
 
 type SearchField = { value?: string | null; weight: number };
-
-export function normalizeSearch(value: string): string {
-  return value.toLocaleLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, ' ').trim();
-}
-
-export function compactSearch(value: string): string {
-  return normalizeSearch(value).replace(/\s+/g, '');
-}
 
 export function searchTerms(query: string): string[] {
   const normalized = normalizeSearch(query);
