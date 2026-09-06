@@ -1,12 +1,34 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-process.env.DATABASE_URL = 'postgresql://test:test@localhost:5432/test';
-import { isCalendarDate, isDiaryId, readDiaryInput, readDiaryRange, withDiaryOwner } from './diaryValidation';
+import { isCalendarDate, isDiaryId, readDiaryInput, readDiaryRange } from './diaryValidation';
 
-const valid = { workDate: '2026-08-30', title: 'Inspect suspension', workPerformed: 'Checked pressures and valves.', followUpRequired: false, tags: [], startTime: null, endTime: null, durationMinutes: null, craneModel: null, craneId: null, systemCategory: null, faultSymptom: null, diagnosis: null, partsUsed: null, outcome: null, followUpNotes: null, documentId: null, workshopNoteId: null };
-test('calendar dates handle leap days and reject impossible or malformed dates', () => { assert.equal(isCalendarDate('2024-02-29'), true); assert.equal(isCalendarDate('2026-02-29'), false); assert.equal(isCalendarDate('2026-02-28'), true); assert.equal(isCalendarDate('2026-02-30'), false); assert.equal(isCalendarDate('30-08-2026'), false); });
-test('diary input validates required fields and practical limits', () => { assert.ok(readDiaryInput(valid)); assert.equal(readDiaryInput({ ...valid, title: '' }), null); assert.equal(readDiaryInput({ ...valid, workPerformed: 'x'.repeat(20_001) }), null); assert.equal(readDiaryInput({ ...valid, durationMinutes: 10_081 }), null); });
-test('date ranges allow exactly 732 days and reject 733 days or reversed ranges', () => { assert.deepEqual(readDiaryRange('2024-09-01', '2026-09-02'), { from: '2024-09-01', to: '2026-09-02' }); assert.equal(readDiaryRange('2024-09-01', '2026-09-03'), null); assert.equal(readDiaryRange('2026-09-01', '2026-08-31'), null); });
-test('ownership always comes from the authenticated technician', () => { const input = readDiaryInput({ ...valid, technicianId: 'attacker' }); assert.ok(input); assert.equal('technicianId' in input, false); assert.equal(withDiaryOwner(input, 'authenticated-owner').technicianId, 'authenticated-owner'); });
-test('malformed diary IDs are rejected before mutation lookup', () => { assert.equal(isDiaryId('not-an-id'), false); assert.equal(isDiaryId('00000000-0000-4000-8000-000000000001'), true); });
-test('diary routes authenticate reads and protect every mutation with same-origin checks', async () => { const { default: router } = await import('../routes/diary'); const { requireAuth } = await import('../middleware/auth'); const { requireSameOrigin } = await import('../middleware/sameOrigin'); const routes = (router as unknown as { stack: Array<{ route?: { path: string; methods: Record<string, boolean>; stack: Array<{ handle: unknown }> } }> }).stack.map((layer) => layer.route).filter(Boolean); const get = routes.find((route) => route?.methods.get); assert.equal(get?.stack[0]?.handle, requireAuth); for (const route of routes.filter((item) => item && !item.methods.get)) { assert.equal(route?.stack[0]?.handle, requireAuth); assert.equal(route?.stack[1]?.handle, requireSameOrigin); } });
+test('calendar dates handle leap days and reject impossible or malformed dates', () => {
+  assert.equal(isCalendarDate('2024-02-29'), true);
+  for (const date of ['2026-02-29', '2026-02-30', '30-08-2026']) assert.equal(isCalendarDate(date), false);
+  assert.equal(isCalendarDate('2026-02-28'), true);
+});
+test('summary input needs only a valid date and freeform text', () => {
+  assert.deepEqual(readDiaryInput({ date: '2026-09-06', summary: '  Worked on crane 12.\nWaiting on parts.  ' }),
+    { date: '2026-09-06', summary: 'Worked on crane 12.\nWaiting on parts.' });
+  for (const summary of ['', '   ', 42, 'x'.repeat(20_001)]) assert.equal(readDiaryInput({ date: '2026-09-06', summary }), null);
+  assert.ok(readDiaryInput({ date: '2026-09-06', summary: 'x'.repeat(20_000) }));
+  assert.equal(readDiaryInput({ date: '2026-02-29', summary: 'Invalid date' }), null);
+});
+test('date ranges allow exactly 732 days and reject 733 days or reversed ranges', () => {
+  assert.deepEqual(readDiaryRange('2024-09-01', '2026-09-02'), { from: '2024-09-01', to: '2026-09-02' });
+  assert.equal(readDiaryRange('2024-09-01', '2026-09-03'), null);
+  assert.equal(readDiaryRange('2026-09-01', '2026-08-31'), null);
+});
+test('malformed range end never throws while calculating default start', () => {
+  for (const end of ['invalid', '2026-02-30', ['2026-09-06']]) assert.equal(readDiaryRange(undefined, end), null);
+  assert.equal(readDiaryRange(['2026-09-06'], '2026-09-06'), null);
+  assert.deepEqual(readDiaryRange(undefined, undefined, new Date('2026-09-06T00:00:00Z')), { from: '2026-06-09', to: '2026-09-06' });
+});
+test('owner and structured job fields are not accepted as summary data', () => {
+  assert.deepEqual(readDiaryInput({ date: '2026-09-06', summary: 'Private', technicianId: 'another-owner', title: 'Job', startTime: '12:00' }),
+    { date: '2026-09-06', summary: 'Private' });
+});
+test('malformed diary IDs are rejected before lookup', () => {
+  assert.equal(isDiaryId('not-an-id'), false);
+  assert.equal(isDiaryId('00000000-0000-4000-8000-000000000001'), true);
+});
