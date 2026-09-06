@@ -1,3 +1,4 @@
+import { sql } from 'drizzle-orm';
 import {
   boolean,
   date,
@@ -170,6 +171,7 @@ export const diaryEntries = pgTable(
     id: uuid('id').defaultRandom().primaryKey(),
     technicianId: uuid('technician_id').notNull().references(() => technicians.id, { onDelete: 'cascade' }),
     workDate: date('work_date', { mode: 'string' }).notNull(),
+    dailySummary: text('daily_summary'),
     startTime: time('start_time'),
     endTime: time('end_time'),
     durationMinutes: integer('duration_minutes'),
@@ -192,6 +194,8 @@ export const diaryEntries = pgTable(
   },
   (table) => [
     index('diary_entries_technician_work_date_idx').on(table.technicianId, table.workDate),
+    uniqueIndex('diary_entries_daily_summary_owner_date_idx').on(table.technicianId, table.workDate)
+      .where(sql`${table.dailySummary} IS NOT NULL`),
     index('diary_entries_technician_updated_at_idx').on(table.technicianId, table.updatedAt),
     index('diary_entries_workshop_note_id_idx').on(table.workshopNoteId),
   ],

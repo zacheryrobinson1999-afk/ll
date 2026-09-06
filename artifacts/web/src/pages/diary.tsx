@@ -1,51 +1,131 @@
-import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
-import { BookOpen, CalendarDays, ChevronLeft, ChevronRight, Clock, List, Pencil, Plus, Search, Trash2, TriangleAlert, X } from 'lucide-react';
-import { useLocation } from 'wouter';
-import { TECH_DOCS } from '@/data/techDocs';
-import { FLEET } from '@/data/craneFleet';
-import { Badge } from '@/components/ui/badge'; import { Button } from '@/components/ui/button'; import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'; import { Input } from '@/components/ui/input'; import { Label } from '@/components/ui/label'; import { Textarea } from '@/components/ui/textarea';
-import { useToast } from '@/hooks/use-toast'; import { listNotes, type WorkshopNote } from '@/lib/notesApi';
-import { createDiary, deleteDiary, listDiary, updateDiary, type DiaryEntry, type DiaryFilters, type DiaryInput } from '@/lib/diaryApi';
+import { useEffect, useState, type FormEvent } from 'react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useLocation, useSearch } from 'wouter';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { getDiary, getDiaryById, listDiary, saveDiary, type DiaryEntry } from '@/lib/diaryApi';
 import { addMonths, calendarDays, displayWorkDate, localDateKey, monthRange } from '@/lib/diaryDates';
 
-const control = 'h-12 w-full rounded-md border border-input bg-background px-3 text-base';
-const todayKey = () => localDateKey(new Date());
-const blank = (date = todayKey()): DiaryInput => ({ workDate: date, startTime: null, endTime: null, durationMinutes: null, title: '', craneModel: null, craneId: null, systemCategory: null, faultSymptom: null, diagnosis: null, workPerformed: '', partsUsed: null, outcome: null, followUpRequired: false, followUpNotes: null, documentId: null, workshopNoteId: null, tags: [] });
-const inputFrom = (entry: DiaryEntry): DiaryInput => { const { id: _id, technicianId: _owner, createdAt: _created, updatedAt: _updated, ...input } = entry; return input; };
-
-export default function DiaryPage() {
-  const [location, navigate] = useLocation(); const { toast } = useToast();
-  const [mode, setMode] = useState<'calendar' | 'history'>('calendar'); const [month, setMonth] = useState(() => new Date(new Date().getFullYear(), new Date().getMonth(), 1));
-  const [selectedDay, setSelectedDay] = useState<string | null>(todayKey()); const [entries, setEntries] = useState<DiaryEntry[]>([]); const [loading, setLoading] = useState(true);
-  const [editor, setEditor] = useState(false); const [editing, setEditing] = useState<DiaryEntry | null>(null); const [form, setForm] = useState<DiaryInput>(() => blank()); const [tagText, setTagText] = useState(''); const [saving, setSaving] = useState(false);
-  const [notes, setNotes] = useState<WorkshopNote[]>([]); const [filters, setFilters] = useState({ q: '', from: localDateKey(new Date(Date.now() - 89 * 86_400_000)), to: todayKey(), crane: '', system: '', followUp: '' });
-
-  const load = useCallback(async () => {
-    setLoading(true); try { const query: DiaryFilters = mode === 'calendar' ? monthRange(month) : { from: filters.from, to: filters.to, q: filters.q, crane: filters.crane, system: filters.system, followUp: filters.followUp === '' ? undefined : filters.followUp === 'true' }; setEntries(await listDiary(query)); }
-    catch (error) { toast({ title: 'Could not load diary', description: (error as Error).message, variant: 'destructive' }); } finally { setLoading(false); }
-  }, [filters, mode, month, toast]);
-  useEffect(() => { void load(); }, [load]); useEffect(() => { void listNotes().then(setNotes).catch(() => setNotes([])); }, []);
-  useEffect(() => { const params = new URLSearchParams(location.split('?')[1] ?? ''); const id = params.get('entry'); const newDate = params.get('new'); if (id) void listDiary({ entry: id }).then(([entry]) => { if (entry) openEdit(entry); else navigate('/diary', { replace: true }); }); else if (newDate) openCreate(/^\d{4}-\d{2}-\d{2}$/.test(newDate) ? newDate : todayKey()); }, [location]);
-
-  const openCreate = (date = selectedDay ?? todayKey()) => { setEditing(null); setForm(blank(date)); setTagText(''); setEditor(true); };
-  const openEdit = (entry: DiaryEntry) => { setEditing(entry); setForm(inputFrom(entry)); setTagText(entry.tags.join(', ')); setEditor(true); };
-  const setText = (key: keyof DiaryInput, value: string) => setForm((current) => ({ ...current, [key]: value || null }));
-  const save = async (event: FormEvent) => { event.preventDefault(); setSaving(true); try { const payload = { ...form, title: form.title.trim(), workPerformed: form.workPerformed.trim(), tags: [...new Set(tagText.split(',').map((tag) => tag.trim()).filter(Boolean))] }; await (editing ? updateDiary(editing.id, payload) : createDiary(payload)); setEditor(false); navigate('/diary', { replace: true }); await load(); toast({ title: editing ? 'Diary entry updated' : 'Diary entry saved' }); } catch (error) { toast({ title: 'Could not save entry', description: (error as Error).message, variant: 'destructive' }); } finally { setSaving(false); } };
-  const remove = async (entry: DiaryEntry) => { if (!window.confirm(`Delete “${entry.title}”? This cannot be undone.`)) return; try { await deleteDiary(entry.id); setEditor(false); navigate('/diary', { replace: true }); await load(); toast({ title: 'Diary entry deleted' }); } catch (error) { toast({ title: 'Could not delete entry', description: (error as Error).message, variant: 'destructive' }); } };
-  const days = calendarDays(month); const counts = useMemo(() => entries.reduce<Record<string, number>>((map, entry) => ({ ...map, [entry.workDate]: (map[entry.workDate] ?? 0) + 1 }), {}), [entries]);
-  const dayEntries = selectedDay ? entries.filter((entry) => entry.workDate === selectedDay) : []; const models = [...new Set(FLEET.map((crane) => crane.model))].sort(); const systems = [...new Set(entries.map((entry) => entry.systemCategory).filter(Boolean) as string[])].sort();
-  const clearFilters = () => setFilters({ q: '', from: localDateKey(new Date(Date.now() - 89 * 86_400_000)), to: todayKey(), crane: '', system: '', followUp: '' });
-
-  return <div className="mx-auto min-h-full max-w-[1400px] space-y-5 p-4 pb-28 sm:p-6 md:p-8 lg:pb-8">
-    <div className="flex flex-wrap items-start justify-between gap-3"><div><h1 className="text-3xl font-bold tracking-tight">Technician Diary</h1><p className="mt-1 text-sm text-muted-foreground">Your private work history. Browse up to 24 months at a time; older entries remain stored.</p></div><Button className="h-12 font-bold" onClick={() => openCreate()}><Plus className="mr-2 h-5 w-5" />Add Entry</Button></div>
-    <div className="grid grid-cols-2 gap-2 rounded-md border border-border bg-card p-1 sm:w-80"><Button variant={mode === 'calendar' ? 'default' : 'ghost'} className="h-11" onClick={() => setMode('calendar')}><CalendarDays className="mr-2 h-4 w-4" />Calendar</Button><Button variant={mode === 'history' ? 'default' : 'ghost'} className="h-11" onClick={() => setMode('history')}><List className="mr-2 h-4 w-4" />History</Button></div>
-    {mode === 'calendar' ? <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_380px]"><Card><CardHeader className="p-4"><div className="flex items-center justify-between gap-2"><Button size="icon" variant="outline" className="h-11 w-11" onClick={() => setMonth(addMonths(month, -1))}><ChevronLeft /></Button><CardTitle className="text-center text-lg">{new Intl.DateTimeFormat('en-AU', { month: 'long', year: 'numeric' }).format(month)}</CardTitle><Button size="icon" variant="outline" className="h-11 w-11" onClick={() => setMonth(addMonths(month, 1))}><ChevronRight /></Button></div><div className="mt-2 grid grid-cols-2 gap-2"><Button variant="ghost" className="h-11" onClick={() => { const now = new Date(); setMonth(new Date(now.getFullYear(), now.getMonth(), 1)); setSelectedDay(todayKey()); }}>Today</Button><Button variant="ghost" className="h-11" onClick={() => setSelectedDay(null)}>Clear day</Button></div></CardHeader><CardContent className="p-2 sm:p-4"><div className="grid grid-cols-7 text-center text-xs font-bold uppercase text-muted-foreground">{'Sun Mon Tue Wed Thu Fri Sat'.split(' ').map((day) => <div key={day} className="py-2">{day.slice(0, 1)}</div>)}</div><div className="grid grid-cols-7 gap-1">{days.map(({ date, currentMonth }) => { const key = localDateKey(date); return <button key={key} type="button" onClick={() => { setSelectedDay(key); if (!currentMonth) setMonth(new Date(date.getFullYear(), date.getMonth(), 1)); }} className={`relative min-h-12 rounded-md border text-sm sm:min-h-16 ${selectedDay === key ? 'border-primary bg-primary text-primary-foreground' : currentMonth ? 'border-border bg-background hover:border-primary/60' : 'border-transparent text-muted-foreground/50'}`}><span>{date.getDate()}</span>{counts[key] ? <span className={`absolute bottom-1 left-1/2 h-1.5 w-1.5 -translate-x-1/2 rounded-full ${selectedDay === key ? 'bg-primary-foreground' : 'bg-primary'}`} /> : null}</button>; })}</div></CardContent></Card><section className="space-y-3">{selectedDay ? <><div className="flex items-center justify-between"><div><h2 className="font-bold">{displayWorkDate(selectedDay)}</h2><p className="text-xs text-muted-foreground">{dayEntries.length} {dayEntries.length === 1 ? 'entry' : 'entries'}</p></div><Button className="h-11" onClick={() => openCreate(selectedDay)}><Plus className="mr-1 h-4 w-4" />Add</Button></div>{loading ? <p className="py-10 text-center text-muted-foreground">Loading…</p> : dayEntries.length ? dayEntries.map((entry) => <EntryCard key={entry.id} entry={entry} onOpen={() => navigate(`/diary?entry=${entry.id}`)} />) : <Empty text="No work recorded for this day." />}</> : <Empty text="Select a day to view or add work." />}</section></div> : <><Card><CardContent className="grid gap-3 p-4 md:grid-cols-3 xl:grid-cols-6"><div className="relative md:col-span-2"><Search className="absolute left-3 top-3.5 h-5 w-5 text-muted-foreground" /><Input className="h-12 pl-10" placeholder="Search work history…" value={filters.q} onChange={(e) => setFilters({ ...filters, q: e.target.value })} /></div><Input type="date" className="h-12" value={filters.from} onChange={(e) => setFilters({ ...filters, from: e.target.value })} /><Input type="date" className="h-12" value={filters.to} onChange={(e) => setFilters({ ...filters, to: e.target.value })} /><select className={control} value={filters.crane} onChange={(e) => setFilters({ ...filters, crane: e.target.value })}><option value="">All cranes</option>{models.map((model) => <option key={model}>{model}</option>)}</select><select className={control} value={filters.system} onChange={(e) => setFilters({ ...filters, system: e.target.value })}><option value="">All systems</option>{systems.map((system) => <option key={system}>{system}</option>)}</select><select className={control} value={filters.followUp} onChange={(e) => setFilters({ ...filters, followUp: e.target.value })}><option value="">All follow-ups</option><option value="true">Follow-up required</option><option value="false">No follow-up</option></select><Button variant="outline" className="h-12" onClick={clearFilters}><X className="mr-2 h-4 w-4" />Clear</Button></CardContent></Card>{loading ? <p className="py-12 text-center text-muted-foreground">Loading history…</p> : entries.length ? <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">{entries.map((entry) => <EntryCard key={entry.id} entry={entry} onOpen={() => navigate(`/diary?entry=${entry.id}`)} />)}</div> : <Empty text="No diary entries match these filters." />}</>}
-    <Dialog open={editor} onOpenChange={(open) => { setEditor(open); if (!open && new URLSearchParams(location.split('?')[1] ?? '').has('entry')) navigate('/diary', { replace: true }); }}><DialogContent className="max-h-[96dvh] w-[calc(100%-1rem)] max-w-3xl overflow-y-auto p-4 sm:p-6"><DialogHeader><DialogTitle>{editing ? 'Edit diary entry' : 'New diary entry'}</DialogTitle><DialogDescription>Private to your technician account.</DialogDescription></DialogHeader><form className="space-y-5" onSubmit={(e) => void save(e)}><div className="grid gap-4 sm:grid-cols-2"><Field label="Work Date"><Input type="date" required className="h-12" value={form.workDate} onChange={(e) => setForm({ ...form, workDate: e.target.value })} /></Field><Field label="Job Title"><Input required maxLength={180} className="h-12" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} /></Field><Field label="Start Time"><Input type="time" className="h-12" value={form.startTime ?? ''} onChange={(e) => setText('startTime', e.target.value)} /></Field><Field label="End Time"><Input type="time" className="h-12" value={form.endTime ?? ''} onChange={(e) => setText('endTime', e.target.value)} /></Field><Field label="Duration (minutes)"><Input type="number" min="0" max="10080" className="h-12" value={form.durationMinutes ?? ''} onChange={(e) => setForm({ ...form, durationMinutes: e.target.value ? Number(e.target.value) : null })} /></Field><Field label="Crane / Model"><Input list="diary-models" maxLength={120} className="h-12" value={form.craneModel ?? ''} onChange={(e) => setText('craneModel', e.target.value)} /><datalist id="diary-models">{models.map((model) => <option key={model}>{model}</option>)}</datalist></Field><Field label="System / Category"><Input maxLength={120} className="h-12" value={form.systemCategory ?? ''} onChange={(e) => setText('systemCategory', e.target.value)} /></Field></div><Field label="Work Performed"><Textarea required maxLength={20000} className="min-h-36 text-base" value={form.workPerformed} onChange={(e) => setForm({ ...form, workPerformed: e.target.value })} /></Field><div className="grid gap-4 sm:grid-cols-2"><Area label="Fault / Symptom" value={form.faultSymptom} onChange={(v) => setText('faultSymptom', v)} /><Area label="Diagnosis" value={form.diagnosis} onChange={(v) => setText('diagnosis', v)} /><Area label="Parts Used" value={form.partsUsed} onChange={(v) => setText('partsUsed', v)} /><Area label="Outcome" value={form.outcome} onChange={(v) => setText('outcome', v)} /></div><label className="flex min-h-12 items-center gap-3 rounded-md border border-border p-3"><input type="checkbox" className="h-5 w-5" checked={form.followUpRequired} onChange={(e) => setForm({ ...form, followUpRequired: e.target.checked })} /><span className="font-medium">Follow-up required</span></label>{form.followUpRequired && <Area label="Follow-up Notes" value={form.followUpNotes} onChange={(v) => setText('followUpNotes', v)} />}<div className="grid gap-4 sm:grid-cols-2"><Field label="Linked Manual"><select className={control} value={form.documentId ?? ''} onChange={(e) => setText('documentId', e.target.value)}><option value="">None</option>{TECH_DOCS.map((doc) => <option key={doc.id} value={doc.id}>{doc.title}</option>)}</select></Field><Field label="Linked Workshop Note"><select className={control} value={form.workshopNoteId ?? ''} onChange={(e) => setText('workshopNoteId', e.target.value)}><option value="">None</option>{notes.map((note) => <option key={note.id} value={note.id}>{note.title}</option>)}</select></Field></div><Field label="Tags (comma-separated)"><Input className="h-12" value={tagText} onChange={(e) => setTagText(e.target.value)} /></Field><div className="grid gap-2 sm:grid-cols-[1fr_auto]"><Button className="h-12 font-bold" disabled={saving}>{saving ? 'Saving…' : 'Save Entry'}</Button>{editing && <Button type="button" variant="destructive" className="h-12" onClick={() => void remove(editing)}><Trash2 className="mr-2 h-4 w-4" />Delete</Button>}</div></form></DialogContent></Dialog>
-  </div>;
+function validDate(value: string) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const [year, month, day] = value.split('-').map(Number);
+  return localDateKey(new Date(year!, month! - 1, day)) === value;
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) { return <div className="space-y-2"><Label>{label}</Label>{children}</div>; }
-function Area({ label, value, onChange }: { label: string; value: string | null; onChange: (value: string) => void }) { return <Field label={label}><Textarea className="min-h-24 text-base" value={value ?? ''} onChange={(e) => onChange(e.target.value)} /></Field>; }
-function Empty({ text }: { text: string }) { return <Card className="border-dashed"><CardContent className="py-12 text-center text-sm text-muted-foreground">{text}</CardContent></Card>; }
-function EntryCard({ entry, onOpen }: { entry: DiaryEntry; onOpen: () => void }) { return <Card className="cursor-pointer border-border/70 bg-card/70 hover:border-primary/60" onClick={onOpen}><CardHeader className="p-4 pb-2"><div className="flex items-start justify-between gap-2"><CardTitle className="text-lg leading-tight">{entry.title}</CardTitle>{entry.followUpRequired && <Badge variant="destructive"><TriangleAlert className="mr-1 h-3 w-3" />Follow-up</Badge>}</div><p className="text-xs text-muted-foreground">{displayWorkDate(entry.workDate)}</p></CardHeader><CardContent className="p-4 pt-1"><div className="flex flex-wrap gap-1.5">{entry.craneModel && <Badge variant="secondary">{entry.craneModel}</Badge>}{entry.systemCategory && <Badge variant="outline">{entry.systemCategory}</Badge>}{entry.durationMinutes !== null && <Badge variant="outline"><Clock className="mr-1 h-3 w-3" />{entry.durationMinutes} min</Badge>}</div><p className="mt-3 line-clamp-3 whitespace-pre-wrap text-sm text-muted-foreground">{entry.workPerformed}</p><div className="mt-3 flex items-center gap-3 text-xs text-primary"><span className="flex items-center"><Pencil className="mr-1 h-3 w-3" />Open</span>{entry.documentId && <BookOpen className="h-3 w-3" />}</div></CardContent></Card>; }
+export default function DiaryPage() {
+  const [, navigate] = useLocation();
+  const search = useSearch();
+  const [month, setMonth] = useState(() => new Date(new Date().getFullYear(), new Date().getMonth(), 1));
+  const [entries, setEntries] = useState<DiaryEntry[]>([]);
+  const [calendarLoading, setCalendarLoading] = useState(true);
+  const [calendarError, setCalendarError] = useState('');
+  const [date, setDate] = useState<string | null>(null);
+  const [summary, setSummary] = useState('');
+  const [original, setOriginal] = useState('');
+  const [fromLegacy, setFromLegacy] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+  const [feedback, setFeedback] = useState('');
+  const [refresh, setRefresh] = useState(0);
+  const [retry, setRetry] = useState(0);
+
+  useEffect(() => {
+    let active = true;
+    setCalendarLoading(true); setCalendarError(''); setEntries([]);
+    void listDiary(monthRange(month)).then(result => { if (active) setEntries(result); })
+      .catch((err: Error) => { if (active) setCalendarError(err.message); })
+      .finally(() => { if (active) setCalendarLoading(false); });
+    return () => { active = false; };
+  }, [month, refresh]);
+
+  useEffect(() => {
+    let active = true;
+    const params = new URLSearchParams(search);
+    const requested = params.get('date') ?? params.get('new');
+    if (requested && validDate(requested)) setDate(requested);
+    else if (params.has('entry')) {
+      void getDiaryById(params.get('entry')!).then(entry => {
+        if (active && entry) navigate(`/diary?date=${entry.date}`, { replace: true });
+      }).catch((err: Error) => { if (active) setCalendarError(err.message); });
+    }
+    return () => { active = false; };
+  }, [search, navigate]);
+
+  useEffect(() => {
+    if (!date) return;
+    let active = true;
+    setLoading(true); setError(''); setFeedback(''); setSummary(''); setOriginal(''); setFromLegacy(false);
+    void getDiary(date).then(entry => {
+      if (!active) return;
+      setSummary(entry?.summary ?? ''); setOriginal(entry?.summary ?? ''); setFromLegacy(entry?.fromLegacy ?? false);
+    }).catch((err: Error) => { if (active) setError(err.message); })
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, [date, retry]);
+
+  const openDay = (value: string) => {
+    setError(''); setFeedback(''); setLoading(true); setSummary(''); setOriginal('');
+    setDate(value);
+    navigate(`/diary?date=${value}`, { replace: true });
+  };
+  const close = () => {
+    if (saving || (summary !== original && !window.confirm('Discard your unsaved daily summary changes?'))) return;
+    setDate(null); navigate('/diary', { replace: true });
+  };
+  const save = async (event: FormEvent) => {
+    event.preventDefault();
+    if (!date || loading || saving) return;
+    setSaving(true); setFeedback('');
+    try {
+      const entry = await saveDiary({ date, summary });
+      setSummary(entry.summary); setOriginal(entry.summary); setFromLegacy(false);
+      setFeedback('Daily summary saved.'); setRefresh(value => value + 1);
+    } catch (err) { setFeedback(`Could not save: ${(err as Error).message}`); }
+    finally { setSaving(false); }
+  };
+  const recorded = new Set(entries.map(entry => entry.date));
+  const today = localDateKey(new Date());
+
+  return <div className="mx-auto min-h-full max-w-3xl space-y-5 p-4 pb-28 sm:p-6 md:p-8">
+    <div><h1 className="text-3xl font-bold tracking-tight">Technician Diary</h1>
+      <p className="mt-1 text-sm text-muted-foreground">One daily summary, private to your technician account. Select a date to write or edit.</p></div>
+    <Card>
+      <CardHeader className="p-4"><div className="flex items-center justify-between gap-2">
+        <Button aria-label="Previous month" size="icon" variant="outline" className="h-11 w-11" onClick={() => setMonth(addMonths(month, -1))}><ChevronLeft /></Button>
+        <CardTitle className="text-center text-lg">{new Intl.DateTimeFormat('en-AU', { month: 'long', year: 'numeric' }).format(month)}</CardTitle>
+        <Button aria-label="Next month" size="icon" variant="outline" className="h-11 w-11" onClick={() => setMonth(addMonths(month, 1))}><ChevronRight /></Button>
+      </div><Button variant="ghost" className="mt-2 h-11" onClick={() => { const now = new Date(); setMonth(new Date(now.getFullYear(), now.getMonth(), 1)); openDay(today); }}>Today</Button></CardHeader>
+      <CardContent className="p-2 sm:p-4">
+        <div className="grid grid-cols-7 text-center text-xs font-bold uppercase text-muted-foreground">{'Sun Mon Tue Wed Thu Fri Sat'.split(' ').map(day => <div key={day} className="py-2">{day}</div>)}</div>
+        <div className="grid grid-cols-7 gap-1">{calendarDays(month).map(({ date: day, currentMonth }) => {
+          const key = localDateKey(day);
+          return <button key={key} type="button" aria-label={`${displayWorkDate(key)}${recorded.has(key) ? ', has daily summary' : ''}`} aria-current={key === today ? 'date' : undefined}
+            onClick={() => { if (!currentMonth) setMonth(new Date(day.getFullYear(), day.getMonth(), 1)); openDay(key); }}
+            className={`relative min-h-12 rounded-md border text-sm sm:min-h-16 ${key === today ? 'border-primary bg-primary/10' : currentMonth ? 'border-border bg-background hover:border-primary/60' : 'border-transparent text-muted-foreground/50'}`}>
+            {day.getDate()}{recorded.has(key) && <span className="absolute bottom-1 left-1/2 h-1.5 w-1.5 -translate-x-1/2 rounded-full bg-primary" />}
+          </button>;
+        })}</div>
+        <p className="mt-3 text-center text-xs text-muted-foreground" role="status">{calendarLoading ? 'Loading summaries…' : 'A dot marks a date with a summary.'}</p>
+        {calendarError && <div role="alert" className="mt-3 text-sm text-destructive">Could not load calendar: {calendarError} <Button variant="outline" onClick={() => setRefresh(value => value + 1)}>Retry</Button></div>}
+      </CardContent>
+    </Card>
+    <Dialog open={date !== null} onOpenChange={open => { if (!open) close(); }}>
+      <DialogContent className="max-h-[95dvh] w-[calc(100%-1rem)] max-w-2xl overflow-y-auto p-4 sm:p-6">
+        <DialogHeader><DialogTitle>{date ? displayWorkDate(date) : 'Daily summary'}</DialogTitle><DialogDescription>Private to you. Saving updates this date’s summary.</DialogDescription></DialogHeader>
+        {loading ? <p role="status">Loading daily summary…</p> : error ? <div role="alert"><p>{error}</p><Button className="mt-3 h-12" onClick={() => setRetry(value => value + 1)}>Retry</Button></div> : <form className="space-y-4" onSubmit={event => void save(event)}>
+          <div className="space-y-2"><Label htmlFor="daily-summary">Daily summary</Label>
+            <Textarea id="daily-summary" autoFocus required disabled={saving} value={summary} onChange={event => { setSummary(event.target.value); setFeedback(''); }}
+              className="min-h-64 resize-y text-base leading-relaxed" placeholder="What did you work on today?" aria-describedby="summary-help" /></div>
+          <p id="summary-help" className="text-xs text-muted-foreground">Up to 20,000 characters.{fromLegacy ? ' Previous diary notes for this date have been combined here. The originals remain stored.' : ''}</p>
+          {summary.trim().length > 20_000 && <p role="alert" className="text-sm text-destructive">Please shorten this summary to 20,000 characters before saving. Stored history is unchanged.</p>}
+          <Button className="h-12 w-full font-bold" disabled={saving || !summary.trim() || summary.trim().length > 20_000}>{saving ? 'Saving…' : 'Save summary'}</Button>
+          {feedback && <p role="status" aria-live="polite" className="text-sm">{feedback}</p>}
+        </form>}
+      </DialogContent>
+    </Dialog>
+  </div>;
+}
