@@ -30,6 +30,10 @@ export type TechDoc = {
   type: DocType;
   title: string;
   subtitle: string;
+  manufacturer?: string;
+  sourceSystem?: string;
+  documentType?: string;
+  bookCode?: string;
   docNumber?: string;
   pages?: number;
   year?: number;
