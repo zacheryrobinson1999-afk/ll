@@ -1,3 +1,5 @@
+import { FLEET } from '../data/craneFleet';
+import { matchesManual, manualFields } from '../../../api-server/src/lib/catalog/manualLibrary';
 import type { CraneModel } from '@/data/craneFleet';
 import type { TechDoc } from '@/data/techDocs';
 import type { WorkshopNote } from '@/lib/notesApi';
@@ -49,11 +51,14 @@ export function scoreFields(query: string, fields: SearchField[]): number {
 }
 
 export function rankDocuments(query: string, documents: TechDoc[]): UnifiedSearchResult[] {
-  return documents.map((doc) => {
+  return documents.filter(doc => matchesManual(query, doc, FLEET)).map((doc) => {
     const section = doc.sections.map((item) => ({ item, score: scoreFields(query, [
       { value: item.ref, weight: 110 }, { value: item.title, weight: 85 }, { value: item.summary, weight: 25 },
     ]) })).sort((a, b) => b.score - a.score)[0];
     const score = scoreFields(query, [
+      ...manualFields(doc, FLEET).map(value => ({ value, weight: 20 })),
+      { value: String(doc.year ?? ''), weight: 50 },
+      ...FLEET.filter(crane => doc.appliesTo.includes(crane.id)).map(crane => ({ value: crane.model, weight: 110 })),
       { value: doc.docNumber, weight: 140 }, { value: doc.title, weight: 120 }, { value: doc.subtitle, weight: 75 },
       ...doc.craneTypes.map((value) => ({ value, weight: 110 })), ...doc.appliesTo.map((value) => ({ value, weight: 85 })),
       { value: doc.manufacturer, weight: 90 }, { value: doc.system, weight: 70 },
