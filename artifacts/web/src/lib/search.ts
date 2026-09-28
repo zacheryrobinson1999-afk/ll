@@ -1,3 +1,4 @@
+import { manualDetailHref } from '../../../api-server/src/lib/catalog/manualDetail';
 import { FLEET } from '../data/craneFleet';
 import { matchesManual, manualFields } from '../../../api-server/src/lib/catalog/manualLibrary';
 import type { CraneModel } from '@/data/craneFleet';
@@ -66,7 +67,7 @@ export function rankDocuments(query: string, documents: TechDoc[]): UnifiedSearc
       { value: doc.documentType, weight: 60 }, { value: doc.type, weight: 55 }, { value: doc.summary, weight: 25 },
       ...doc.sections.flatMap((item) => [{ value: item.ref, weight: 110 }, { value: item.title, weight: 85 }, { value: item.summary, weight: 25 }]),
     ]);
-    return { type: 'manual' as const, id: doc.id, title: doc.title, subtitle: `${doc.type} · ${doc.system}${doc.craneTypes[0] ? ` · ${doc.craneTypes[0]}` : ''}`, detail: section?.score ? `${section.item.ref} · ${section.item.title}` : doc.docNumber ? `Document ${doc.docNumber}` : undefined, href: `/docs?document=${encodeURIComponent(doc.id)}`, score };
+    return { type: 'manual' as const, id: doc.id, title: doc.title, subtitle: `${doc.type} · ${doc.system}${doc.craneTypes[0] ? ` · ${doc.craneTypes[0]}` : ''}`, detail: section?.score ? `${section.item.ref} · ${section.item.title}` : doc.docNumber ? `Document ${doc.docNumber}` : undefined, href: manualDetailHref(doc.id, { from: `/search?q=${encodeURIComponent(query)}` }), score };
   }).filter((result) => result.score > 0).sort(compareResults);
 }
 

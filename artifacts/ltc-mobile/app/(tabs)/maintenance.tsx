@@ -1,3 +1,4 @@
+import { useRouter } from 'expo-router';
 /**
  * Maintenance tab — three-level navigator (state-based):
  *   1. Manufacturer cards   → pick a make
@@ -1143,16 +1144,10 @@ function styles(colors: ReturnType<typeof useColors>) {
 
 function DocCard({ doc, accent }: { doc: TechDoc; accent: string }) {
   const colors = useColors();
+  const router = useRouter();
   const systemColor = SYSTEM_COLORS[doc.system];
 
-  const openDoc = () => {
-    const url = docUrl(doc);
-    WebBrowser.openBrowserAsync(url, {
-      presentationStyle: WebBrowser.WebBrowserPresentationStyle.PAGE_SHEET,
-    }).catch(() => {
-      /* no-op — URL may not be reachable in dev */
-    });
-  };
+  const openDoc = () => router.push({ pathname: '/docs', params: { document: doc.id } });
 
   return (
     <View

@@ -1,5 +1,6 @@
+import { manualDetailHref } from '../../../api-server/src/lib/catalog/manualDetail';
 import { Link } from 'wouter';
-import { TECH_DOCS, docUrl } from '@/data/techDocs';
+import { TECH_DOCS } from '@/data/techDocs';
 import { useBookmarks } from '@/hooks/useBookmarks';
 import { BookmarkButton } from '@/components/bookmark-button';
 import { Button } from '@/components/ui/button';
@@ -18,7 +19,7 @@ export default function BookmarksPage() {
       return <article key={bookmark.id} className="space-y-3 rounded-lg border border-border bg-card p-4">
         <h2 className="font-semibold">{doc?.title ?? 'Manual no longer in catalogue'}</h2>
         <p className="text-sm text-muted-foreground">{doc?.system}{bookmark.sectionRef && ` · Section ${bookmark.sectionRef}`}{bookmark.pageRef && ` · Page ${bookmark.pageRef}`}</p>
-        <div className="flex flex-wrap gap-2">{doc && <Button asChild><a href={`${docUrl(doc)}${bookmark.pageRef ? `#page=${bookmark.pageRef}` : ''}`} target="_blank" rel="noopener noreferrer">Open manual</a></Button>}
+        <div className="flex flex-wrap gap-2">{doc && <Button asChild><Link href={manualDetailHref(doc.id, { from: '/bookmarks', section: bookmark.sectionRef, page: bookmark.pageRef })}>View manual</Link></Button>}
           <BookmarkButton documentId={bookmark.documentId} sectionRef={bookmark.sectionRef} pageRef={bookmark.pageRef} />
         </div>
       </article>;
