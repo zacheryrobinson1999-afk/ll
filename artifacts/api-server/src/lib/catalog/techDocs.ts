@@ -7,6 +7,7 @@
 
 import { MANUAL_EXPANSION_DOCS } from './manualExpansion';
 import { VERIFIED_MANUAL_DOCS } from './verifiedManuals';
+import { NEW_MANUAL_DOCS } from './newManuals';
 
 export type DocSystem =
   | 'LICCON 1'
@@ -19,6 +20,7 @@ export type DocSystem =
   | 'KATO'
   | 'Liebherr'
   | 'Kobelco'
+  | 'Hino'
   | 'Eaton'
   | 'SANY';
 
@@ -76,6 +78,7 @@ export const DOC_SYSTEMS: DocSystem[] = [
   'KATO',
   'Liebherr',
   'Kobelco',
+  'Hino',
   'Eaton',
   'SANY',
 ];
@@ -91,6 +94,7 @@ export const SYSTEM_COLORS: Record<DocSystem, string> = {
   KATO: '#E07B00',
   Liebherr: '#F7BE21',
   Kobelco: '#0067B1',
+  Hino: '#C62828',
   Eaton: '#005EB8',
   SANY: '#E31E24',
 };
@@ -106,6 +110,7 @@ export const SYSTEM_ICONS: Record<DocSystem, string> = {
   KATO: 'KT',
   Liebherr: 'LH',
   Kobelco: 'KB',
+  Hino: 'HI',
   Eaton: 'EA',
   SANY: 'SY',
 };
@@ -118,7 +123,7 @@ export const TYPE_ICONS: Record<DocType, string> = {
   Training: 'school',
 };
 
-export const TECH_DOCS: TechDoc[] = [
+export const EXISTING_TECH_DOCS: TechDoc[] = [
 
   // ===========================================================================
   // LICCON 1
@@ -1267,6 +1272,8 @@ export const TECH_DOCS: TechDoc[] = [
   ...MANUAL_EXPANSION_DOCS,
   ...VERIFIED_MANUAL_DOCS,
 ];
+
+export const TECH_DOCS: TechDoc[] = [...EXISTING_TECH_DOCS, ...NEW_MANUAL_DOCS];
 
 /**
  * Return all documents that apply to a given fleet model ID.
