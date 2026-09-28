@@ -1,3 +1,5 @@
+import { NEW_MANUAL_DOCS } from '../../api-server/src/lib/catalog/newManuals';
+
 /**
  * Technical Document Library
  *
@@ -8,7 +10,7 @@
  * from reference material.
  */
 
-export type DocSystem = 'LICCON 1' | 'LICCON 2' | 'ECOS / CCS' | 'Terex / Franna' | 'ZF / WABCO' | 'KATO';
+export type DocSystem = 'LICCON 1' | 'LICCON 2' | 'ECOS / CCS' | 'Terex / Franna' | 'ZF / WABCO' | 'KATO' | 'Kobelco' | 'Hino';
 export type DocType =
   | 'Diagnostics'
   | 'Procedure'
@@ -49,7 +51,7 @@ export function docUrl(doc: TechDoc): string {
   return `${base}/api/docs/${encodeURIComponent(doc.cleanFile)}`;
 }
 
-export const DOC_SYSTEMS: DocSystem[] = ['LICCON 1', 'LICCON 2', 'ECOS / CCS', 'Terex / Franna', 'ZF / WABCO', 'KATO'];
+export const DOC_SYSTEMS: DocSystem[] = ['LICCON 1', 'LICCON 2', 'ECOS / CCS', 'Terex / Franna', 'ZF / WABCO', 'KATO', 'Kobelco', 'Hino'];
 
 export const SYSTEM_COLORS: Record<DocSystem, string> = {
   'LICCON 1':      '#F7BE21',   // yellow — matches Liebherr
@@ -57,6 +59,8 @@ export const SYSTEM_COLORS: Record<DocSystem, string> = {
   'ECOS / CCS':    '#0055A5',   // Grove blue
   'Terex / Franna':'#E8271A',   // Terex red
   'ZF / WABCO':   '#4A4A4A',   // dark grey — drivetrain
+  Kobelco: '#0067B1',
+  Hino: '#C62828',
   'KATO':          '#E07B00',   // orange — KATO brand
 };
 
@@ -67,6 +71,8 @@ export const SYSTEM_ICONS: Record<DocSystem, string> = {
   'Terex / Franna':'TF',
   'ZF / WABCO':   'ZW',
   'KATO':          'KT',
+  Kobelco: 'KB',
+  Hino: 'HI',
 };
 
 export const TYPE_ICONS: Record<DocType, string> = {
@@ -77,7 +83,7 @@ export const TYPE_ICONS: Record<DocType, string> = {
   Training:      'school',
 };
 
-export const TECH_DOCS: TechDoc[] = [
+export const EXISTING_TECH_DOCS: TechDoc[] = [
   // ── LICCON 1 ─────────────────────────────────────────────────────────────
 
   {
@@ -842,6 +848,8 @@ export const TECH_DOCS: TechDoc[] = [
     ],
   },
 ];
+
+export const TECH_DOCS: TechDoc[] = [...EXISTING_TECH_DOCS, ...NEW_MANUAL_DOCS];
 
 export function getBySystem(system: DocSystem): TechDoc[] {
   return TECH_DOCS.filter((d) => d.system === system);
