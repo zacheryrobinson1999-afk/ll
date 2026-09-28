@@ -1,3 +1,4 @@
+import { noteReference } from '../../../api-server/src/lib/catalog/manualDetail';
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { FileText, Pencil, Plus, Search, StickyNote, Trash2, X } from 'lucide-react';
 import { TECH_DOCS } from '@/data/techDocs';
@@ -50,7 +51,7 @@ export default function NotesPage() {
     if (!documentId) return;
     const document = TECH_DOCS.find((item) => item.id === documentId);
     if (!document) return;
-    setForm({ ...emptyInput, craneModel: document.craneTypes[0] ?? null, systemCategory: document.system, documentId: document.id, documentTitle: document.title });
+    setForm({ ...emptyInput, craneModel: document.craneTypes[0] ?? null, systemCategory: document.system, documentId: document.id, documentTitle: document.title, pageReference: noteReference(params.get('section'), params.get('page')) });
     setEditorOpen(true);
     window.history.replaceState(null, '', `${import.meta.env.BASE_URL}notes`);
   }, []);

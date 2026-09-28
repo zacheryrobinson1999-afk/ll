@@ -1,15 +1,17 @@
+import ManualDetail from './manual-detail';
+import { ManualShortcut } from '@/components/manual-shortcut';
+import { useBookmarks } from '@/hooks/useBookmarks';
+import { useManualActivity } from '@/hooks/useManualActivity';
+import { manualDetailHref, recentManuals, bookmarkedManuals } from '../../../api-server/src/lib/catalog/manualDetail';
 import { useMemo, type MouseEvent } from 'react';
-import { TECH_DOCS, SYSTEM_COLORS, SYSTEM_ICONS, docUrl, type TechDoc } from '@/data/techDocs';
+import { TECH_DOCS, SYSTEM_COLORS, SYSTEM_ICONS, type TechDoc } from '@/data/techDocs';
 import { useDocumentLibrary } from '@/hooks/useDocumentLibrary';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
-import { Search, ExternalLink, FileText, Layers, Star, X, StickyNote } from 'lucide-react';
+import { Search, ExternalLink, FileText, Star, X } from 'lucide-react';
 import { Link, useLocation } from 'wouter';
-import { Separator } from '@/components/ui/separator';
 import { FLEET } from '@/data/craneFleet';
 import { availableCategories, filterManuals, manufacturerGroups, modelGroups, manualModels, manualCategories } from '../../../api-server/src/lib/catalog/manualLibrary';
 import { BookmarkButton } from '@/components/bookmark-button';
@@ -62,7 +64,7 @@ function DocumentCard({ doc, favourite, onSelect, onOpen, onToggleFavourite, com
           {doc.docNumber && <Badge variant="outline">No. {doc.docNumber}</Badge>}
         </div>
         <Button className="h-11 w-full font-bold" onClick={(event) => { event.stopPropagation(); onOpen(doc); }}>
-          <ExternalLink className="mr-2 h-4 w-4" /> Open Manual
+          <ExternalLink className="mr-2 h-4 w-4" /> View manual
         </Button>
       </CardContent>
     </Card>
@@ -78,8 +80,12 @@ export default function DocsPage() {
   const model = params.get('model') ?? '';
   const category = params.get('type') ?? 'All';
   const favouritesOnly = params.get('favourites') === '1';
-  const selectedDoc = TECH_DOCS.find(doc => doc.id === params.get('document')) ?? null;
-  const { favouriteIds, recentlyViewedIds, toggleFavourite, recordViewed } = useDocumentLibrary();
+  const detailId = params.get('document');
+  const { bookmarks } = useBookmarks();
+  const activity = useManualActivity(detailId);
+  const recents = recentManuals(TECH_DOCS, activity.events);
+  const saved = bookmarkedManuals(TECH_DOCS, bookmarks);
+  const { favouriteIds, toggleFavourite } = useDocumentLibrary();
   const categories = useMemo(() => availableCategories(TECH_DOCS), []);
   const update = (values: Record<string, string>, replace = false) => {
     const next = new URLSearchParams(query);
@@ -91,12 +97,9 @@ export default function DocsPage() {
     .filter(doc => !favouritesOnly || favouriteIds.includes(doc.id)), [search, category, manufacturer, model, favouritesOnly, favouriteIds]);
   const groups = !searching && !model ? (manufacturer ? modelGroups(filteredDocs, FLEET) : manufacturerGroups(filteredDocs)) : [];
   const clearFilters = () => navigate('/docs');
-  const openDocument = (doc: TechDoc) => {
-    recordViewed(doc.id);
-    window.open(docUrl(doc), '_blank', 'noopener,noreferrer');
-  };
-  const selectDocument = (doc: TechDoc) => update({ document: doc.id });
-  const cardProps = (doc: TechDoc) => ({ doc, favourite: favouriteIds.includes(doc.id), onSelect: selectDocument, onOpen: openDocument, onToggleFavourite: toggleFavourite });
+  const selectDocument = (doc: TechDoc) => navigate(manualDetailHref(doc.id, { from: `/docs${query ? `?${query}` : ''}` }));
+  const cardProps = (doc: TechDoc) => ({ doc, favourite: favouriteIds.includes(doc.id), onSelect: selectDocument, onOpen: selectDocument, onToggleFavourite: toggleFavourite });
+  if (detailId !== null) return <ManualDetail id={detailId} query={query} />;
   return <div className="mx-auto flex min-h-full w-full max-w-[1400px] flex-col gap-5 p-4 pb-24 sm:p-6 md:p-8">
     <div className="flex flex-wrap items-start justify-between gap-2">
       <div><h1 className="text-3xl font-bold tracking-tight">Manuals</h1><p className="mt-1 text-sm text-muted-foreground">{TECH_DOCS.length} documents · Browse by manufacturer and model, or search the entire library.</p></div>
@@ -111,6 +114,11 @@ export default function DocsPage() {
       {categories.map(type => <Button key={type} variant={category === type ? 'default' : 'outline'} className="min-h-11" aria-pressed={category === type} onClick={() => update({ type: type === 'All' ? '' : type })}>{type}</Button>)}
       <Button variant={favouritesOnly ? 'default' : 'outline'} className="min-h-11" aria-pressed={favouritesOnly} onClick={() => update({ favourites: favouritesOnly ? '' : '1' })}><Star className="mr-2 h-4 w-4" />Favourites</Button>
     </div>
+    {!searching && !manufacturer && category === 'All' && !favouritesOnly && <>
+      {recents.length > 0 && <section className="space-y-3" aria-label="Recently opened"><h2 className="text-xl font-bold">Recently opened</h2><div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{recents.map(({ doc, openedAt }) => <ManualShortcut key={doc.id} doc={doc} openedAt={openedAt} />)}</div></section>}
+      {saved.length > 0 && <section className="space-y-3" aria-label="Bookmarked manuals"><div className="flex flex-wrap items-center justify-between gap-3"><h2 className="text-xl font-bold">Bookmarked manuals</h2><Link href="/bookmarks" className="min-h-11 py-2 text-primary">View all bookmarks</Link></div><div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{saved.map(doc => <ManualShortcut key={doc.id} doc={doc} />)}</div></section>}
+      {activity.error && <Button variant="ghost" onClick={activity.retry}>Retry recent manuals</Button>}
+    </>}
     {!searching && <nav aria-label="Manual library breadcrumb" className="flex flex-wrap items-center gap-2 text-sm">
       <Button variant="ghost" className="min-h-11" onClick={() => update({ manufacturer: '', model: '', document: '' })}>Manuals</Button>
       {manufacturer && <><span>/</span><Button variant="ghost" className="min-h-11" onClick={() => update({ model: '', document: '' })}>{manufacturer}</Button></>}
@@ -122,12 +130,5 @@ export default function DocsPage() {
         : searching || model ? <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">{filteredDocs.map(doc => <DocumentCard key={doc.id} {...cardProps(doc)} />)}</div>
         : <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">{groups.map(group => <button key={group.label} type="button" onClick={() => update(manufacturer ? { model: group.label } : { manufacturer: group.label, model: '' })} className="flex min-h-24 items-center justify-between gap-3 rounded-xl border border-border bg-card p-5 text-left transition-colors hover:border-primary focus-visible:outline focus-visible:outline-primary"><span className="font-semibold">{group.label}</span><span className="shrink-0 text-sm text-muted-foreground">{group.count} {group.count === 1 ? 'manual' : 'manuals'} →</span></button>)}</div>}
     </section>
-    {!searching && !manufacturer && category === 'All' && !favouritesOnly && <details className="rounded-lg border border-border p-4"><summary className="cursor-pointer py-2 font-semibold">Recently viewed ({recentlyViewedIds.length})</summary><div className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">{recentlyViewedIds.map(id => TECH_DOCS.find(doc => doc.id === id)).filter((doc): doc is TechDoc => Boolean(doc)).map(doc => <DocumentCard key={doc.id} {...cardProps(doc)} />)}</div>{!recentlyViewedIds.length && <p className="text-sm text-muted-foreground">Manuals you open will appear here.</p>}</details>}
-      <Sheet open={Boolean(selectedDoc)} onOpenChange={(open) => !open && update({ document: '' }, true)}>
-        <SheetContent className="flex w-full flex-col overflow-y-auto border-l-border bg-card p-0 sm:max-w-md">
-          {selectedDoc && <><div className="space-y-5 p-4 sm:p-6"><SheetHeader><div className="mb-2 flex flex-wrap gap-2"><Badge variant="outline" style={{ borderColor: SYSTEM_COLORS[selectedDoc.system], color: SYSTEM_COLORS[selectedDoc.system] }}>{selectedDoc.system}</Badge><Badge variant="secondary">{selectedDoc.type}</Badge></div><SheetTitle className="text-2xl leading-tight">{selectedDoc.title}</SheetTitle><SheetDescription className="text-base font-medium">{selectedDoc.subtitle}</SheetDescription></SheetHeader><p className="text-sm leading-relaxed text-muted-foreground">{selectedDoc.summary}</p><BookmarkButton documentId={selectedDoc.id} /><div className="flex flex-wrap gap-2">{selectedDoc.craneTypes.map((model) => <Badge key={model} variant="outline" className="bg-secondary/20">{model}</Badge>)}{selectedDoc.year && <Badge variant="outline">{selectedDoc.year}</Badge>}{selectedDoc.pages && <Badge variant="outline">{selectedDoc.pages} pages</Badge>}{selectedDoc.docNumber && <Badge variant="outline">No. {selectedDoc.docNumber}</Badge>}</div></div><Separator /><div className="flex-1 space-y-4 p-4 sm:p-6"><h4 className="flex items-center gap-2 font-semibold"><Layers className="h-4 w-4 text-primary" />Document Sections</h4><Accordion type="multiple">{selectedDoc.sections.map((section, index) => <AccordionItem key={`${section.ref}-${index}`} value={`section-${index}`}><AccordionTrigger className="min-h-12 text-left text-sm hover:text-primary hover:no-underline"><span className="mr-3 shrink-0 font-mono text-muted-foreground">{section.ref}</span><span>{section.title}</span></AccordionTrigger><AccordionContent className="ml-2 border-l border-border/50 pl-4 text-sm leading-relaxed text-muted-foreground sm:pl-6">{section.summary}<div className="mt-3"><BookmarkButton documentId={selectedDoc.id} sectionRef={section.ref} /></div></AccordionContent></AccordionItem>)}</Accordion></div><div className="sticky bottom-0 z-10 grid gap-2 border-t border-border bg-card/95 p-4 backdrop-blur sm:p-6"><Button className="h-12 w-full font-bold" onClick={() => openDocument(selectedDoc)}><ExternalLink className="mr-2 h-4 w-4" />Open Manual</Button><Button asChild variant="outline" className="h-12 w-full font-bold"><Link href={`/notes?document=${encodeURIComponent(selectedDoc.id)}`}><StickyNote className="mr-2 h-4 w-4" />Add workshop note</Link></Button></div></>}
-        </SheetContent>
-      </Sheet>
-    </div>
-  ;
+  </div>;
 }

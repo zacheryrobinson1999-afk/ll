@@ -1,7 +1,8 @@
+import { manualDetailHref } from '../../../api-server/src/lib/catalog/manualDetail';
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'wouter';
 import type { CraneModel } from '@/data/craneFleet';
-import { TECH_DOCS, docUrl } from '@/data/techDocs';
+import { TECH_DOCS } from '@/data/techDocs';
 import { isCustomCrane } from '@/lib/customFleet';
 import { listNotes } from '@/lib/notesApi';
 import { workflowRequest, type FleetDetails } from '@/lib/workflowApi';
@@ -40,10 +41,10 @@ export function FleetWorkspace({ crane }: { crane: CraneModel }) {
   const manualRows = (rows: typeof manuals) => rows.map((match) => {
     const doc = TECH_DOCS.find((item) => item.id === match.documentId)!;
     return <article key={doc.id} className="space-y-2 rounded-md border border-border p-3">
-      <Link href={`/docs?document=${encodeURIComponent(doc.id)}`} className="block font-medium text-primary">{doc.title}</Link>
+      <Link href={manualDetailHref(doc.id, { from: `/fleet?crane=${encodeURIComponent(crane.id)}` })} className="block font-medium text-primary">{doc.title}</Link>
       <p className="text-xs text-muted-foreground">{doc.type} · {doc.system}</p>
       <p className="text-xs text-muted-foreground">{match.reason}</p>
-      <div className="flex flex-wrap gap-2"><Button asChild><a href={docUrl(doc)} target="_blank" rel="noopener noreferrer">Open manual</a></Button><BookmarkButton documentId={doc.id} /></div>
+      <div className="flex flex-wrap gap-2"><Button asChild><Link href={manualDetailHref(doc.id, { from: `/fleet?crane=${encodeURIComponent(crane.id)}` })}>View manual</Link></Button><BookmarkButton documentId={doc.id} /></div>
     </article>;
   });
   return <div className="space-y-6">

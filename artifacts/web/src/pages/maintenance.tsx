@@ -1,7 +1,8 @@
+import { manualDetailHref } from '../../../api-server/src/lib/catalog/manualDetail';
 import { useState } from 'react';
 import { useLocation } from 'wouter';
 import { getManufacturers, getByManufacturer } from '@/data/craneFleet';
-import { getByFleetId, docUrl } from '@/data/techDocs';
+import { getByFleetId } from '@/data/techDocs';
 import { generateDailyCodes, makeLegacyDate } from '@/lib/daycodesApi';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -133,6 +134,7 @@ function ManufacturerView({ manufacturer, onBack, onSelect }: { manufacturer: st
 }
 
 function CraneDetailView({ manufacturer, craneId, onBack }: { manufacturer: string, craneId: string, onBack: () => void }) {
+  const [, navigate] = useLocation();
   const crane = getByManufacturer(manufacturer).find(c => c.id === craneId);
   const docs = crane ? getByFleetId(crane.id) : [];
   const isLiebherr = manufacturer === 'Liebherr';
@@ -174,7 +176,7 @@ function CraneDetailView({ manufacturer, craneId, onBack }: { manufacturer: stri
                         <div className="font-semibold text-sm group-hover:text-primary transition-colors">{doc.title}</div>
                         <div className="text-xs text-muted-foreground">{doc.type} • {doc.system}</div>
                       </div>
-                      <Button size="sm" variant="secondary" onClick={() => window.open(docUrl(doc), '_blank')}>
+                      <Button size="sm" variant="secondary" onClick={() => navigate(manualDetailHref(doc.id, { from: `/maintenance/${encodeURIComponent(manufacturer)}/${encodeURIComponent(craneId)}` }))}>
                         Open <ExternalLink className="w-3 h-3 ml-2" />
                       </Button>
                     </div>

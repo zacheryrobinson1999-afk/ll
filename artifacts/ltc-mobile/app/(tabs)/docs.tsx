@@ -1,7 +1,9 @@
+import { ManualDetail } from '@/components/ManualDetail';
+import { recentManuals, bookmarkedManuals, manualMetadata } from '../../../api-server/src/lib/catalog/manualDetail';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useManualLibraryStorage } from '@/hooks/useManualLibraryStorage';
 import { availableCategories, filterManuals, manufacturerGroups, modelGroups, manualModels, manualCategories } from '../../../api-server/src/lib/catalog/manualLibrary';
-import React, { useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import {
   Pressable,
   ScrollView,
@@ -10,41 +12,15 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import * as WebBrowser from 'expo-web-browser';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { MaterialCommunityIcons, Feather } from '@expo/vector-icons';
+import { Feather } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
 import { useColors } from '@/hooks/useColors';
 import {
   TECH_DOCS,
-  SYSTEM_COLORS,
-  SYSTEM_ICONS,
-  TYPE_ICONS,
-  docUrl,
   type TechDoc,
-  type DocSection,
 } from '@/data/techDocs';
 import { FLEET } from '@/data/craneFleet';
-
-// ─── helpers ─────────────────────────────────────────────────────────────────
-
-const TYPE_LABELS: Record<string, string> = {
-  Diagnostics:   'DIAGNOSTICS',
-  Procedure:     'PROCEDURE',
-  Reference:     'REFERENCE',
-  'Screen Guide':'SCREEN GUIDE',
-  Training:      'TRAINING',
-};
-
-const TYPE_COLORS: Record<string, string> = {
-  Diagnostics:   '#E36B55',
-  Procedure:     '#67C587',
-  Reference:     '#1B9AAA',
-  'Screen Guide':'#F7BE21',
-  Training:      '#A78BFA',
-};
-
-// ─── sub-components ──────────────────────────────────────────────────────────
 
 function SystemChip({
   label,
@@ -90,32 +66,6 @@ function SystemChip({
   );
 }
 
-function TypePill({
-  type,
-  colors,
-}: {
-  type: string;
-  colors: ReturnType<typeof useColors>;
-}) {
-  const color = TYPE_COLORS[type] ?? colors.mutedForeground;
-  return (
-    <View
-      style={{
-        backgroundColor: color + '22',
-        borderRadius: 6,
-        paddingHorizontal: 7,
-        paddingVertical: 3,
-        borderWidth: 1,
-        borderColor: color + '55',
-      }}
-    >
-      <Text style={{ color, fontSize: 9, fontWeight: '700', letterSpacing: 0.6 }}>
-        {TYPE_LABELS[type] ?? type.toUpperCase()}
-      </Text>
-    </View>
-  );
-}
-
 function DocCard({ doc, colors, onPress, onOpen, bookmarked, onBookmark, ready }: {
   doc: TechDoc; colors: ReturnType<typeof useColors>; onPress: () => void;
   onOpen: () => void; bookmarked: boolean; onBookmark: () => void; ready: boolean;
@@ -128,481 +78,11 @@ function DocCard({ doc, colors, onPress, onOpen, bookmarked, onBookmark, ready }
       <Text style={{ color: colors.mutedForeground, fontSize: 12 }}>{[doc.docNumber, doc.year].filter(Boolean).join(' · ')}</Text>
     </Pressable>
     <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12 }}>
-      <Pressable accessibilityRole="button" onPress={onOpen} style={{ minHeight: 44, justifyContent: 'center', paddingHorizontal: 12, borderRadius: 8, backgroundColor: colors.primary }}><Text style={{ color: colors.primaryForeground, fontWeight: '700' }}>Open manual</Text></Pressable>
+      <Pressable accessibilityRole="button" onPress={onOpen} style={{ minHeight: 44, justifyContent: 'center', paddingHorizontal: 12, borderRadius: 8, backgroundColor: colors.primary }}><Text style={{ color: colors.primaryForeground, fontWeight: '700' }}>View manual</Text></Pressable>
       <Pressable accessibilityRole="button" accessibilityState={{ selected: bookmarked, disabled: !ready }} disabled={!ready} onPress={onBookmark} style={{ minHeight: 44, justifyContent: 'center', paddingHorizontal: 12 }}><Text style={{ color: colors.primary }}>{bookmarked ? 'Bookmarked' : 'Bookmark'}</Text></Pressable>
     </View>
   </View>;
 }
-
-function SectionRow({
-  section,
-  colors,
-  expanded,
-  onToggle,
-}: {
-  section: DocSection;
-  colors: ReturnType<typeof useColors>;
-  expanded: boolean;
-  onToggle: () => void;
-}) {
-  return (
-    <View
-      style={{
-        borderBottomWidth: 1,
-        borderBottomColor: colors.border,
-      }}
-    >
-      <Pressable
-        onPress={onToggle}
-        style={({ pressed }) => ({
-          flexDirection: 'row',
-          alignItems: 'center',
-          paddingVertical: 12,
-          paddingHorizontal: 16,
-          opacity: pressed ? 0.75 : 1,
-        })}
-      >
-        <View style={{ flex: 1 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-            {section.ref !== '—' && (
-              <Text
-                style={{
-                  color: colors.primary,
-                  fontSize: 10,
-                  fontWeight: '700',
-                  letterSpacing: 0.5,
-                  minWidth: 40,
-                }}
-              >
-                {section.ref}
-              </Text>
-            )}
-            <Text
-              style={{
-                color: colors.foreground,
-                fontWeight: '600',
-                fontSize: 13,
-                flex: 1,
-              }}
-            >
-              {section.title}
-            </Text>
-          </View>
-        </View>
-        <Feather
-          name={expanded ? 'chevron-up' : 'chevron-down'}
-          size={14}
-          color={colors.mutedForeground}
-        />
-      </Pressable>
-
-      {expanded && (
-        <View
-          style={{
-            paddingHorizontal: 16,
-            paddingBottom: 14,
-            paddingTop: 0,
-          }}
-        >
-          <Text
-            style={{
-              color: colors.mutedForeground,
-              fontSize: 12,
-              lineHeight: 18,
-            }}
-          >
-            {section.summary}
-          </Text>
-        </View>
-      )}
-    </View>
-  );
-}
-
-function DocDetail({
-  doc,
-  colors,
-  onBack,
-  onOpen,
-}: {
-  doc: TechDoc;
-  colors: ReturnType<typeof useColors>;
-  onBack: () => void;
-  onOpen: () => void;
-}) {
-  const sysColor = SYSTEM_COLORS[doc.system];
-  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
-
-  const toggleSection = (ref: string) => {
-    setExpandedSections((prev) => {
-      const next = new Set(prev);
-      if (next.has(ref)) next.delete(ref);
-      else next.add(ref);
-      return next;
-    });
-  };
-
-  const expandAll = () =>
-    setExpandedSections(new Set(doc.sections.map((s) => s.ref + s.title)));
-  const collapseAll = () => setExpandedSections(new Set());
-
-  return (
-    <ScrollView
-      style={{ flex: 1 }}
-      contentContainerStyle={{ paddingBottom: 40 }}
-      showsVerticalScrollIndicator={false}
-    >
-      {/* coloured header */}
-      <View
-        style={{
-          backgroundColor: sysColor + '14',
-          borderBottomWidth: 2,
-          borderBottomColor: sysColor + '44',
-          padding: 20,
-          paddingTop: 8,
-        }}
-      >
-        <Pressable
-          onPress={onBack}
-          style={({ pressed }) => ({
-            flexDirection: 'row',
-            alignItems: 'center',
-            gap: 6,
-            marginBottom: 16,
-            opacity: pressed ? 0.7 : 1,
-            alignSelf: 'flex-start',
-          })}
-        >
-          <Feather name="arrow-left" size={16} color={sysColor} />
-          <Text style={{ color: sysColor, fontWeight: '600', fontSize: 13 }}>
-            Tech Docs
-          </Text>
-        </Pressable>
-
-        {/* title block */}
-        <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 12 }}>
-          <View
-            style={{
-              width: 52,
-              height: 52,
-              borderRadius: 14,
-              backgroundColor: sysColor + '33',
-              alignItems: 'center',
-              justifyContent: 'center',
-              borderWidth: 1.5,
-              borderColor: sysColor + '66',
-              flexShrink: 0,
-            }}
-          >
-            <MaterialCommunityIcons
-              name={TYPE_ICONS[doc.type] as any}
-              size={24}
-              color={sysColor}
-            />
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text
-              style={{
-                color: colors.foreground,
-                fontWeight: '800',
-                fontSize: 18,
-                lineHeight: 24,
-              }}
-            >
-              {doc.title}
-            </Text>
-            <Text
-              style={{ color: sysColor, fontWeight: '600', fontSize: 12, marginTop: 3 }}
-            >
-              {doc.system}
-            </Text>
-          </View>
-        </View>
-
-        {/* subtitle + pills */}
-        <Text
-          style={{
-            color: colors.mutedForeground,
-            fontSize: 12,
-            marginTop: 10,
-            lineHeight: 17,
-          }}
-        >
-          {doc.subtitle}
-        </Text>
-
-        <View
-          style={{
-            flexDirection: 'row',
-            flexWrap: 'wrap',
-            gap: 8,
-            marginTop: 12,
-          }}
-        >
-          <TypePill type={doc.type} colors={colors} />
-          {doc.pages != null && (
-            <View
-              style={{
-                backgroundColor: colors.muted,
-                borderRadius: 6,
-                paddingHorizontal: 7,
-                paddingVertical: 3,
-              }}
-            >
-              <Text
-                style={{
-                  color: colors.mutedForeground,
-                  fontSize: 9,
-                  fontWeight: '600',
-                }}
-              >
-                {doc.pages} PAGES
-              </Text>
-            </View>
-          )}
-          {doc.year != null && (
-            <View
-              style={{
-                backgroundColor: colors.muted,
-                borderRadius: 6,
-                paddingHorizontal: 7,
-                paddingVertical: 3,
-              }}
-            >
-              <Text
-                style={{
-                  color: colors.mutedForeground,
-                  fontSize: 9,
-                  fontWeight: '600',
-                }}
-              >
-                {doc.year}
-              </Text>
-            </View>
-          )}
-          {doc.docNumber != null && (
-            <View
-              style={{
-                backgroundColor: colors.muted,
-                borderRadius: 6,
-                paddingHorizontal: 7,
-                paddingVertical: 3,
-              }}
-            >
-              <Text
-                style={{
-                  color: colors.mutedForeground,
-                  fontSize: 9,
-                  fontWeight: '600',
-                }}
-              >
-                {doc.docNumber}
-              </Text>
-            </View>
-          )}
-        </View>
-      </View>
-
-      <View style={{ paddingHorizontal: 20, marginTop: 20 }}>
-        {/* summary */}
-        <Text
-          style={{
-            color: colors.mutedForeground,
-            fontSize: 11,
-            fontWeight: '700',
-            letterSpacing: 1,
-            marginBottom: 8,
-          }}
-        >
-          OVERVIEW
-        </Text>
-        <View
-          style={{
-            backgroundColor: colors.card,
-            borderRadius: 14,
-            borderWidth: 1,
-            borderColor: colors.border,
-            padding: 14,
-          }}
-        >
-          <Text style={{ color: colors.foreground, fontSize: 13, lineHeight: 20 }}>
-            {doc.summary}
-          </Text>
-        </View>
-
-        {/* applies to */}
-        <Text
-          style={{
-            color: colors.mutedForeground,
-            fontSize: 11,
-            fontWeight: '700',
-            letterSpacing: 1,
-            marginTop: 20,
-            marginBottom: 8,
-          }}
-        >
-          APPLICABLE CRANE TYPES
-        </Text>
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-          {doc.craneTypes.map((ct) => (
-            <View
-              key={ct}
-              style={{
-                backgroundColor: sysColor + '22',
-                borderRadius: 8,
-                paddingHorizontal: 10,
-                paddingVertical: 6,
-                borderWidth: 1,
-                borderColor: sysColor + '44',
-              }}
-            >
-              <Text style={{ color: sysColor, fontWeight: '700', fontSize: 12 }}>{ct}</Text>
-            </View>
-          ))}
-        </View>
-
-        {/* sections */}
-        <View
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            marginTop: 20,
-            marginBottom: 8,
-          }}
-        >
-          <Text
-            style={{
-              color: colors.mutedForeground,
-              fontSize: 11,
-              fontWeight: '700',
-              letterSpacing: 1,
-            }}
-          >
-            SECTIONS ({doc.sections.length})
-          </Text>
-          <View style={{ flexDirection: 'row', gap: 12 }}>
-            <Pressable onPress={expandAll}>
-              <Text style={{ color: sysColor, fontSize: 11, fontWeight: '600' }}>
-                Expand all
-              </Text>
-            </Pressable>
-            <Pressable onPress={collapseAll}>
-              <Text
-                style={{ color: colors.mutedForeground, fontSize: 11, fontWeight: '600' }}
-              >
-                Collapse
-              </Text>
-            </Pressable>
-          </View>
-        </View>
-
-        <View
-          style={{
-            backgroundColor: colors.card,
-            borderRadius: 14,
-            borderWidth: 1,
-            borderColor: colors.border,
-            overflow: 'hidden',
-          }}
-        >
-          {doc.sections.map((section, index) => {
-            const key = section.ref + section.title;
-            return (
-              <SectionRow
-                key={key}
-                section={section}
-                colors={colors}
-                expanded={expandedSections.has(key)}
-                onToggle={() => toggleSection(key)}
-              />
-            );
-          })}
-        </View>
-
-        {/* open document button */}
-        <Pressable
-          onPress={onOpen}
-          style={({ pressed }) => ({
-            backgroundColor: pressed ? colors.primary + 'cc' : colors.primary,
-            borderRadius: 12,
-            paddingVertical: 14,
-            alignItems: 'center',
-            justifyContent: 'center',
-            flexDirection: 'row',
-            gap: 8,
-            marginTop: 16,
-          })}
-        >
-          <Feather name="book-open" size={16} color={colors.primaryForeground} />
-          <Text style={{ color: colors.primaryForeground, fontWeight: '700', fontSize: 15 }}>
-            Open Document
-          </Text>
-        </Pressable>
-
-        {/* file reference */}
-        <View
-          style={{
-            backgroundColor: colors.muted,
-            borderRadius: 10,
-            padding: 12,
-            marginTop: 10,
-            flexDirection: 'row',
-            gap: 8,
-          }}
-        >
-          <Feather
-            name="file-text"
-            size={14}
-            color={colors.mutedForeground}
-            style={{ marginTop: 1 }}
-          />
-          <Text
-            style={{ color: colors.mutedForeground, fontSize: 10, lineHeight: 16, flex: 1 }}
-          >
-            {doc.cleanFile}
-          </Text>
-        </View>
-
-        {doc.type === 'Procedure' && (
-          <View
-            style={{
-              backgroundColor: colors.success + '14',
-              borderRadius: 10,
-              padding: 12,
-              marginTop: 10,
-              flexDirection: 'row',
-              gap: 8,
-              borderWidth: 1,
-              borderColor: colors.success + '33',
-            }}
-          >
-            <MaterialCommunityIcons
-              name="key-variant"
-              size={14}
-              color={colors.success}
-              style={{ marginTop: 1 }}
-            />
-            <Text
-              style={{
-                color: colors.success,
-                fontSize: 11,
-                lineHeight: 17,
-                flex: 1,
-                fontWeight: '600',
-              }}
-            >
-              Use the LICCON Daycode Generator on the Instrument tab to generate the access
-              code required for this procedure.
-            </Text>
-          </View>
-        )}
-      </View>
-    </ScrollView>
-  );
-}
-
-// ─── main screen ─────────────────────────────────────────────────────────────
 
 export default function DocsScreen() {
   const colors = useColors();
@@ -616,21 +96,19 @@ export default function DocsScreen() {
   const category = params.type ?? 'All';
   const savedOnly = params.saved === '1';
   const storage = useManualLibraryStorage();
-  const [showRecent, setShowRecent] = useState(false);
-  const selected = TECH_DOCS.find(doc => doc.id === params.document);
+  const recents = recentManuals(TECH_DOCS, storage.recent.map(entityId => ({ entityId })));
+  const bookmarked = bookmarkedManuals(TECH_DOCS, storage.bookmarks.map(documentId => ({ documentId })));
+
   const update = (values: Record<string, string>) => router.push({ pathname: '/docs', params: { ...params, ...values } });
   const searching = Boolean(search.trim());
   const filtered = useMemo(() => filterManuals(TECH_DOCS, { query: search, category, manufacturer, model }, FLEET)
     .filter(doc => !savedOnly || storage.bookmarks.includes(doc.id)), [search, category, manufacturer, model, savedOnly, storage.bookmarks]);
   const groups = manufacturer ? modelGroups(filtered, FLEET) : manufacturerGroups(filtered);
   const categories = useMemo(() => availableCategories(TECH_DOCS), []);
-  const open = (doc: TechDoc) => {
-    if (storage.ready) storage.record(doc.id);
-    void WebBrowser.openBrowserAsync(docUrl(doc), { presentationStyle: WebBrowser.WebBrowserPresentationStyle.PAGE_SHEET });
-  };
-  const card = (doc: TechDoc) => <DocCard key={doc.id} doc={doc} colors={colors} onPress={() => update({ document: doc.id })} onOpen={() => open(doc)} bookmarked={storage.bookmarks.includes(doc.id)} ready={storage.ready} onBookmark={() => storage.toggle(doc.id)} />;
+  const card = (doc: TechDoc) => <DocCard key={doc.id} doc={doc} colors={colors} onPress={() => update({ document: doc.id })} onOpen={() => update({ document: doc.id })} bookmarked={storage.bookmarks.includes(doc.id)} ready={storage.ready} onBookmark={() => storage.toggle(doc.id)} />;
+  const shortcut = (doc: TechDoc) => <Pressable key={doc.id} accessibilityRole="button" onPress={() => update({ document: doc.id })} style={{ backgroundColor: colors.card, padding: 14, borderRadius: 12, gap: 6, minHeight: 76 }}><Text style={{ color: colors.foreground, fontWeight: '700' }}>{doc.title}</Text><Text style={{ color: colors.mutedForeground }}>{manualMetadata(doc, FLEET).manufacturer} · {manualMetadata(doc, FLEET).type}</Text><Text style={{ color: colors.mutedForeground }}>{manualMetadata(doc, FLEET).models.join(' · ')}</Text></Pressable>;
   const reset = () => update({ q: '', manufacturer: '', model: '', type: '', saved: '', document: '' });
-  if (selected) return <View style={[styles.root, { paddingTop: insets.top }]}><DocDetail doc={selected} colors={colors} onOpen={() => open(selected)} onBack={() => router.canGoBack() ? router.back() : router.setParams({ document: '' })} /></View>;
+  if (params.document !== undefined && params.document !== '') return <View style={[styles.root, { paddingTop: insets.top }]}><ManualDetail id={params.document} onBack={() => router.canGoBack() ? router.back() : router.setParams({ document: '' })} /></View>;
   return <View style={[styles.root, { paddingTop: insets.top }]}>
     <StatusBar style="light" />
     <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ padding: 16, paddingBottom: insets.bottom + 90, gap: 14 }}>
@@ -644,6 +122,10 @@ export default function DocsScreen() {
         {categories.map(type => <SystemChip key={type} label={type} active={(category || 'All') === type} color={colors.primary} colors={colors} onPress={() => update({ type })} />)}
         <SystemChip label="Bookmarks" active={savedOnly} color={colors.primary} colors={colors} onPress={() => update({ saved: savedOnly ? '' : '1' })} />
       </View>
+      {!searching && !manufacturer && !savedOnly && (!category || category === 'All') && <>
+        {recents.length > 0 && <View style={{ gap: 10 }}><Text style={{ color: colors.foreground, fontSize: 20, fontWeight: '700' }}>Recently opened</Text>{recents.map(({ doc }) => shortcut(doc))}</View>}
+        {bookmarked.length > 0 && <View style={{ gap: 10 }}><Text style={{ color: colors.foreground, fontSize: 20, fontWeight: '700' }}>Bookmarked manuals</Text>{bookmarked.map(shortcut)}<Pressable accessibilityRole="button" onPress={() => update({ saved: '1' })} style={{ minHeight: 44, justifyContent: 'center' }}><Text style={{ color: colors.primary }}>View all bookmarks</Text></Pressable></View>}
+      </>}
       {!searching && <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8 }}>
         <Pressable accessibilityRole="button" onPress={() => update({ manufacturer: '', model: '' })} style={{ minHeight: 44, justifyContent: 'center' }}><Text style={{ color: colors.primary }}>Manuals</Text></Pressable>
         {manufacturer ? <Pressable accessibilityRole="button" onPress={() => update({ model: '' })} style={{ minHeight: 44, justifyContent: 'center' }}><Text style={{ color: colors.primary }}> / {manufacturer}</Text></Pressable> : null}
@@ -653,7 +135,7 @@ export default function DocsScreen() {
       {!filtered.length ? <View style={{ padding: 20, gap: 12 }}><Text style={{ color: colors.foreground }}>{searching ? `No manuals found for “${search.trim()}”` : 'No manuals match these filters.'}</Text><Pressable accessibilityRole="button" onPress={reset} style={{ minHeight: 44, justifyContent: 'center' }}><Text style={{ color: colors.primary }}>Clear search and filters</Text></Pressable></View>
         : searching || model ? filtered.map(card)
         : groups.map(group => <Pressable key={group.label} accessibilityRole="button" onPress={() => update(manufacturer ? { model: group.label } : { manufacturer: group.label, model: '' })} style={{ padding: 18, minHeight: 76, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, borderRadius: 12, flexDirection: 'row', alignItems: 'center', gap: 12 }}><Text style={{ flex: 1, color: colors.foreground, fontSize: 16, fontWeight: '700' }}>{group.label}</Text><Text style={{ color: colors.mutedForeground }}>{group.count} manuals</Text><Feather name="chevron-right" size={18} color={colors.primary} /></Pressable>)}
-      {!searching && !manufacturer && !savedOnly && <><Pressable accessibilityRole="button" onPress={() => setShowRecent(!showRecent)} style={{ minHeight: 48, justifyContent: 'center' }}><Text style={{ color: colors.primary }}>Recently viewed ({storage.recent.length})</Text></Pressable>{showRecent && storage.recent.map(id => TECH_DOCS.find(doc => doc.id === id)).filter((doc): doc is TechDoc => Boolean(doc)).map(card)}</>}
+
       <Text style={{ color: colors.mutedForeground, fontSize: 12 }}>Mobile bookmarks are saved on this device.</Text>
       {storage.error ? <Text style={{ color: colors.foreground }}>{storage.error}</Text> : null}
     </ScrollView>
