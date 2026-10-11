@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Search, ExternalLink, FileText, Star, X } from 'lucide-react';
 import { Link, useLocation } from 'wouter';
 import { FLEET } from '@/data/craneFleet';
-import { availableCategories, filterManuals, manufacturerGroups, modelGroups, manualModels, manualCategories } from '../../../api-server/src/lib/catalog/manualLibrary';
+import { availableCategories, filterManuals, manufacturerGroups, systemGroups, groupExamples, modelGroups, manualModels, manualCategories } from '../../../api-server/src/lib/catalog/manualLibrary';
 import { BookmarkButton } from '@/components/bookmark-button';
 import { useSearch } from 'wouter';
 
@@ -79,6 +79,8 @@ export default function DocsPage() {
   const manufacturer = params.get('manufacturer') ?? '';
   const model = params.get('model') ?? '';
   const category = params.get('type') ?? 'All';
+  const system = params.get('system') ?? '';
+  const documentType = params.get('documentType') ?? '';
   const favouritesOnly = params.get('favourites') === '1';
   const detailId = params.get('document');
   const { bookmarks } = useBookmarks();
@@ -93,9 +95,10 @@ export default function DocsPage() {
     navigate(`/docs${next.size ? `?${next}` : ''}`, { replace });
   };
   const searching = Boolean(search.trim());
-  const filteredDocs = useMemo(() => filterManuals(TECH_DOCS, { query: search, category, manufacturer, model }, FLEET)
-    .filter(doc => !favouritesOnly || favouriteIds.includes(doc.id)), [search, category, manufacturer, model, favouritesOnly, favouriteIds]);
-  const groups = !searching && !model ? (manufacturer ? modelGroups(filteredDocs, FLEET) : manufacturerGroups(filteredDocs)) : [];
+  const filteredDocs = useMemo(() => filterManuals(TECH_DOCS, { query: search, category, manufacturer, model, system: system === 'browse' ? '' : system, documentType }, FLEET)
+    .filter(doc => !favouritesOnly || favouriteIds.includes(doc.id)), [search, category, manufacturer, model, system, documentType, favouritesOnly, favouriteIds]);
+  const groups = !searching && !model ? (manufacturer ? modelGroups(filteredDocs, FLEET) : system ? manufacturerGroups(filteredDocs) : manufacturerGroups(filteredDocs)) : [];
+  const browseSystems = !searching && !manufacturer && !model && !system;
   const clearFilters = () => navigate('/docs');
   const selectDocument = (doc: TechDoc) => navigate(manualDetailHref(doc.id, { from: `/docs${query ? `?${query}` : ''}` }));
   const cardProps = (doc: TechDoc) => ({ doc, favourite: favouriteIds.includes(doc.id), onSelect: selectDocument, onOpen: selectDocument, onToggleFavourite: toggleFavourite });
@@ -114,13 +117,20 @@ export default function DocsPage() {
       {categories.map(type => <Button key={type} variant={category === type ? 'default' : 'outline'} className="min-h-11" aria-pressed={category === type} onClick={() => update({ type: type === 'All' ? '' : type })}>{type}</Button>)}
       <Button variant={favouritesOnly ? 'default' : 'outline'} className="min-h-11" aria-pressed={favouritesOnly} onClick={() => update({ favourites: favouritesOnly ? '' : '1' })}><Star className="mr-2 h-4 w-4" />Favourites</Button>
     </div>
-    {!searching && !manufacturer && category === 'All' && !favouritesOnly && <>
+    <div className="flex flex-wrap items-center gap-2 rounded-lg border border-border/60 bg-card/40 p-2" aria-label="Browse mode">
+      <span className="px-2 text-sm font-semibold">Browse by</span>
+      <Button variant={!system ? 'default' : 'outline'} className="min-h-10" onClick={() => update({ system: '', manufacturer: '', model: '' })}>Manufacturer</Button>
+      <Button variant={system ? 'default' : 'outline'} className="min-h-10" onClick={() => update({ system: 'browse', manufacturer: '', model: '' })}>System / job</Button>
+      <Button variant={!manufacturer && !model && !system && category === 'All' && !favouritesOnly ? 'outline' : 'secondary'} className="min-h-10" onClick={clearFilters}>All manuals</Button>
+    </div>
+    {!searching && !manufacturer && category === 'All' && !favouritesOnly && !system && <>
       {recents.length > 0 && <section className="space-y-3" aria-label="Recently opened"><h2 className="text-xl font-bold">Recently opened</h2><div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{recents.map(({ doc, openedAt }) => <ManualShortcut key={doc.id} doc={doc} openedAt={openedAt} />)}</div></section>}
       {saved.length > 0 && <section className="space-y-3" aria-label="Bookmarked manuals"><div className="flex flex-wrap items-center justify-between gap-3"><h2 className="text-xl font-bold">Bookmarked manuals</h2><Link href="/bookmarks" className="min-h-11 py-2 text-primary">View all bookmarks</Link></div><div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{saved.map(doc => <ManualShortcut key={doc.id} doc={doc} />)}</div></section>}
       {activity.error && <Button variant="ghost" onClick={activity.retry}>Retry recent manuals</Button>}
     </>}
     {!searching && <nav aria-label="Manual library breadcrumb" className="flex flex-wrap items-center gap-2 text-sm">
-      <Button variant="ghost" className="min-h-11" onClick={() => update({ manufacturer: '', model: '', document: '' })}>Manuals</Button>
+      <Button variant="ghost" className="min-h-11" onClick={() => update({ system: '', manufacturer: '', model: '', document: '' })}>Manuals</Button>
+      {system && system !== 'browse' && <><span>/</span><Button variant="ghost" className="min-h-11" onClick={() => update({ system: 'browse', document: '' })}>{system}</Button></>}
       {manufacturer && <><span>/</span><Button variant="ghost" className="min-h-11" onClick={() => update({ model: '', document: '' })}>{manufacturer}</Button></>}
       {model && <><span>/</span><span aria-current="page">{model}</span></>}
     </nav>}
@@ -128,7 +138,7 @@ export default function DocsPage() {
       <h2 className="text-lg font-semibold" aria-live="polite">{searching ? `${filteredDocs.length} ${filteredDocs.length === 1 ? 'result' : 'results'} for ${search.trim()}` : `${manufacturer || 'Manufacturers / systems'}${model ? ` · ${model}` : ''} · ${filteredDocs.length} documents`}</h2>
       {!filteredDocs.length ? <div className="rounded-lg border border-dashed p-8 text-center"><FileText className="mx-auto mb-3 h-8 w-8 text-muted-foreground" /><p>{searching ? `No manuals found for “${search.trim()}”` : 'No manuals match these filters.'}</p><Button variant="outline" className="mt-4 min-h-11" onClick={clearFilters}>Clear search and filters</Button></div>
         : searching || model ? <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">{filteredDocs.map(doc => <DocumentCard key={doc.id} {...cardProps(doc)} />)}</div>
-        : <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">{groups.map(group => <button key={group.label} type="button" onClick={() => update(manufacturer ? { model: group.label } : { manufacturer: group.label, model: '' })} className="flex min-h-24 items-center justify-between gap-3 rounded-xl border border-border bg-card p-5 text-left transition-colors hover:border-primary focus-visible:outline focus-visible:outline-primary"><span className="font-semibold">{group.label}</span><span className="shrink-0 text-sm text-muted-foreground">{group.count} {group.count === 1 ? 'manual' : 'manuals'} →</span></button>)}</div>}
+        : <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">{(browseSystems ? systemGroups(filteredDocs) : groups).map(group => <button key={group.label} type="button" onClick={() => update(browseSystems ? { system: group.label } : manufacturer ? { model: group.label } : { manufacturer: group.label, model: '' })} className="flex min-h-28 flex-col items-start justify-between gap-2 rounded-xl border border-border bg-card p-5 text-left transition-colors hover:border-primary focus-visible:outline focus-visible:outline-primary"><span className="font-semibold">{group.label}</span><span className="text-sm text-muted-foreground">{group.count} {group.count === 1 ? 'manual' : 'manuals'} →</span><span className="line-clamp-2 text-xs text-muted-foreground">{groupExamples(filteredDocs, group.label, browseSystems ? 'system' : 'manufacturer').join(' · ')}</span></button>)}</div>}
     </section>
   </div>;
 }
