@@ -9,7 +9,7 @@ export interface LibraryDocument {
   sections: { ref: string; title: string; summary: string }[];
 }
 export interface LibraryFleet { id: string; model: string; manufacturer: string }
-export const LIBRARY_CATEGORIES = ['All', 'Operation / Maintenance', 'Service / Workshop', 'Parts', 'Diagnostics', 'Electrical', 'Engine', 'Reference'] as const;
+export const LIBRARY_CATEGORIES = ['All', 'Operation / Maintenance', 'Service / Workshop', 'Parts', 'Diagnostics', 'Electrical', 'Engine', 'Hydraulics', 'Crane controls', 'Transmission', 'Reference'] as const;
 export type LibraryCategory = typeof LIBRARY_CATEGORIES[number];
 
 export function manualFields(doc: LibraryDocument, fleet: readonly LibraryFleet[] = []): string[] {
@@ -41,6 +41,9 @@ export function manualCategories(doc: LibraryDocument): LibraryCategory[] {
   if (/\b(diagnostics?|fault|error|troubleshooting)\b/.test(text)) categories.push('Diagnostics');
   if (/\b(electrical|wiring)\b/.test(text)) categories.push('Electrical');
   if (/\bengine\b/.test(text)) categories.push('Engine');
+  if (/\b(hydraulic|hydraulics|hydrostatic)\b/.test(text)) categories.push('Hydraulics');
+  if (/\b(liccon|ecos|ccs|lmi|rci|control|controls)\b/.test(text)) categories.push('Crane controls');
+  if (/\b(transmission|tronic|gearbox|driveline)\b/.test(text)) categories.push('Transmission');
   return categories.length ? categories : ['Reference'];
 }
 
@@ -85,16 +88,25 @@ function groups(docs: readonly LibraryDocument[], labels: (doc: LibraryDocument)
 export function manufacturerGroups(docs: readonly LibraryDocument[]): ManualGroup[] {
   return groups(docs, doc => [manufacturerGroup(doc)]);
 }
+export function systemGroups(docs: readonly LibraryDocument[]): ManualGroup[] {
+  return groups(docs, doc => [doc.system]);
+}
+export function groupExamples(docs: readonly LibraryDocument[], label: string, kind: 'manufacturer' | 'system', limit = 3): string[] {
+  return docs.filter(doc => compactSearch(kind === 'manufacturer' ? manufacturerGroup(doc) : doc.system) === compactSearch(label))
+    .slice(0, limit).map(doc => doc.title);
+}
 export function modelGroups(docs: readonly LibraryDocument[], fleet: readonly LibraryFleet[] = []): ManualGroup[] {
   return groups(docs, doc => modelGroupsFor(doc, fleet));
 }
 
 export function filterManuals<T extends LibraryDocument>(docs: readonly T[], options: {
-  query?: string; category?: string; manufacturer?: string; model?: string;
+  query?: string; category?: string; manufacturer?: string; model?: string; system?: string; documentType?: string;
 }, fleet: readonly LibraryFleet[] = []): T[] {
   const searching = Boolean(options.query?.trim());
   return docs.filter(doc => matchesManual(options.query ?? '', doc, fleet)
     && (!options.category || options.category === 'All' || manualCategories(doc).includes(options.category as LibraryCategory))
+    && (!options.system || compactSearch(doc.system) === compactSearch(options.system))
+    && (!options.documentType || compactSearch(doc.documentType ?? doc.type) === compactSearch(options.documentType))
     && (searching || !options.manufacturer || compactSearch(manufacturerGroup(doc)) === compactSearch(options.manufacturer))
     && (searching || !options.model || modelGroupsFor(doc, fleet).some(model => compactSearch(model) === compactSearch(options.model!))));
 }

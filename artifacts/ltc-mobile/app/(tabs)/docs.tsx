@@ -2,7 +2,7 @@ import { ManualDetail } from '@/components/ManualDetail';
 import { recentManuals, bookmarkedManuals, manualMetadata } from '../../../api-server/src/lib/catalog/manualDetail';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useManualLibraryStorage } from '@/hooks/useManualLibraryStorage';
-import { availableCategories, filterManuals, manufacturerGroups, modelGroups, manualModels, manualCategories } from '../../../api-server/src/lib/catalog/manualLibrary';
+import { availableCategories, filterManuals, manufacturerGroups, systemGroups, groupExamples, modelGroups, manualModels, manualCategories } from '../../../api-server/src/lib/catalog/manualLibrary';
 import React, { useMemo } from 'react';
 import {
   Pressable,
@@ -89,11 +89,12 @@ export default function DocsScreen() {
   const insets = useSafeAreaInsets();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const router = useRouter();
-  const params = useLocalSearchParams<{ q?: string; manufacturer?: string; model?: string; type?: string; document?: string; saved?: string }>();
+  const params = useLocalSearchParams<{ q?: string; manufacturer?: string; model?: string; type?: string; system?: string; document?: string; saved?: string }>();
   const search = typeof params.q === 'string' ? params.q : '';
   const manufacturer = params.manufacturer ?? '';
   const model = params.model ?? '';
   const category = params.type ?? 'All';
+  const system = params.system ?? '';
   const savedOnly = params.saved === '1';
   const storage = useManualLibraryStorage();
   const recents = recentManuals(TECH_DOCS, storage.recent.map(entityId => ({ entityId })));
@@ -101,9 +102,10 @@ export default function DocsScreen() {
 
   const update = (values: Record<string, string>) => router.push({ pathname: '/docs', params: { ...params, ...values } });
   const searching = Boolean(search.trim());
-  const filtered = useMemo(() => filterManuals(TECH_DOCS, { query: search, category, manufacturer, model }, FLEET)
-    .filter(doc => !savedOnly || storage.bookmarks.includes(doc.id)), [search, category, manufacturer, model, savedOnly, storage.bookmarks]);
+  const filtered = useMemo(() => filterManuals(TECH_DOCS, { query: search, category, manufacturer, model, system: system === 'browse' ? '' : system }, FLEET)
+    .filter(doc => !savedOnly || storage.bookmarks.includes(doc.id)), [search, category, manufacturer, model, system, savedOnly, storage.bookmarks]);
   const groups = manufacturer ? modelGroups(filtered, FLEET) : manufacturerGroups(filtered);
+  const browseSystems = !searching && !manufacturer && !model && !system;
   const categories = useMemo(() => availableCategories(TECH_DOCS), []);
   const card = (doc: TechDoc) => <DocCard key={doc.id} doc={doc} colors={colors} onPress={() => update({ document: doc.id })} onOpen={() => update({ document: doc.id })} bookmarked={storage.bookmarks.includes(doc.id)} ready={storage.ready} onBookmark={() => storage.toggle(doc.id)} />;
   const shortcut = (doc: TechDoc) => <Pressable key={doc.id} accessibilityRole="button" onPress={() => update({ document: doc.id })} style={{ backgroundColor: colors.card, padding: 14, borderRadius: 12, gap: 6, minHeight: 76 }}><Text style={{ color: colors.foreground, fontWeight: '700' }}>{doc.title}</Text><Text style={{ color: colors.mutedForeground }}>{manualMetadata(doc, FLEET).manufacturer} · {manualMetadata(doc, FLEET).type}</Text><Text style={{ color: colors.mutedForeground }}>{manualMetadata(doc, FLEET).models.join(' · ')}</Text></Pressable>;
@@ -122,6 +124,12 @@ export default function DocsScreen() {
         {categories.map(type => <SystemChip key={type} label={type} active={(category || 'All') === type} color={colors.primary} colors={colors} onPress={() => update({ type })} />)}
         <SystemChip label="Bookmarks" active={savedOnly} color={colors.primary} colors={colors} onPress={() => update({ saved: savedOnly ? '' : '1' })} />
       </View>
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
+        <Text style={{ color: colors.foreground, fontWeight: '700', padding: 8 }}>Browse by</Text>
+        <SystemChip label="Manufacturer" active={!system} color={colors.primary} colors={colors} onPress={() => update({ system: '', manufacturer: '', model: '' })} />
+        <SystemChip label="System / job" active={Boolean(system)} color={colors.primary} colors={colors} onPress={() => update({ system: 'browse', manufacturer: '', model: '' })} />
+        <SystemChip label="All manuals" active={!system && !manufacturer && !model && category === 'All' && !savedOnly} color={colors.primary} colors={colors} onPress={reset} />
+      </View>
       {!searching && !manufacturer && !savedOnly && (!category || category === 'All') && <>
         {recents.length > 0 && <View style={{ gap: 10 }}><Text style={{ color: colors.foreground, fontSize: 20, fontWeight: '700' }}>Recently opened</Text>{recents.map(({ doc }) => shortcut(doc))}</View>}
         {bookmarked.length > 0 && <View style={{ gap: 10 }}><Text style={{ color: colors.foreground, fontSize: 20, fontWeight: '700' }}>Bookmarked manuals</Text>{bookmarked.map(shortcut)}<Pressable accessibilityRole="button" onPress={() => update({ saved: '1' })} style={{ minHeight: 44, justifyContent: 'center' }}><Text style={{ color: colors.primary }}>View all bookmarks</Text></Pressable></View>}
@@ -134,7 +142,7 @@ export default function DocsScreen() {
       <Text accessibilityLiveRegion="polite" style={{ color: colors.foreground, fontWeight: '700' }}>{searching ? `${filtered.length} ${filtered.length === 1 ? 'result' : 'results'} for ${search.trim()}` : `${filtered.length} matching documents`}</Text>
       {!filtered.length ? <View style={{ padding: 20, gap: 12 }}><Text style={{ color: colors.foreground }}>{searching ? `No manuals found for “${search.trim()}”` : 'No manuals match these filters.'}</Text><Pressable accessibilityRole="button" onPress={reset} style={{ minHeight: 44, justifyContent: 'center' }}><Text style={{ color: colors.primary }}>Clear search and filters</Text></Pressable></View>
         : searching || model ? filtered.map(card)
-        : groups.map(group => <Pressable key={group.label} accessibilityRole="button" onPress={() => update(manufacturer ? { model: group.label } : { manufacturer: group.label, model: '' })} style={{ padding: 18, minHeight: 76, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, borderRadius: 12, flexDirection: 'row', alignItems: 'center', gap: 12 }}><Text style={{ flex: 1, color: colors.foreground, fontSize: 16, fontWeight: '700' }}>{group.label}</Text><Text style={{ color: colors.mutedForeground }}>{group.count} manuals</Text><Feather name="chevron-right" size={18} color={colors.primary} /></Pressable>)}
+        : (browseSystems ? systemGroups(filtered) : groups).map(group => <Pressable key={group.label} accessibilityRole="button" onPress={() => update(browseSystems ? { system: group.label } : manufacturer ? { model: group.label } : { manufacturer: group.label, model: '' })} style={{ padding: 18, minHeight: 104, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, borderRadius: 12, gap: 6 }}><View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}><Text style={{ flex: 1, color: colors.foreground, fontSize: 16, fontWeight: '700' }}>{group.label}</Text><Text style={{ color: colors.mutedForeground }}>{group.count} manuals</Text><Feather name="chevron-right" size={18} color={colors.primary} /></View><Text numberOfLines={2} style={{ color: colors.mutedForeground, fontSize: 12 }}>{groupExamples(filtered, group.label, browseSystems ? 'system' : 'manufacturer').join(' · ')}</Text></Pressable>)}
 
       <Text style={{ color: colors.mutedForeground, fontSize: 12 }}>Mobile bookmarks are saved on this device.</Text>
       {storage.error ? <Text style={{ color: colors.foreground }}>{storage.error}</Text> : null}
