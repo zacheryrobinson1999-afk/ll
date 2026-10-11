@@ -2,7 +2,7 @@ import { ManualDetail } from '@/components/ManualDetail';
 import { recentManuals, bookmarkedManuals, manualMetadata } from '../../../api-server/src/lib/catalog/manualDetail';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useManualLibraryStorage } from '@/hooks/useManualLibraryStorage';
-import { availableCategories, filterManuals, manufacturerGroups, systemGroups, groupExamples, modelGroups, manualModels, manualCategories } from '../../../api-server/src/lib/catalog/manualLibrary';
+import { availableCategories, filterManuals, manufacturerGroups, systemGroups, groupExamples, groupDescription, modelGroups, manualModels, manualCategories } from '../../../api-server/src/lib/catalog/manualLibrary';
 import React, { useMemo } from 'react';
 import {
   Pressable,
@@ -75,6 +75,7 @@ function DocCard({ doc, colors, onPress, onOpen, bookmarked, onBookmark, ready }
       <Text style={{ color: colors.foreground, fontSize: 16, fontWeight: '700' }}>{doc.title}</Text>
       <Text style={{ color: colors.mutedForeground, fontSize: 12 }}>{doc.manufacturer ?? doc.system} · {doc.documentType ?? manualCategories(doc).join(' / ')}</Text>
       <Text style={{ color: colors.mutedForeground, fontSize: 12 }} numberOfLines={2}>{manualModels(doc, FLEET).join(' · ') || 'Engine / system reference'}</Text>
+      <Text style={{ color: colors.foreground, fontSize: 13, lineHeight: 19 }} numberOfLines={3}>{doc.summary}</Text>
       <Text style={{ color: colors.mutedForeground, fontSize: 12 }}>{[doc.docNumber, doc.year].filter(Boolean).join(' · ')}</Text>
     </Pressable>
     <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12 }}>
@@ -115,7 +116,8 @@ export default function DocsScreen() {
     <StatusBar style="light" />
     <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ padding: 16, paddingBottom: insets.bottom + 90, gap: 14 }}>
       <Text style={{ color: colors.foreground, fontSize: 28, fontWeight: '800' }}>Manuals</Text>
-      <Text style={{ color: colors.mutedForeground }}>{TECH_DOCS.length} documents</Text>
+      <Text style={{ color: colors.primary, fontSize: 12, fontWeight: '800', letterSpacing: 1.2 }}>TECHNICAL LIBRARY</Text>
+      <Text style={{ color: colors.mutedForeground, fontSize: 15 }}>{TECH_DOCS.length} documents · Browse by manufacturer, model, system, or job.</Text>
       <View style={{ flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: colors.border, borderRadius: 12, backgroundColor: colors.card }}>
         <TextInput accessibilityLabel="Search manuals" placeholder="Search manuals, models, systems, document numbers…" placeholderTextColor={colors.mutedForeground} value={search} onChangeText={q => router.setParams({ q })} autoCapitalize="none" style={{ flex: 1, minHeight: 52, padding: 12, color: colors.foreground }} />
         {search ? <Pressable accessibilityRole="button" accessibilityLabel="Clear search" onPress={() => router.setParams({ q: '' })} style={{ minWidth: 48, minHeight: 48, alignItems: 'center', justifyContent: 'center' }}><Feather name="x" size={20} color={colors.foreground} /></Pressable> : null}
@@ -139,10 +141,14 @@ export default function DocsScreen() {
         {manufacturer ? <Pressable accessibilityRole="button" onPress={() => update({ model: '' })} style={{ minHeight: 44, justifyContent: 'center' }}><Text style={{ color: colors.primary }}> / {manufacturer}</Text></Pressable> : null}
         {model ? <Text style={{ color: colors.foreground }}> / {model}</Text> : null}
       </View>}
-      <Text accessibilityLiveRegion="polite" style={{ color: colors.foreground, fontWeight: '700' }}>{searching ? `${filtered.length} ${filtered.length === 1 ? 'result' : 'results'} for ${search.trim()}` : `${filtered.length} matching documents`}</Text>
+      <View style={{ borderLeftWidth: 4, borderLeftColor: colors.primary, paddingLeft: 12, gap: 4 }}>
+        <Text style={{ color: colors.foreground, fontSize: 22, fontWeight: '800' }}>{searching ? 'Search results' : model ? `Manuals for ${model}` : manufacturer ? `Choose a model in ${manufacturer}` : system && system !== 'browse' ? `Browse ${system} manuals` : system === 'browse' ? 'Browse by system or job' : 'Browse the manual library'}</Text>
+        <Text style={{ color: colors.mutedForeground, fontSize: 13, lineHeight: 19 }}>{searching ? 'Matches titles, identifiers, systems, types, descriptions, and indexed sections.' : model ? 'Review manuals available for this explicit model or system association.' : manufacturer ? 'Choose a model or general/system document group to narrow the catalogue.' : system === 'browse' ? 'Choose a technical area when you know the job, but not the exact crane model.' : system && system !== 'browse' ? 'Use this route when you know the technical system involved.' : 'Choose Manufacturer for brand and model browsing, or System / job for technical areas.'}</Text>
+      </View>
+      <Text accessibilityLiveRegion="polite" style={{ color: colors.foreground, fontWeight: '800', fontSize: 14 }}>{searching ? `${filtered.length} ${filtered.length === 1 ? 'result' : 'results'} for “${search.trim()}”` : `${filtered.length} ${filtered.length === 1 ? 'manual' : 'manuals'} in this view`}</Text>
       {!filtered.length ? <View style={{ padding: 20, gap: 12 }}><Text style={{ color: colors.foreground }}>{searching ? `No manuals found for “${search.trim()}”` : 'No manuals match these filters.'}</Text><Pressable accessibilityRole="button" onPress={reset} style={{ minHeight: 44, justifyContent: 'center' }}><Text style={{ color: colors.primary }}>Clear search and filters</Text></Pressable></View>
         : searching || model ? filtered.map(card)
-        : (browseSystems ? systemGroups(filtered) : groups).map(group => <Pressable key={group.label} accessibilityRole="button" onPress={() => update(browseSystems ? { system: group.label } : manufacturer ? { model: group.label } : { manufacturer: group.label, model: '' })} style={{ padding: 18, minHeight: 104, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, borderRadius: 12, gap: 6 }}><View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}><Text style={{ flex: 1, color: colors.foreground, fontSize: 16, fontWeight: '700' }}>{group.label}</Text><Text style={{ color: colors.mutedForeground }}>{group.count} manuals</Text><Feather name="chevron-right" size={18} color={colors.primary} /></View><Text numberOfLines={2} style={{ color: colors.mutedForeground, fontSize: 12 }}>{groupExamples(filtered, group.label, browseSystems ? 'system' : 'manufacturer').join(' · ')}</Text></Pressable>)}
+        : (browseSystems ? systemGroups(filtered) : groups).map(group => <Pressable key={group.label} accessibilityRole="button" onPress={() => update(browseSystems ? { system: group.label } : manufacturer ? { model: group.label } : { manufacturer: group.label, model: '' })} style={{ padding: 18, minHeight: 150, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, borderRadius: 12, gap: 8 }}><View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}><Text style={{ flex: 1, color: colors.foreground, fontSize: 18, fontWeight: '800' }}>{group.label}</Text><Feather name="chevron-right" size={18} color={colors.primary} /></View><Text style={{ alignSelf: 'flex-start', color: colors.primary, backgroundColor: colors.primary + '18', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 14, fontSize: 12, fontWeight: '800' }}>{group.count} {group.count === 1 ? 'manual' : 'manuals'}</Text><Text numberOfLines={3} style={{ color: colors.mutedForeground, fontSize: 13, lineHeight: 19 }}>{groupDescription(filtered, group.label, browseSystems ? 'system' : 'manufacturer', FLEET)}</Text><Text numberOfLines={1} style={{ color: colors.mutedForeground, fontSize: 12 }}>Examples: {groupExamples(filtered, group.label, browseSystems ? 'system' : 'manufacturer').join(' · ')}</Text></Pressable>)}
 
       <Text style={{ color: colors.mutedForeground, fontSize: 12 }}>Mobile bookmarks are saved on this device.</Text>
       {storage.error ? <Text style={{ color: colors.foreground }}>{storage.error}</Text> : null}

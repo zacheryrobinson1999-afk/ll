@@ -11,6 +11,19 @@ export interface LibraryDocument {
 export interface LibraryFleet { id: string; model: string; manufacturer: string }
 export const LIBRARY_CATEGORIES = ['All', 'Operation / Maintenance', 'Service / Workshop', 'Parts', 'Diagnostics', 'Electrical', 'Engine', 'Hydraulics', 'Crane controls', 'Transmission', 'Reference'] as const;
 export type LibraryCategory = typeof LIBRARY_CATEGORIES[number];
+export const LIBRARY_CATEGORY_DESCRIPTIONS: Record<LibraryCategory, string> = {
+  All: 'Browse the complete catalogue.',
+  'Operation / Maintenance': 'Operating instructions, maintenance procedures, and day-to-day servicing information.',
+  'Service / Workshop': 'Workshop procedures and repair information for technicians.',
+  Parts: 'Parts catalogues and component references.',
+  Diagnostics: 'Fault codes, troubleshooting, and diagnostic guidance.',
+  Electrical: 'Wiring diagrams and electrical system references.',
+  Engine: 'Engine-specific handbooks, parts, and technical references.',
+  Hydraulics: 'Hydraulic system and component information where identified in the document metadata.',
+  'Crane controls': 'LMI, RCI, LICCON, ECOS, CCS, and other crane control references.',
+  Transmission: 'Transmission, gearbox, and driveline documentation.',
+  Reference: 'General or system-level technical reference material.',
+};
 
 export function manualFields(doc: LibraryDocument, fleet: readonly LibraryFleet[] = []): string[] {
   return [doc.title, doc.subtitle, doc.manufacturer, manufacturerGroup(doc), doc.system, doc.sourceSystem,
@@ -94,6 +107,13 @@ export function systemGroups(docs: readonly LibraryDocument[]): ManualGroup[] {
 export function groupExamples(docs: readonly LibraryDocument[], label: string, kind: 'manufacturer' | 'system', limit = 3): string[] {
   return docs.filter(doc => compactSearch(kind === 'manufacturer' ? manufacturerGroup(doc) : doc.system) === compactSearch(label))
     .slice(0, limit).map(doc => doc.title);
+}
+export function groupDescription(docs: readonly LibraryDocument[], label: string, kind: 'manufacturer' | 'system', fleet: readonly LibraryFleet[] = []): string {
+  const records = docs.filter(doc => compactSearch(kind === 'manufacturer' ? manufacturerGroup(doc) : doc.system) === compactSearch(label));
+  const categories = [...new Set(records.flatMap(manualCategories))].filter(category => category !== 'All');
+  if (kind === 'system') return `${LIBRARY_CATEGORY_DESCRIPTIONS[categories[0] ?? 'Reference']} ${records.length} manuals are indexed in this system.`;
+  const models = [...new Set(records.flatMap(doc => manualModels(doc, fleet)))];
+  return models.length ? `Browse ${models.length} indexed model or system group${models.length === 1 ? '' : 's'} with ${categories.slice(0, 3).join(', ').toLowerCase() || 'technical reference'} documents.` : 'Browse general and system-level documents indexed for this manufacturer.';
 }
 export function modelGroups(docs: readonly LibraryDocument[], fleet: readonly LibraryFleet[] = []): ManualGroup[] {
   return groups(docs, doc => modelGroupsFor(doc, fleet));

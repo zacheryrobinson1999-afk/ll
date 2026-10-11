@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Search, ExternalLink, FileText, Star, X } from 'lucide-react';
 import { Link, useLocation } from 'wouter';
 import { FLEET } from '@/data/craneFleet';
-import { availableCategories, filterManuals, manufacturerGroups, systemGroups, groupExamples, modelGroups, manualModels, manualCategories } from '../../../api-server/src/lib/catalog/manualLibrary';
+import { availableCategories, filterManuals, manufacturerGroups, systemGroups, groupExamples, groupDescription, modelGroups, manualModels, manualCategories } from '../../../api-server/src/lib/catalog/manualLibrary';
 import { BookmarkButton } from '@/components/bookmark-button';
 import { useSearch } from 'wouter';
 
@@ -55,7 +55,7 @@ function DocumentCard({ doc, favourite, onSelect, onOpen, onToggleFavourite, com
       </CardHeader>
       <CardContent className={`mt-auto ${compact ? 'p-4 pt-1' : 'p-5 pt-1'}`}>
         <div className="mb-3"><BookmarkButton documentId={doc.id} /></div>
-        {!compact && <p className="mb-3 line-clamp-2 text-sm leading-relaxed text-muted-foreground">{doc.summary}</p>}
+        <p className="mb-3 line-clamp-2 text-sm leading-relaxed text-foreground/80">{doc.summary}</p>
         <div className="mb-4 flex flex-wrap gap-1.5 text-xs text-muted-foreground">
           {manualModels(doc, FLEET).slice(0, 4).map((model) => <Badge key={model} variant="outline" className="max-w-full truncate bg-secondary/20 font-normal">{model}</Badge>)}
           {manualModels(doc, FLEET).length > 4 && <Badge variant="outline">+{manualModels(doc, FLEET).length - 4}</Badge>}
@@ -102,10 +102,13 @@ export default function DocsPage() {
   const clearFilters = () => navigate('/docs');
   const selectDocument = (doc: TechDoc) => navigate(manualDetailHref(doc.id, { from: `/docs${query ? `?${query}` : ''}` }));
   const cardProps = (doc: TechDoc) => ({ doc, favourite: favouriteIds.includes(doc.id), onSelect: selectDocument, onOpen: selectDocument, onToggleFavourite: toggleFavourite });
+  const browseKind = browseSystems ? 'system' : 'manufacturer';
+  const stageTitle = searching ? 'Search results' : model ? `Manuals for ${model}` : manufacturer ? `Choose a model in ${manufacturer}` : system && system !== 'browse' ? `Browse ${system} manuals` : system === 'browse' ? 'Browse by system or job' : 'Browse the manual library';
+  const stageDescription = searching ? 'Results match titles, identifiers, systems, types, descriptions, and indexed section metadata.' : model ? 'Review the available manuals for this model or explicit system association.' : manufacturer ? 'Choose a model or general/system document group to narrow the catalogue.' : system && system !== 'browse' ? `${groupDescription(filteredDocs, system, 'system', FLEET)} Use this route when you know the technical system involved, rather than the crane model.` : system === 'browse' ? 'Use system/job browsing when you know what you are working on—such as an engine, electrical system, controls, or transmission—but not the exact crane model.' : 'Start with a manufacturer if you know the crane brand, or choose System / job to browse by the technical area involved.';
   if (detailId !== null) return <ManualDetail id={detailId} query={query} />;
   return <div className="mx-auto flex min-h-full w-full max-w-[1400px] flex-col gap-5 p-4 pb-24 sm:p-6 md:p-8">
     <div className="flex flex-wrap items-start justify-between gap-2">
-      <div><h1 className="text-3xl font-bold tracking-tight">Manuals</h1><p className="mt-1 text-sm text-muted-foreground">{TECH_DOCS.length} documents · Browse by manufacturer and model, or search the entire library.</p></div>
+      <div><p className="mb-1 text-xs font-bold uppercase tracking-[0.18em] text-primary">Technical library</p><h1 className="text-4xl font-extrabold tracking-tight text-foreground">Manuals</h1><p className="mt-2 max-w-2xl text-base text-muted-foreground">{TECH_DOCS.length} documents · Find useful information by manufacturer, model, system, or job.</p></div>
       <Link href="/bookmarks" className="inline-flex min-h-11 items-center font-semibold text-primary">Your private bookmarks</Link>
     </div>
     <div className="relative">
@@ -135,10 +138,11 @@ export default function DocsPage() {
       {model && <><span>/</span><span aria-current="page">{model}</span></>}
     </nav>}
     <section className="space-y-4" aria-label="Manual library results">
-      <h2 className="text-lg font-semibold" aria-live="polite">{searching ? `${filteredDocs.length} ${filteredDocs.length === 1 ? 'result' : 'results'} for ${search.trim()}` : `${manufacturer || 'Manufacturers / systems'}${model ? ` · ${model}` : ''} · ${filteredDocs.length} documents`}</h2>
+      <div className="border-l-4 border-primary pl-4"><h2 className="text-2xl font-bold tracking-tight text-foreground" aria-live="polite">{stageTitle}</h2><p className="mt-1 max-w-3xl text-sm leading-relaxed text-muted-foreground">{stageDescription}</p></div>
+      <p className="text-sm font-semibold text-foreground">{searching ? `${filteredDocs.length} ${filteredDocs.length === 1 ? 'result' : 'results'} for “${search.trim()}”` : `${filteredDocs.length} ${filteredDocs.length === 1 ? 'manual' : 'manuals'} in this view`}</p>
       {!filteredDocs.length ? <div className="rounded-lg border border-dashed p-8 text-center"><FileText className="mx-auto mb-3 h-8 w-8 text-muted-foreground" /><p>{searching ? `No manuals found for “${search.trim()}”` : 'No manuals match these filters.'}</p><Button variant="outline" className="mt-4 min-h-11" onClick={clearFilters}>Clear search and filters</Button></div>
         : searching || model ? <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">{filteredDocs.map(doc => <DocumentCard key={doc.id} {...cardProps(doc)} />)}</div>
-        : <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">{(browseSystems ? systemGroups(filteredDocs) : groups).map(group => <button key={group.label} type="button" onClick={() => update(browseSystems ? { system: group.label } : manufacturer ? { model: group.label } : { manufacturer: group.label, model: '' })} className="flex min-h-28 flex-col items-start justify-between gap-2 rounded-xl border border-border bg-card p-5 text-left transition-colors hover:border-primary focus-visible:outline focus-visible:outline-primary"><span className="font-semibold">{group.label}</span><span className="text-sm text-muted-foreground">{group.count} {group.count === 1 ? 'manual' : 'manuals'} →</span><span className="line-clamp-2 text-xs text-muted-foreground">{groupExamples(filteredDocs, group.label, browseSystems ? 'system' : 'manufacturer').join(' · ')}</span></button>)}</div>}
+        : <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">{(browseSystems ? systemGroups(filteredDocs) : groups).map(group => <button key={group.label} type="button" onClick={() => update(browseSystems ? { system: group.label } : manufacturer ? { model: group.label } : { manufacturer: group.label, model: '' })} className="flex min-h-36 flex-col items-start gap-3 rounded-xl border border-border bg-card p-5 text-left shadow-sm transition-colors hover:border-primary hover:shadow-md focus-visible:outline focus-visible:outline-primary"><span className="text-lg font-bold text-foreground">{group.label}</span><span className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-bold text-primary">{group.count} {group.count === 1 ? 'manual' : 'manuals'}</span><span className="text-sm leading-relaxed text-muted-foreground">{groupDescription(filteredDocs, group.label, browseKind, FLEET)}</span><span className="line-clamp-1 text-xs text-muted-foreground">Examples: {groupExamples(filteredDocs, group.label, browseKind).join(' · ')}</span></button>)}</div>}
     </section>
   </div>;
 }
