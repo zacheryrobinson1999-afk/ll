@@ -25,6 +25,7 @@ import {
   type Category,
 } from '@/data/craneFleet';
 import { useCustomFleet, type CustomCraneInput } from '@/lib/customFleet';
+import { useFavouriteCranes } from '@/hooks/useFavouriteCranes';
 
 // ─── sub-components ──────────────────────────────────────────────────────────
 
@@ -102,11 +103,15 @@ function CraneCard({
   colors,
   isCustom,
   onPress,
+  favourite,
+  onToggleFavourite,
 }: {
   crane: CraneModel;
   colors: ReturnType<typeof useColors>;
   isCustom?: boolean;
   onPress: () => void;
+  favourite: boolean;
+  onToggleFavourite: () => void;
 }) {
   const catColor = CATEGORY_COLORS[crane.category];
   const unitCount = crane.units.length;
@@ -164,6 +169,7 @@ function CraneCard({
           </View>
 
           <View style={{ alignItems: 'flex-end', gap: 4 }}>
+            <Pressable accessibilityRole="button" accessibilityLabel={favourite ? `Remove ${crane.model} from favourites` : `Favourite ${crane.model}`} onPress={onToggleFavourite} hitSlop={8}><Feather name="star" size={18} color={favourite ? colors.primary : colors.mutedForeground} /></Pressable>
             <View
               style={{
                 backgroundColor: colors.primary + '22',
@@ -857,6 +863,7 @@ export default function FleetScreen() {
   const insets = useSafeAreaInsets();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const { cranes: customCranes, addCrane, removeCrane } = useCustomFleet();
+  const { favouriteCraneIds, toggleFavouriteCrane } = useFavouriteCranes();
 
   const [activeFilter, setActiveFilter] = useState<Category | 'All'>('All');
   const [search, setSearch] = useState('');
@@ -1048,6 +1055,8 @@ export default function FleetScreen() {
                     colors={colors}
                     isCustom={customIds.has(crane.id)}
                     onPress={() => setSelected(crane)}
+                    favourite={favouriteCraneIds.includes(crane.id)}
+                    onToggleFavourite={() => toggleFavouriteCrane(crane.id)}
                   />
                 ))}
               </View>
@@ -1059,6 +1068,8 @@ export default function FleetScreen() {
                 colors={colors}
                 isCustom={customIds.has(crane.id)}
                 onPress={() => setSelected(crane)}
+                favourite={favouriteCraneIds.includes(crane.id)}
+                onToggleFavourite={() => toggleFavouriteCrane(crane.id)}
               />
             ))}
       </ScrollView>

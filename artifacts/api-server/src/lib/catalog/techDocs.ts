@@ -35,6 +35,8 @@ export type DocSection = {
   ref: string;
   title: string;
   summary: string;
+  /** Confirmed 1-based physical PDF page; never inferred from section numbering. */
+  pdfPage?: number;
 };
 
 export type TechDoc = {
@@ -1273,7 +1275,21 @@ export const EXISTING_TECH_DOCS: TechDoc[] = [
   ...VERIFIED_MANUAL_DOCS,
 ];
 
+// Keep the raw catalogue object identity stable for existing consumers. Page targets are
+// resolved from explicit section metadata by sectionPdfPage() without rewriting records.
 export const TECH_DOCS: TechDoc[] = [...EXISTING_TECH_DOCS, ...NEW_MANUAL_DOCS];
+
+function explicitPdfPage(ref: string, pages?: number): number | undefined {
+  const match = /^\s*(?:PDF\s+)?p\.\s*(\d+)\s*$/i.exec(ref);
+  if (!match) return undefined;
+  const page = Number(match[1]);
+  return Number.isInteger(page) && page > 0 && (!pages || page <= pages) ? page : undefined;
+}
+
+/** Add structured page targets only where the source metadata explicitly names one. */
+export function withVerifiedSectionPages<T extends TechDoc>(docs: readonly T[]): T[] {
+  return docs.map(doc => ({ ...doc, sections: doc.sections.map(section => { const page = section.pdfPage ?? explicitPdfPage(section.ref, doc.pages); return page ? { ...section, pdfPage: page } : section; }) }));
+}
 
 /**
  * Return all documents that apply to a given fleet model ID.

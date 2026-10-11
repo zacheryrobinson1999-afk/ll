@@ -1,23 +1,25 @@
-import { useState } from 'react';
-import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
+import { useMemo, useState } from 'react';
+import { Alert, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import { useColors } from '@/hooks/useColors';
 import { useManualLibraryStorage } from '@/hooks/useManualLibraryStorage';
 import { TECH_DOCS, docUrl } from '@/data/techDocs';
 import { FLEET } from '@/data/craneFleet';
-import { resolveManual, manualMetadata, relatedManuals, manualNoteHref } from '../../api-server/src/lib/catalog/manualDetail';
+import { resolveManual, manualMetadata, relatedManuals, manualNoteHref, sectionPdfPage } from '../../api-server/src/lib/catalog/manualDetail';
 
 export function ManualDetail({ id, onBack }: { id: string; onBack: () => void }) {
   const colors = useColors();
   const router = useRouter();
   const saved = useManualLibraryStorage();
   const [expanded, setExpanded] = useState<string[]>([]);
+  const [sectionQuery, setSectionQuery] = useState('');
   const doc = resolveManual(TECH_DOCS, id);
   const action = (label: string, onPress: () => void, disabled = false) => <Pressable accessibilityRole="button" disabled={disabled} accessibilityState={{ disabled }} onPress={onPress} style={{ minHeight: 48, justifyContent: 'center', padding: 12, borderRadius: 8, borderWidth: 1, borderColor: colors.border, opacity: disabled ? 0.5 : 1 }}><Text style={{ color: colors.primary, fontWeight: '700' }}>{label}</Text></Pressable>;
   if (!doc) return <View style={{ padding: 20, gap: 16 }}><Text style={{ fontSize: 26, color: colors.foreground, fontWeight: '700' }}>Manual not found</Text>{action('Back to Manuals', onBack)}</View>;
   const meta = manualMetadata(doc, FLEET);
   const related = relatedManuals(doc, TECH_DOCS);
+  const visibleSections = useMemo(() => doc.sections.filter(item => `${item.ref} ${item.title} ${item.summary}`.toLocaleLowerCase().includes(sectionQuery.trim().toLocaleLowerCase())), [doc.sections, sectionQuery]);
   const domain = process.env.EXPO_PUBLIC_DOMAIN;
   const open = () => {
     if (saved.ready) saved.record(doc.id);
@@ -48,11 +50,13 @@ export function ManualDetail({ id, onBack }: { id: string; onBack: () => void })
     <Text style={{ color: colors.foreground, fontSize: 20, fontWeight: '700' }}>About this manual</Text>
     <Text style={{ color: colors.mutedForeground, lineHeight: 23 }}>{doc.summary}</Text>
     {FLEET.filter(crane => doc.appliesTo.includes(crane.id)).map(crane => <Text key={crane.id} style={{ color: colors.foreground }}>Applicable fleet model: {crane.model}</Text>)}
-    <Text style={{ color: colors.foreground, fontSize: 20, fontWeight: '700' }}>Manual sections</Text>
-    {doc.sections.map((section, index) => <View key={`${section.ref}-${index}`} style={{ gap: 10, padding: 12, borderWidth: 1, borderColor: colors.border, borderRadius: 10 }}>
+    <View style={{ gap: 6 }}><Text style={{ color: colors.foreground, fontSize: 20, fontWeight: '800' }}>Jump to section</Text><Text style={{ color: colors.mutedForeground, lineHeight: 20 }}>Search indexed sections. Page numbers are physical PDF pages, not printed section labels.</Text><TextInput accessibilityLabel="Filter sections" placeholder="Filter section titles or descriptions…" placeholderTextColor={colors.mutedForeground} value={sectionQuery} onChangeText={setSectionQuery} style={{ minHeight: 48, borderWidth: 1, borderColor: colors.border, borderRadius: 8, paddingHorizontal: 12, color: colors.foreground, backgroundColor: colors.card }} /></View>
+    {visibleSections.map((section, index) => { const target = sectionPdfPage(doc, section); return <View key={`${section.ref}-${index}`} style={{ gap: 10, padding: 12, borderWidth: 1, borderColor: colors.border, borderRadius: 10 }}>
       {action(`${section.ref} · ${section.title}`, () => setExpanded(current => current.includes(String(index)) ? current.filter(value => value !== String(index)) : [...current, String(index)]))}
-      {expanded.includes(String(index)) && <><Text style={{ color: colors.mutedForeground, lineHeight: 22 }}>{section.summary}</Text>{domain ? action('Add section note', () => note(section.ref)) : null}</>}
-    </View>)}
+      <Text style={{ color: target ? colors.primary : colors.mutedForeground, fontSize: 12, fontWeight: '700' }}>{target ? `PDF page ${target}` : 'Page not indexed'}</Text>
+      {expanded.includes(String(index)) && <><Text style={{ color: colors.mutedForeground, lineHeight: 22 }}>{section.summary}</Text><View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>{action(saved.sectionBookmarks.some(item => item.documentId === doc.id && item.sectionRef === section.ref) ? 'Remove section bookmark' : 'Save section', () => saved.toggleSection({ documentId: doc.id, sectionRef: section.ref, pageRef: target }), !saved.ready)}{target ? action(`Open PDF at page ${target}`, () => void WebBrowser.openBrowserAsync(`${docUrl(doc)}#page=${target}`)) : action('Open full manual', open)}{domain ? action('Add section note', () => note(section.ref)) : null}</View></>}
+    </View>; })}
+    {!visibleSections.length && <Text style={{ color: colors.mutedForeground }}>No indexed sections match this filter. Open the full manual to search it directly.</Text>}
     <Text style={{ color: colors.foreground, fontSize: 20, fontWeight: '700' }}>Related manuals</Text>
     {related.length ? related.map(item => <Pressable key={item.id} accessibilityRole="button" onPress={() => router.push({ pathname: '/docs', params: { document: item.id } })} style={{ padding: 16, minHeight: 76, gap: 8, backgroundColor: colors.card, borderRadius: 12 }}><Text style={{ color: colors.foreground, fontWeight: '700' }}>{item.title}</Text><Text style={{ color: colors.mutedForeground }}>{manualMetadata(item, FLEET).manufacturer} · {manualMetadata(item, FLEET).type}</Text><Text style={{ color: colors.mutedForeground }}>{manualMetadata(item, FLEET).models.join(' · ')}</Text></Pressable>) : <Text style={{ color: colors.mutedForeground }}>No other manuals with an explicit matching model or fleet association.</Text>}
     <Text style={{ color: colors.mutedForeground, fontSize: 12 }}>Mobile bookmarks save the whole manual on this device. Workshop notes open in the signed-in web app{domain ? '.' : ' when a server domain is configured.'}</Text>

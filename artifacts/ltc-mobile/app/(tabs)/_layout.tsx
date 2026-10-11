@@ -68,6 +68,13 @@ export default function TabLayout() {
           ),
         }}
       />
+      <Tabs.Screen
+        name="workshop"
+        options={{
+          title: 'Workshop',
+          tabBarIcon: ({ color }) => <Feather name="briefcase" size={21} color={color} />,
+        }}
+      />
     </Tabs>
   );
 }

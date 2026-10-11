@@ -12,10 +12,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
-import { Search, Weight, Maximize2, MoveHorizontal, Info, Settings2, Truck, Plus, Trash2 } from 'lucide-react';
+import { Search, Weight, Maximize2, MoveHorizontal, Info, Settings2, Truck, Plus, Trash2, Star } from 'lucide-react';
 import { toast } from 'sonner';
 import { useLocation, useSearch } from 'wouter';
 import { FleetWorkspace } from '@/components/fleet-workspace';
+import { useAuth } from '@/lib/auth-context';
+import { useFavouriteCranes } from '@/hooks/useFavouriteCranes';
 
 type FormState = {
   manufacturer: string;
@@ -50,6 +52,8 @@ export default function FleetPage() {
   const [addOpen, setAddOpen] = useState(false);
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [customCranes, setCustomCranes] = useState<CraneModel[]>(() => loadCustomCranes());
+  const { user } = useAuth();
+  const { favouriteCraneIds, toggleFavouriteCrane } = useFavouriteCranes(user?.id);
 
   const allCranes = useMemo(() => [...FLEET, ...customCranes], [customCranes]);
 
@@ -176,13 +180,13 @@ export default function FleetPage() {
                     </div>
                     <div className="text-lg font-bold group-hover:text-primary transition-colors">{crane.model}</div>
                   </div>
-                  <Badge
+                  <div className="flex items-center gap-2"><button type="button" aria-label={favouriteCraneIds.includes(crane.id) ? `Remove ${crane.model} from favourites` : `Favourite ${crane.model}`} className="flex h-10 w-10 items-center justify-center rounded-md border border-border bg-background/50 text-primary" onClick={(event) => { event.stopPropagation(); toggleFavouriteCrane(crane.id); }}><Star className={`h-4 w-4 ${favouriteCraneIds.includes(crane.id) ? 'fill-primary' : ''}`} /></button><Badge
                     variant="outline"
                     className="font-mono"
                     style={{ borderColor: CATEGORY_COLORS[crane.category], color: CATEGORY_COLORS[crane.category] }}
                   >
                     {CATEGORY_ICONS[crane.category]}
-                  </Badge>
+                  </Badge></div>
                 </div>
 
                 <div className="grid grid-cols-3 gap-2">

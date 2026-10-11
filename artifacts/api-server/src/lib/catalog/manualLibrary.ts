@@ -6,7 +6,8 @@ export interface LibraryDocument {
   manufacturer?: string; sourceSystem?: string; documentType?: string;
   docNumber?: string; bookCode?: string; year?: number; summary: string;
   craneTypes: string[]; appliesTo: string[];
-  sections: { ref: string; title: string; summary: string }[];
+  pages?: number;
+  sections: { ref: string; title: string; summary: string; pdfPage?: number }[];
 }
 export interface LibraryFleet { id: string; model: string; manufacturer: string }
 export const LIBRARY_CATEGORIES = ['All', 'Operation / Maintenance', 'Service / Workshop', 'Parts', 'Diagnostics', 'Electrical', 'Engine', 'Hydraulics', 'Crane controls', 'Transmission', 'Reference'] as const;
