@@ -22,6 +22,7 @@ export type DocSection = {
   ref: string;     // e.g. "20.05" or "Module 03"
   title: string;
   summary: string;
+  pdfPage?: number;
 };
 
 export type TechDoc = {

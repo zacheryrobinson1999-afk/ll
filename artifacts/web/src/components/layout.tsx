@@ -11,6 +11,7 @@ import {
   Shield,
   StickyNote,
   CalendarDays,
+  HardHat,
 } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { Button } from '@/components/ui/button';
@@ -27,6 +28,7 @@ export function Layout({ children }: { children: ReactNode }) {
     { href: '/fleet', label: 'Fleet', icon: Truck },
     { href: '/maintenance', label: 'Maintenance', icon: Wrench },
     { href: '/docs', label: 'Documents', icon: BookOpen },
+    { href: '/workshop', label: 'My Workshop', icon: HardHat },
     { href: '/notes', label: 'Workshop Notes', icon: StickyNote },
     { href: '/diary', label: 'Diary', icon: CalendarDays },
     { href: '/tools', label: 'Tools', icon: Calculator },
@@ -35,6 +37,7 @@ export function Layout({ children }: { children: ReactNode }) {
   const mobileNavItems = [
     { href: '/', label: 'Home', icon: Home },
     { href: '/docs', label: 'Manuals', icon: BookOpen },
+    { href: '/workshop', label: 'Workshop', icon: HardHat },
     { href: '/notes', label: 'Notes', icon: StickyNote },
     { href: '/#search', label: 'Search', icon: Search },
   ];

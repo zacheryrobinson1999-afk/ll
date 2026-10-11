@@ -16,6 +16,7 @@ import NotesPage from '@/pages/notes';
 import SearchPage from '@/pages/search';
 import DiaryPage from '@/pages/diary';
 import BookmarksPage from '@/pages/bookmarks';
+import WorkshopPage from '@/pages/workshop';
 import { BookmarksProvider } from '@/hooks/useBookmarks';
 import { AuthProvider, useAuth } from '@/lib/auth-context';
 import {
@@ -51,6 +52,7 @@ function Router() {
           <Route path="/search" component={SearchPage} />
           <Route path="/diary" component={DiaryPage} />
           <Route path="/bookmarks" component={BookmarksPage} />
+          <Route path="/workshop" component={WorkshopPage} />
           <Route path="/maintenance" component={MaintenancePage} />
           <Route path="/maintenance/:manufacturer" component={MaintenancePage} />
           <Route path="/maintenance/:manufacturer/:craneId" component={MaintenancePage} />

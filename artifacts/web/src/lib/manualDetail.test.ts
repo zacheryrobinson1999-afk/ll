@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { TECH_DOCS } from '../data/techDocs';
 import { TECH_DOCS as MOBILE_DOCS } from '../../../ltc-mobile/data/techDocs';
 import { NEW_MANUAL_DOCS } from '../../../api-server/src/lib/catalog/newManuals';
-import { resolveManual, manualMetadata, relatedManuals, recentManuals, bookmarkedManuals, bookmarksInManual, manualDetailHref, manualNoteHref, noteReference, manualReturnPath } from '../../../api-server/src/lib/catalog/manualDetail';
+import { resolveManual, manualMetadata, relatedManuals, recentManuals, bookmarkedManuals, bookmarksInManual, bookmarkedSections, manualDetailHref, manualNoteHref, noteReference, manualReturnPath, verifiedPdfPage, sectionPdfPage } from '../../../api-server/src/lib/catalog/manualDetail';
 import { rankDocuments } from './search';
 
 const [cke, ckeParts, cks, cksParts, genericEngine, engineParts] = NEW_MANUAL_DOCS;
@@ -24,6 +24,25 @@ test('detail metadata preserves title, code, actual year and applicability', () 
   assert.deepEqual(meta.models, []);
   assert.equal(meta.type, 'Engine handbook');
   assert.equal(meta.summary, genericEngine.summary);
+});
+test('section targets use explicit physical PDF pages only and respect document limits', () => {
+  const doc = { ...cks, pages: 20, sections: [{ ref: '20.05', title: 'Printed section', summary: 'No page metadata.' }, { ref: 'PDF p. 5', title: 'Indexed', summary: '', pdfPage: 5 }, { ref: 'pp. 6-8', title: 'Range', summary: '' }] };
+  assert.equal(sectionPdfPage(doc, doc.sections[0]), '');
+  assert.equal(sectionPdfPage(doc, doc.sections[1]), '5');
+  assert.equal(verifiedPdfPage(doc, '21'), '');
+  assert.equal(verifiedPdfPage(doc, '0'), '');
+  assert.equal(verifiedPdfPage(doc, 'not-a-page'), '');
+});
+test('saved sections resolve to catalogue sections, deduplicate, and retain verified targets', () => {
+  const doc = { ...cks, pages: 20, sections: [{ ref: 'PDF p. 5', title: 'Indexed', summary: '', pdfPage: 5 }] };
+  const rows = bookmarkedSections([doc], [{ id: 'a', documentId: doc.id, sectionRef: 'PDF p. 5', pageRef: '5' }, { id: 'b', documentId: doc.id, sectionRef: 'PDF p. 5', pageRef: '5' }, { id: 'c', documentId: 'missing', sectionRef: 'PDF p. 5', pageRef: '5' }]);
+  assert.equal(rows.length, 1);
+  assert.equal(rows[0].page, '5');
+});
+test('legacy section bookmarks without a page remain resolvable as saved references', () => {
+  const doc = { ...cks, pages: 20, sections: [{ ref: 'PDF p. 5', title: 'Indexed', summary: '', pdfPage: 5 }] };
+  const rows = bookmarkedSections([doc], [{ id: 'legacy', documentId: doc.id, sectionRef: 'PDF p. 5', pageRef: '' }]);
+  assert.equal(rows[0].page, '5');
 });
 test('related manuals prefer explicit fleet and model links and exclude current', () => {
   for (const docs of [TECH_DOCS, MOBILE_DOCS]) {

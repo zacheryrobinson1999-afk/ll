@@ -4,6 +4,14 @@ import { manualModels, manufacturerGroup, manualCategories, type LibraryDocument
 export function resolveManual<T extends LibraryDocument>(docs: readonly T[], id?: string | null): T | undefined {
   return docs.find(doc => doc.id === id);
 }
+export function verifiedPdfPage(doc: LibraryDocument, raw?: string | number | null): string {
+  const page = typeof raw === 'number' ? raw : raw && /^\d+$/.test(raw) ? Number(raw) : 0;
+  return Number.isInteger(page) && page > 0 && (!doc.pages || page <= doc.pages) ? String(page) : '';
+}
+export function sectionPdfPage(doc: LibraryDocument, section: { ref?: string; pdfPage?: number }): string {
+  const explicit = section.pdfPage ?? (/^\s*(?:PDF\s+)?p\.\s*(\d+)\s*$/i.exec(section.ref ?? '') ? Number(/^\s*(?:PDF\s+)?p\.\s*(\d+)\s*$/i.exec(section.ref ?? '')![1]) : 0);
+  return verifiedPdfPage(doc, explicit);
+}
 export function manualDetailHref(id: string, options: { from?: string; section?: string; page?: string } = {}): string {
   const query = new URLSearchParams({ document: id });
   for (const [key, value] of Object.entries(options)) if (value) query.set(key, value);
@@ -47,6 +55,18 @@ export function bookmarkedManuals<T extends LibraryDocument>(docs: readonly T[],
 }
 export function bookmarksInManual<T extends ManualBookmark>(bookmarks: readonly T[], id: string): T[] {
   return bookmarks.filter(bookmark => bookmark.documentId === id && Boolean(bookmark.sectionRef || bookmark.pageRef));
+}
+export function bookmarkedSections<T extends LibraryDocument, B extends ManualBookmark>(docs: readonly T[], bookmarks: readonly B[]) {
+  const seen = new Set<string>();
+  return bookmarks.flatMap(bookmark => {
+    const doc = resolveManual(docs, bookmark.documentId);
+    const section = doc?.sections.find(item => item.ref === bookmark.sectionRef);
+    if (!doc || !section) return [];
+    const key = `${doc.id}\u0000${section.ref}\u0000${sectionPdfPage(doc, section)}`;
+    if (seen.has(key)) return [];
+    seen.add(key);
+    return [{ bookmark, doc, section, page: sectionPdfPage(doc, section) }];
+  });
 }
 export function noteReference(section?: string | null, page?: string | null): string | null {
   return [section ? `Section ${section}` : '', page ? `Page ${page}` : ''].filter(Boolean).join(' · ').slice(0, 160) || null;

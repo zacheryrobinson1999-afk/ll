@@ -17,7 +17,7 @@ function useBookmarkState() {
   const toggle = async (documentId: string, sectionRef = '', pageRef = '') => {
     if (lock.current || loading || error) return;
     lock.current = true; setBusy(true);
-    const existing = bookmarks.find((bookmark) => bookmark.documentId === documentId && bookmark.sectionRef === sectionRef && bookmark.pageRef === pageRef);
+    const existing = bookmarks.find((bookmark) => bookmark.documentId === documentId && bookmark.sectionRef === sectionRef && (bookmark.pageRef === pageRef || Boolean(sectionRef && !bookmark.pageRef)));
     try {
       if (existing) {
         await workflowRequest(`/bookmarks/${existing.id}`, 'DELETE');
