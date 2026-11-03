@@ -9,7 +9,7 @@ import { useDocumentLibrary } from '@/hooks/useDocumentLibrary';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ArrowRight, BookOpen, ChevronRight, Clock3, ExternalLink, FileText, Filter, Layers3, Search, SlidersHorizontal, Star, Truck, Wrench, X } from 'lucide-react';
+import { ArrowRight, BookOpen, ChevronRight, Clock3, ExternalLink, FileText, Filter, Layers3, Search, Star, Truck, Wrench, X } from 'lucide-react';
 import { Link, useLocation } from 'wouter';
 import { FLEET } from '@/data/craneFleet';
 import { availableCategories, filterManuals, manufacturerGroups, systemGroups, groupExamples, groupDescription, modelGroups, manualModels, manualCategories } from '../../../api-server/src/lib/catalog/manualLibrary';
@@ -72,19 +72,10 @@ function DocumentCard({ doc, favourite, onSelect, onOpen, onToggleFavourite }: D
         {doc.pages && <span className="ml-auto text-xs text-muted-foreground">{doc.pages.toLocaleString()} pages</span>}
       </div>
 
-      <div className="mt-5 flex gap-2">
-        <Button className="min-h-11 flex-1 font-bold" onClick={(event) => { event.stopPropagation(); onOpen(doc); }}>
+      <div className="mt-5">
+        <Button className="min-h-11 w-full font-bold" onClick={(event) => { event.stopPropagation(); onOpen(doc); }}>
           <ExternalLink className="h-4 w-4" /> Open manual
         </Button>
-        <button
-          type="button"
-          className="flex min-h-11 w-11 shrink-0 items-center justify-center rounded-md border border-border text-muted-foreground hover:border-primary hover:text-primary"
-          onClick={toggleFavourite}
-          aria-label={favourite ? 'Remove from favourites' : 'Add to favourites'}
-          title={favourite ? 'Remove from favourites' : 'Add to favourites'}
-        >
-          <Star className={favourite ? 'h-4 w-4 fill-primary text-primary' : 'h-4 w-4'} />
-        </button>
       </div>
     </article>
   );
@@ -173,6 +164,24 @@ export default function DocsPage() {
           : system
             ? 'Manuals tagged to this technical system.'
             : 'Start with the crane brand, or switch to System / job if you are troubleshooting a component.';
+
+  const groupDescriptionFor = (group: { label: string; count: number }) => {
+    if (!manufacturer) return groupDescription(filteredDocs, group.label, browsingSystems ? 'system' : 'manufacturer', FLEET);
+    const groupDocs = filteredDocs.filter(doc => {
+      const models = manualModels(doc, FLEET);
+      const fallback = manualCategories(doc).includes('Engine') ? 'Engine documents' : 'General / system documents';
+      return models.length ? models.includes(group.label) : fallback === group.label;
+    });
+    const categoriesForGroup = [...new Set(groupDocs.flatMap(manualCategories))].filter(item => item !== 'All').slice(0, 3);
+    return groupDocs.length + ' manuals in this group' + (categoriesForGroup.length ? ', covering ' + categoriesForGroup.join(', ').toLowerCase() : '') + '.';
+  };
+  const groupExamplesFor = (group: { label: string; count: number }) => manufacturer
+    ? filteredDocs.filter(doc => {
+      const models = manualModels(doc, FLEET);
+      const fallback = manualCategories(doc).includes('Engine') ? 'Engine documents' : 'General / system documents';
+      return models.length ? models.includes(group.label) : fallback === group.label;
+    }).slice(0, 3).map(doc => doc.title)
+    : groupExamples(filteredDocs, group.label, browsingSystems ? 'system' : 'manufacturer').slice(0, 3);
 
   if (detailId !== null) return <ManualDetail id={detailId} query={query} />;
 
@@ -268,7 +277,7 @@ export default function DocsPage() {
           </div>
         ) : showBrowseCards ? (
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-            {groups.map(group => <BrowseCard key={group.label} label={group.label} count={group.count} description={groupDescription(filteredDocs, group.label, browsingSystems ? 'system' : manufacturer ? 'model' : 'manufacturer', FLEET)} examples={groupExamples(filteredDocs, group.label, browsingSystems ? 'system' : manufacturer ? 'model' : 'manufacturer').slice(0, 3)} icon={browsingSystems ? 'system' : manufacturer ? 'model' : 'machine'} onClick={() => update(browsingSystems ? { system: group.label } : manufacturer ? { model: group.label } : { manufacturer: group.label, model: '' })} />)}
+            {groups.map(group => <BrowseCard key={group.label} label={group.label} count={group.count} description={groupDescriptionFor(group)} examples={groupExamplesFor(group)} icon={browsingSystems ? 'system' : manufacturer ? 'model' : 'machine'} onClick={() => update(browsingSystems ? { system: group.label } : manufacturer ? { model: group.label } : { manufacturer: group.label, model: '' })} />)}
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">{filteredDocs.map(doc => <DocumentCard key={doc.id} {...cardProps(doc)} />)}</div>
