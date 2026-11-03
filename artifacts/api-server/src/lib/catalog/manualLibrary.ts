@@ -163,8 +163,8 @@ function inferredCraneManufacturer(doc: LibraryDocument): string | null {
   if (systemKey === 'kobelco' || /\bkobelco\b|\bck[es]?\s*\d{3,4}\b/.test(text)) return 'Kobelco';
   if (systemKey === 'kato' || /\bkato\b/.test(text)) return 'KATO';
   if (systemKey === 'sany' || /\bsany\b|\bscc\s*\d{3,4}\b/.test(text)) return 'SANY';
-  if (systemKey === 'ecos ccs' && /\bgmk\b|\bgrove\b/.test(text)) return 'Grove';
-  if (systemKey === 'liccon 1' || systemKey === 'liccon 2' || systemKey === 'liebherr') {
+  if (systemKey === 'ecosccs' && /\bgmk\b|\bgrove\b/.test(text)) return 'Grove';
+  if (systemKey === 'liccon1' || systemKey === 'liccon2' || systemKey === 'liebherr') {
     return /\bliccon\b|\bltm\b|\bliebherr\b/.test(text) && !['Engine', 'Transmission', 'Drivetrain'].includes(manualSubsystem(doc) ?? '')
       ? 'Liebherr'
       : null;
@@ -187,7 +187,7 @@ export function manufacturerGroup(doc: LibraryDocument): string {
   return craneManufacturerGroup(doc) ?? canonicalManufacturer(doc.manufacturer ?? doc.system) || 'Technical references';
 }
 
-export function manualModelsexport function manualModels(doc: LibraryDocument, fleet: readonly LibraryFleet[] = []): string[] {
+export function manualModels(doc: LibraryDocument, fleet: readonly LibraryFleet[] = []): string[] {
   const labels = [...doc.craneTypes, ...fleet.filter(crane => doc.appliesTo.includes(crane.id)).map(crane => crane.model)];
   const unique = new Map<string, string>();
   for (const label of labels) if (label.trim() && !unique.has(compactSearch(label))) unique.set(compactSearch(label), label.trim());
@@ -295,7 +295,7 @@ export function groupDescription(docs: readonly LibraryDocument[], label: string
     : 'Browse general and system-level documents indexed for this manufacturer.';
 }
 
-export function filterManualsexport function filterManuals<T extends LibraryDocument>(docs: readonly T[], options: {
+export function filterManuals<T extends LibraryDocument>(docs: readonly T[], options: {
   query?: string; category?: string; manufacturer?: string; model?: string; system?: string; documentType?: string;
 }, fleet: readonly LibraryFleet[] = []): T[] {
   const searching = Boolean(options.query?.trim());
