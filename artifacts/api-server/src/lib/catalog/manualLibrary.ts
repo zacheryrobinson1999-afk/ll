@@ -94,15 +94,15 @@ const SUBSYSTEM_ORDER = [
 const CRANE_MANUFACTURERS = new Set(CRANE_MANUFACTURER_ORDER);
 const COMPONENT_SUPPLIER_KEYS = new Set([
   'zf',
-  'zf wabco',
+  'zfwabco',
   'wabco',
-  'zf sachs',
-  'mercedes benz',
-  'dana spicer',
+  'zfsachs',
+  'mercedesbenz',
+  'danaspicer',
   'eaton',
   'hino',
   'allison',
-  'pat hirschmann',
+  'pathirschmann',
   'hirschmann',
 ]);
 
@@ -116,11 +116,11 @@ export function canonicalManufacturer(value?: string): string {
   const key = compactSearch(label);
   const aliases: Record<string, string> = {
     franna: 'Terex / Franna',
-    'terex franna': 'Terex / Franna',
-    'tadano faun': 'Tadano',
-    'terex demag': 'Terex / Demag',
-    'palfinger ag': 'Palfinger',
-    'grove pat': 'Grove',
+    'terexfranna': 'Terex / Franna',
+    'tadanofaun': 'Tadano',
+    'terexdemag': 'Terex / Demag',
+    'palfingerag': 'Palfinger',
+    'grovepat': 'Grove',
   };
   return aliases[key] ?? label;
 }
@@ -159,7 +159,7 @@ function inferredCraneManufacturer(doc: LibraryDocument): string | null {
   if (explicit && COMPONENT_SUPPLIER_KEYS.has(compactSearch(explicit))) return null;
   if (isComponentReference(doc)) return null;
 
-  if (systemKey === 'terex franna' || /\bfranna\b|\bmac\s*25\b|\brobway\b|\bat\s*\d{2,4}\b/.test(text)) return 'Terex / Franna';
+  if (systemKey === 'terexfranna' || /\bfranna\b|\bmac\s*25\b|\brobway\b|\bat\s*\d{2,4}\b/.test(text)) return 'Terex / Franna';
   if (systemKey === 'kobelco' || /\bkobelco\b|\bck[es]?\s*\d{3,4}\b/.test(text)) return 'Kobelco';
   if (systemKey === 'kato' || /\bkato\b/.test(text)) return 'KATO';
   if (systemKey === 'sany' || /\bsany\b|\bscc\s*\d{3,4}\b/.test(text)) return 'SANY';
@@ -250,9 +250,9 @@ export function manualSubsystem(doc: LibraryDocument): string | null {
   if (/\bhydraulic\b|\bpiston\s+pump\b/.test(text)) return 'Hydraulics';
   if (/\bparts\b|\bspare\s+parts\b/.test(text)) return 'Parts';
   const systemKey = compactSearch(doc.system);
-  if (['mercedes benz', 'hino'].includes(systemKey)) return 'Engine';
-  if (['zf wabco', 'allison'].includes(systemKey)) return 'Transmission';
-  if (systemKey === 'dana spicer') return 'Drivetrain';
+  if (['mercedesbenz', 'hino'].includes(systemKey)) return 'Engine';
+  if (['zfwabco', 'allison'].includes(systemKey)) return 'Transmission';
+  if (systemKey === 'danaspicer') return 'Drivetrain';
   if (systemKey === 'eaton') return 'Hydraulics';
   return null;
 }
