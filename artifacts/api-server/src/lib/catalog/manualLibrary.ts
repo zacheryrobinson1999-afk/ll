@@ -184,7 +184,7 @@ export function craneManufacturerGroup(doc: LibraryDocument): string | null {
 }
 
 export function manufacturerGroup(doc: LibraryDocument): string {
-  return craneManufacturerGroup(doc) ?? canonicalManufacturer(doc.manufacturer ?? doc.system) || 'Technical references';
+  return craneManufacturerGroup(doc) ?? (canonicalManufacturer(doc.manufacturer ?? doc.system) || 'Technical references');
 }
 
 export function manualModels(doc: LibraryDocument, fleet: readonly LibraryFleet[] = []): string[] {
