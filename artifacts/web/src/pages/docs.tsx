@@ -136,7 +136,7 @@ export default function DocsPage() {
       ? modelGroups(filteredDocs, FLEET)
       : manufacturerGroups(filteredDocs);
   const rootView = !searching && !manufacturer && !model && !system && category === 'All' && !favouritesOnly;
-  const showBrowseCards = !searching && !model && !favouritesOnly && !system || browsingSystems;
+  const showBrowseCards = !searching && !model && !favouritesOnly && (browsingSystems || !system);
   const activeFilterCount = [category !== 'All', manufacturer, model, system && !browsingSystems, favouritesOnly].filter(Boolean).length;
   const clearFilters = () => navigate('/docs');
   const selectDocument = (doc: TechDoc) => navigate(manualDetailHref(doc.id, { from: '/docs' + (query ? '?' + query : '') }));
