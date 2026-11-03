@@ -91,7 +91,7 @@ const SUBSYSTEM_ORDER = [
   'Parts',
 ] as const;
 
-const CRANE_MANUFACTURERS = new Set(CRANE_MANUFACTURER_ORDER);
+const CRANE_MANUFACTURERS = new Set<string>(CRANE_MANUFACTURER_ORDER);
 const COMPONENT_SUPPLIER_KEYS = new Set([
   'zf',
   'zfwabco',
