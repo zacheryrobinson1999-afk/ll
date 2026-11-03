@@ -173,7 +173,7 @@ function ConverterSelectors({
   options: [string, string][];
 }) {
   return (
-    <div className="grid grid-cols-[1fr_auto_1fr] items-end gap-3">
+    <div className="grid grid-cols-1 items-end gap-3 sm:grid-cols-[1fr_auto_1fr]">
       <label className="block">
         <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">
           From
@@ -199,7 +199,7 @@ function ConverterSelectors({
           setTo(from);
         }}
         aria-label="Swap units"
-        className="mb-1 flex h-10 w-10 items-center justify-center rounded-xl bg-secondary text-muted-foreground transition hover:bg-secondary/80 hover:text-foreground"
+        className="mb-1 flex h-10 w-10 items-center justify-center justify-self-center rounded-xl sm:justify-self-auto bg-secondary text-muted-foreground transition hover:bg-secondary/80 hover:text-foreground"
       >
         <ArrowRightLeft className="h-4 w-4" />
       </button>
@@ -556,7 +556,7 @@ export default function ToolsPage() {
   };
 
   return (
-    <div className="min-h-full px-4 py-6 sm:px-6 lg:px-8">
+    <div className="min-h-full px-4 py-5 pb-24 sm:px-6 sm:py-6 lg:px-8">
       <div className="mx-auto max-w-6xl">
 
         <div className="mb-6">
@@ -570,7 +570,7 @@ export default function ToolsPage() {
         </div>
 
         {activeTool && (
-          <div className="mb-8 rounded-2xl border border-border bg-card p-5">
+          <div className="mb-6 rounded-2xl border border-border bg-card p-4 sm:mb-8 sm:p-5">
             <div className="mb-4 flex justify-end">
               <button
                 type="button"
