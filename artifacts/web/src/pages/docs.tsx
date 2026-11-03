@@ -107,6 +107,7 @@ export default function DocsPage() {
   const model = params.get('model') ?? '';
   const category = params.get('type') ?? 'All';
   const system = params.get('system') ?? '';
+  const subsystem = params.get('subsystem') ?? '';
   const documentType = params.get('documentType') ?? '';
   const favouritesOnly = params.get('favourites') === '1';
   const detailId = params.get('document');
@@ -125,9 +126,10 @@ export default function DocsPage() {
 
   const searching = Boolean(search.trim());
   const filteredDocs = useMemo(
-    () => filterManuals(TECH_DOCS, { query: search, category, manufacturer, model, system: system === 'browse' ? '' : system, documentType }, FLEET)
+    () => filterManuals(TECH_DOCS, { query: search, category, manufacturer, model, system: system === 'browse' || subsystem ? '' : system, documentType }, FLEET)
+      .filter(doc => !subsystem || (manualSubsystem(doc) ?? 'Crane documents') === subsystem)
       .filter(doc => !favouritesOnly || favouriteIds.includes(doc.id)),
-    [search, category, manufacturer, model, system, documentType, favouritesOnly, favouriteIds],
+    [search, category, manufacturer, model, system, subsystem, documentType, favouritesOnly, favouriteIds],
   );
 
   const browsingSystems = system === 'browse';
@@ -136,9 +138,9 @@ export default function DocsPage() {
     : manufacturer
       ? modelGroups(filteredDocs, FLEET)
       : manufacturerGroups(filteredDocs);
-  const rootView = !searching && !manufacturer && !model && !system && category === 'All' && !favouritesOnly;
-  const showBrowseCards = !searching && !model && !favouritesOnly && (browsingSystems || !system);
-  const activeFilterCount = [category !== 'All', manufacturer, model, system && !browsingSystems, favouritesOnly].filter(Boolean).length;
+  const rootView = !searching && !manufacturer && !model && !system && !subsystem && category === 'All' && !favouritesOnly;
+  const showBrowseCards = !searching && !model && !favouritesOnly && !subsystem && (browsingSystems || !system);
+  const activeFilterCount = [category !== 'All', manufacturer, model, system && !browsingSystems, subsystem, favouritesOnly].filter(Boolean).length;
   const clearFilters = () => navigate('/docs');
   const selectDocument = (doc: TechDoc) => navigate(manualDetailHref(doc.id, { from: '/docs' + (query ? '?' + query : '') }));
   const cardProps = (doc: TechDoc) => ({ doc, favourite: favouriteIds.includes(doc.id), onSelect: selectDocument, onOpen: selectDocument, onToggleFavourite: toggleFavourite });
@@ -162,9 +164,11 @@ export default function DocsPage() {
         ? 'Pick a model to narrow the list before opening a manual.'
         : browsingSystems
           ? 'Use this when you know the job or subsystem, but not the exact crane model.'
-          : system
-            ? 'Manuals tagged to this technical system.'
-            : 'Start with the crane brand, or switch to Subsystem / job if you are troubleshooting a component.';
+          : subsystem
+            ? 'Manuals grouped under this subsystem.'
+            : system
+              ? 'Manuals tagged to this technical system.'
+              : 'Start with the crane brand, or switch to Subsystem / job if you are troubleshooting a component.';
 
   const groupDescriptionFor = (group: { label: string; count: number }) => {
     if (!manufacturer) return groupDescription(filteredDocs, group.label, browsingSystems ? 'subsystem' : 'manufacturer', FLEET);
@@ -221,8 +225,8 @@ export default function DocsPage() {
         </div>
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <span className="mr-1 text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">Browse</span>
-          <Button variant={!browsingSystems ? 'secondary' : 'outline'} className="min-h-10" onClick={() => update({ system: '', manufacturer: '', model: '' })}><Truck className="h-4 w-4" /> By machine</Button>
-          <Button variant={browsingSystems ? 'secondary' : 'outline'} className="min-h-10" onClick={() => update({ system: 'browse', manufacturer: '', model: '' })}><Wrench className="h-4 w-4" /> Subsystem / job</Button>
+          <Button variant={!browsingSystems ? 'secondary' : 'outline'} className="min-h-10" onClick={() => update({ system: '', subsystem: '', manufacturer: '', model: '' })}><Truck className="h-4 w-4" /> By machine</Button>
+          <Button variant={browsingSystems ? 'secondary' : 'outline'} className="min-h-10" onClick={() => update({ system: 'browse', subsystem: '', manufacturer: '', model: '' })}><Wrench className="h-4 w-4" /> Subsystem / job</Button>
           {activeFilterCount > 0 && <Button variant="ghost" className="ml-auto min-h-10 text-muted-foreground" onClick={clearFilters}><Filter className="h-4 w-4" /> Clear ({activeFilterCount})</Button>}
         </div>
       </div>
@@ -251,10 +255,10 @@ export default function DocsPage() {
         </>
       )}
 
-      {!searching && (manufacturer || model || system) && (
+      {!searching && (manufacturer || model || system || subsystem) && (
         <nav aria-label="Manual library breadcrumb" className="flex flex-wrap items-center gap-1 text-sm">
           <Button variant="ghost" className="min-h-10 px-2" onClick={clearFilters}>Manuals</Button>
-          {system && <><ChevronRight className="h-4 w-4 text-muted-foreground" /><Button variant="ghost" className="min-h-10 px-2" onClick={() => update({ system: 'browse', manufacturer: '', model: '' })}>{system === 'browse' ? 'System / job' : system}</Button></>}
+          {(system || subsystem) && <><ChevronRight className="h-4 w-4 text-muted-foreground" /><Button variant="ghost" className="min-h-10 px-2" onClick={() => update({ system: 'browse', subsystem: '', manufacturer: '', model: '' })}>{subsystem || (system === 'browse' ? 'Subsystem / job' : system)}</Button></>}
           {manufacturer && <><ChevronRight className="h-4 w-4 text-muted-foreground" /><Button variant="ghost" className="min-h-10 px-2" onClick={() => update({ model: '', document: '' })}>{manufacturer}</Button></>}
           {model && <><ChevronRight className="h-4 w-4 text-muted-foreground" /><span aria-current="page" className="font-semibold">{model}</span></>}
         </nav>
@@ -278,7 +282,7 @@ export default function DocsPage() {
           </div>
         ) : showBrowseCards ? (
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-            {groups.map(group => <BrowseCard key={group.label} label={group.label} count={group.count} description={groupDescriptionFor(group)} examples={groupExamplesFor(group)} icon={browsingSystems ? 'system' : manufacturer ? 'model' : 'machine'} onClick={() => update(browsingSystems ? { system: group.label } : manufacturer ? { model: group.label } : { manufacturer: group.label, model: '' })} />)}
+            {groups.map(group => <BrowseCard key={group.label} label={group.label} count={group.count} description={groupDescriptionFor(group)} examples={groupExamplesFor(group)} icon={browsingSystems ? 'system' : manufacturer ? 'model' : 'machine'} onClick={() => update(browsingSystems ? { system: '', subsystem: group.label } : manufacturer ? { model: group.label } : { manufacturer: group.label, model: '' })} />)}
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">{filteredDocs.map(doc => <DocumentCard key={doc.id} {...cardProps(doc)} />)}</div>
