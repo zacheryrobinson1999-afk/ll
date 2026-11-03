@@ -182,7 +182,7 @@ export default function DocsPage() {
       const fallback = manualCategories(doc).includes('Engine') ? 'Engine documents' : 'General / system documents';
       return models.length ? models.includes(group.label) : fallback === group.label;
     }).slice(0, 3).map(doc => doc.title)
-    : groupExamples(filteredDocs, group.label, browsingSystems ? 'system' : 'manufacturer').slice(0, 3);
+    : groupExamples(filteredDocs, group.label, browsingSystems ? 'subsystem' : 'manufacturer').slice(0, 3);
 
   if (detailId !== null) return <ManualDetail id={detailId} query={query} />;
 
@@ -222,7 +222,7 @@ export default function DocsPage() {
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <span className="mr-1 text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">Browse</span>
           <Button variant={!browsingSystems ? 'secondary' : 'outline'} className="min-h-10" onClick={() => update({ system: '', manufacturer: '', model: '' })}><Truck className="h-4 w-4" /> By machine</Button>
-          <Button variant={browsingSystems ? 'secondary' : 'outline'} className="min-h-10" onClick={() => update({ system: 'browse', manufacturer: '', model: '' })}><Wrench className="h-4 w-4" /> System / job</Button>
+          <Button variant={browsingSystems ? 'secondary' : 'outline'} className="min-h-10" onClick={() => update({ system: 'browse', manufacturer: '', model: '' })}><Wrench className="h-4 w-4" /> Subsystem / job</Button>
           {activeFilterCount > 0 && <Button variant="ghost" className="ml-auto min-h-10 text-muted-foreground" onClick={clearFilters}><Filter className="h-4 w-4" /> Clear ({activeFilterCount})</Button>}
         </div>
       </div>
