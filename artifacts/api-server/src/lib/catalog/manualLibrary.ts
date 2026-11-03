@@ -105,19 +105,51 @@ export function manufacturerGroups(docs: readonly LibraryDocument[]): ManualGrou
 export function systemGroups(docs: readonly LibraryDocument[]): ManualGroup[] {
   return groups(docs, doc => [doc.system]);
 }
-export function groupExamples(docs: readonly LibraryDocument[], label: string, kind: 'manufacturer' | 'system', limit = 3): string[] {
-  return docs.filter(doc => compactSearch(kind === 'manufacturer' ? manufacturerGroup(doc) : doc.system) === compactSearch(label))
+
+export function manualSubsystem(doc: LibraryDocument): string | null {
+  const text = normalizeSearch([doc.title, doc.subtitle, doc.system, doc.documentType, doc.type, doc.summary].join(' '));
+  if (/\btransfer\s+case\b|\bdriveline\b|\bpowertrain\b|\bdrive\s*train\b/.test(text)) return 'Drivetrain';
+  if (/\btransmission\b|\ballison\b|\bgearbox\b/.test(text)) return 'Transmission';
+  if (/\bengine\b|\bdiesel\b|\bom934\b|\bom936\b|\bd936\b|\bd946\b/.test(text)) return 'Engine';
+  if (/\bliccon\b|\blmi\b|\brci\b|\becos\b|\bccs\b/.test(text)) return 'Crane controls';
+  const categories = manualCategories(doc);
+  if (categories.includes('Electrical')) return 'Electrical';
+  if (categories.includes('Hydraulics')) return 'Hydraulics';
+  if (categories.includes('Parts')) return 'Parts';
+  if (['Mercedes-Benz', 'ZF / WABCO', 'Dana / Spicer', 'Eaton'].includes(doc.system)) return 'Drivetrain';
+  return null;
+}
+
+export function subsystemGroups(docs: readonly LibraryDocument[]): ManualGroup[] {
+  return groups(docs, doc => [manualSubsystem(doc) ?? 'Crane documents']);
+}
+export function groupExamples(docs: readonly LibraryDocument[], label: string, kind: 'manufacturer' | 'system' | 'subsystem', limit = 3): string[] {
+  const groupLabel = (doc: LibraryDocument) => kind === 'manufacturer'
+    ? manufacturerGroup(doc)
+    : kind === 'system'
+      ? doc.system
+      : manualSubsystem(doc) ?? 'Crane documents';
+  return docs.filter(doc => compactSearch(groupLabel(doc)) === compactSearch(label))
     .slice(0, limit).map(doc => doc.title);
 }
-export function groupDescription(docs: readonly LibraryDocument[], label: string, kind: 'manufacturer' | 'system', fleet: readonly LibraryFleet[] = []): string {
-  const records = docs.filter(doc => compactSearch(kind === 'manufacturer' ? manufacturerGroup(doc) : doc.system) === compactSearch(label));
+export function groupDescription(docs: readonly LibraryDocument[], label: string, kind: 'manufacturer' | 'system' | 'subsystem', fleet: readonly LibraryFleet[] = []): string {
+  const groupLabel = (doc: LibraryDocument) => kind === 'manufacturer'
+    ? manufacturerGroup(doc)
+    : kind === 'system'
+      ? doc.system
+      : manualSubsystem(doc) ?? 'Crane documents';
+  const records = docs.filter(doc => compactSearch(groupLabel(doc)) === compactSearch(label));
   const categories = [...new Set(records.flatMap(manualCategories))].filter(category => category !== 'All');
-  if (kind === 'system') return `${LIBRARY_CATEGORY_DESCRIPTIONS[categories[0] ?? 'Reference']} ${records.length} manuals are indexed in this system.`;
+  if (kind === 'system') return LIBRARY_CATEGORY_DESCRIPTIONS[categories[0] ?? 'Reference'] + ' ' + records.length + ' manuals are indexed in this system.';
+  if (kind === 'subsystem') {
+    return label === 'Crane documents'
+      ? 'Manufacturer and crane-specific manuals grouped separately from component references.'
+      : records.length + ' manuals focused on ' + label.toLowerCase() + (categories.length ? ', including ' + categories.slice(0, 3).join(', ').toLowerCase() : '') + '.';
+  }
   const models = [...new Set(records.flatMap(doc => manualModels(doc, fleet)))];
-  return models.length ? `Browse ${models.length} indexed model or system group${models.length === 1 ? '' : 's'} with ${categories.slice(0, 3).join(', ').toLowerCase() || 'technical reference'} documents.` : 'Browse general and system-level documents indexed for this manufacturer.';
-}
-export function modelGroups(docs: readonly LibraryDocument[], fleet: readonly LibraryFleet[] = []): ManualGroup[] {
-  return groups(docs, doc => modelGroupsFor(doc, fleet));
+  return models.length
+    ? 'Browse ' + models.length + ' indexed model or system group' + (models.length === 1 ? '' : 's') + ' with ' + (categories.slice(0, 3).join(', ').toLowerCase() || 'technical reference') + ' documents.'
+    : 'Browse general and system-level documents indexed for this manufacturer.';
 }
 
 export function filterManuals<T extends LibraryDocument>(docs: readonly T[], options: {
