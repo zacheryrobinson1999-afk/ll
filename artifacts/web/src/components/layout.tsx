@@ -39,7 +39,6 @@ export function Layout({ children }: { children: ReactNode }) {
     { href: '/docs', label: 'Manuals', icon: BookOpen },
     { href: '/workshop', label: 'Workshop', icon: HardHat },
     { href: '/notes', label: 'Notes', icon: StickyNote },
-    { href: '/#search', label: 'Search', icon: Search },
   ];
 
   const isActive = (href: string) => {
@@ -51,20 +50,20 @@ export function Layout({ children }: { children: ReactNode }) {
     <div className="dark min-h-[100dvh] bg-background text-foreground">
       {/* Header */}
       <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur">
-        <div className="mx-auto flex h-[72px] max-w-[1400px] items-center px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto flex h-16 max-w-[1400px] items-center px-3 sm:px-6 lg:px-8">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-md bg-primary text-sm font-black text-primary-foreground shadow-lg">
+          <Link href="/" className="flex items-center gap-2 sm:gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-md bg-primary text-xs font-black sm:h-11 sm:w-11 sm:text-sm text-primary-foreground shadow-lg">
               CH
             </div>
 
             <div className="leading-none">
-              <div className="brand-heading text-[27px] font-bold uppercase tracking-wide">
+              <div className="brand-heading text-[22px] sm:text-[27px] font-bold uppercase tracking-wide">
                 <span className="text-foreground">CRANE</span>
                 <span className="text-primary">HUB</span>
               </div>
 
-              <div className="mt-1 text-[9px] font-bold uppercase tracking-[0.28em] text-muted-foreground">
+              <div className="mt-1 hidden text-[9px] font-bold uppercase tracking-[0.28em] text-muted-foreground sm:block">
                 Technician Hub
               </div>
             </div>
@@ -80,7 +79,7 @@ export function Layout({ children }: { children: ReactNode }) {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`relative flex items-center gap-2 px-4 py-6 text-xs font-bold uppercase tracking-wider transition-colors ${
+                  className={`relative flex items-center gap-2 px-3 py-5 text-xs font-bold uppercase tracking-wider transition-colors ${
                     active
                       ? 'text-primary'
                       : 'text-muted-foreground hover:text-foreground'
@@ -123,7 +122,7 @@ export function Layout({ children }: { children: ReactNode }) {
       </header>
 
       {/* Main */}
-      <main className="min-h-[calc(100dvh-72px)] pb-[calc(68px+env(safe-area-inset-bottom))] xl:pb-0">
+      <main className="min-h-[calc(100dvh-64px)] pb-[calc(68px+env(safe-area-inset-bottom))] xl:pb-0">
         {children}
       </main>
 
@@ -138,7 +137,7 @@ export function Layout({ children }: { children: ReactNode }) {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex min-h-[68px] flex-col items-center justify-center gap-1 ${
+                className={`flex min-h-[64px] flex-col items-center justify-center gap-1 ${
                   active
                     ? 'text-primary'
                     : 'text-muted-foreground hover:text-foreground'
