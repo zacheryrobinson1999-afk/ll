@@ -39,11 +39,11 @@ const quickLinks = [
 
 export default function HomePage() {
   return (
-    <div className="min-h-full bg-background pb-24 lg:pb-0">
+    <div className="min-h-full bg-background pb-20 xl:pb-0">
       <div className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8">
 
         {/* HERO */}
-        <section className="relative overflow-hidden border-b border-border py-12 sm:py-16 lg:py-20">
+        <section className="relative overflow-hidden border-b border-border py-8 sm:py-12 lg:py-20">
           {/* Decorative industrial glow */}
           <div className="pointer-events-none absolute right-0 top-0 h-80 w-80 rounded-full bg-primary/5 blur-3xl" />
 
@@ -59,7 +59,7 @@ export default function HomePage() {
                 </span>
               </div>
 
-              <h1 className="brand-heading max-w-xl text-5xl font-bold uppercase leading-[0.9] tracking-wide sm:text-6xl lg:text-7xl">
+              <h1 className="brand-heading max-w-xl text-4xl font-bold uppercase leading-[0.9] tracking-wide sm:text-6xl lg:text-7xl">
                 <span className="block text-foreground">
                   Everything Crane.
                 </span>
@@ -69,7 +69,7 @@ export default function HomePage() {
                 </span>
               </h1>
 
-              <p className="mt-6 max-w-xl text-base leading-7 text-muted-foreground sm:text-lg">
+              <p className="mt-4 max-w-xl text-base leading-7 text-muted-foreground sm:text-lg">
                 Crane information, maintenance procedures, technical
                 documents and engineering tools — all in one place.
               </p>
@@ -160,9 +160,9 @@ export default function HomePage() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="group border border-border bg-card p-5 transition-all hover:-translate-y-0.5 hover:border-primary/50 hover:bg-secondary"
+                  className="group border border-border bg-card p-4 sm:p-5 transition-all hover:-translate-y-0.5 hover:border-primary/50 hover:bg-secondary"
                 >
-                  <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-md bg-primary/10 text-primary">
+                  <div className="mb-4 flex h-11 w-11 sm:mb-6 sm:h-12 sm:w-12 items-center justify-center rounded-md bg-primary/10 text-primary">
                     <Icon className="h-6 w-6" />
                   </div>
 
@@ -174,7 +174,7 @@ export default function HomePage() {
                     {item.description}
                   </p>
 
-                  <div className="mt-5 flex items-center gap-1 text-sm font-bold uppercase text-primary">
+                  <div className="mt-4 flex items-center gap-1 text-sm sm:mt-5 font-bold uppercase text-primary">
                     Open
                     <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
                   </div>

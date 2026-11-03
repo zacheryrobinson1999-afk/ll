@@ -60,7 +60,7 @@ export default function AdminPage() {
     } catch (error) { toast.error(error instanceof Error ? error.message : 'Unable to reset password'); }
   };
 
-  return <div className="mx-auto max-w-[1400px] space-y-8 p-6 md:p-8">
+  return <div className="mx-auto max-w-[1400px] space-y-6 p-4 pb-24 md:space-y-8 md:p-8">
     <div><h1 className="text-3xl font-bold">Administration</h1><p className="mt-1 text-sm text-muted-foreground">Manage authorised CraneHub accounts and review daycode activity.</p></div>
     {loading ? <div className="flex justify-center py-16"><Loader2 className="h-7 w-7 animate-spin text-primary" /></div> : <>
       <Card><CardHeader><CardTitle className="flex items-center gap-2"><ShieldPlus className="h-5 w-5 text-primary" />Add account</CardTitle></CardHeader><CardContent>

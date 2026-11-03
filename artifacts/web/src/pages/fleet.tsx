@@ -112,15 +112,15 @@ export default function FleetPage() {
   }, []);
 
   return (
-    <div className="p-6 md:p-8 space-y-6 h-full flex flex-col animate-in fade-in duration-500">
-      <div className="flex items-start justify-between shrink-0">
+    <div className="p-4 pb-24 md:p-8 space-y-6 h-full flex flex-col animate-in fade-in duration-500">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between shrink-0">
         <div className="space-y-2">
           <h1 className="text-3xl font-bold tracking-tight">Fleet</h1>
           <p className="text-muted-foreground text-sm">
             Browse the heavy lifting fleet and specifications.
           </p>
         </div>
-        <Button onClick={() => setAddOpen(true)} className="gap-2 shrink-0">
+        <Button onClick={() => setAddOpen(true)} className="min-h-11 w-full gap-2 shrink-0 sm:w-auto">
           <Plus className="w-4 h-4" />
           Add Crane
         </Button>
@@ -133,7 +133,7 @@ export default function FleetPage() {
             placeholder="Search models or manufacturers..."
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="pl-9 bg-card/50"
+            className="h-11 pl-9 bg-card/50"
           />
         </div>
         <div className="flex gap-2 overflow-x-auto pb-2 sm:pb-0 hide-scrollbar">
@@ -159,7 +159,7 @@ export default function FleetPage() {
         </div>
       </div>
 
-      <div className="flex-1 overflow-auto -mx-6 px-6 md:mx-0 md:px-0">
+      <div className="flex-1 overflow-auto -mx-4 px-4 md:mx-0 md:px-0">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 pb-6">
           {filteredFleet.map(crane => (
             <Card
@@ -167,7 +167,7 @@ export default function FleetPage() {
               className="bg-card/50 hover:bg-card/80 transition-all cursor-pointer border-border/50 hover:border-primary/50 group"
               onClick={() => navigate(`/fleet?crane=${encodeURIComponent(crane.id)}`)}
             >
-              <CardContent className="p-5 space-y-4">
+              <CardContent className="p-4 space-y-4 sm:p-5">
                 <div className="flex justify-between items-start">
                   <div>
                     <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-2">
