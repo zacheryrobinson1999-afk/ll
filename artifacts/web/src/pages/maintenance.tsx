@@ -49,7 +49,7 @@ function Overview() {
   const manufacturers = getManufacturers();
 
   return (
-    <div className="p-6 md:p-8 space-y-6 animate-in fade-in duration-500">
+    <div className="p-4 pb-24 md:p-8 space-y-6 animate-in fade-in duration-500">
       <div className="space-y-2">
         <h1 className="text-3xl font-bold tracking-tight">Maintenance</h1>
         <p className="text-muted-foreground text-sm">
@@ -70,7 +70,7 @@ function Overview() {
               onClick={() => setLocation(`/maintenance/${mfr}`)}
             >
               <div className="absolute inset-0 opacity-10 transition-opacity group-hover:opacity-20" style={{ backgroundColor: color }} />
-              <CardContent className="p-6 flex flex-col items-center justify-center text-center space-y-4 min-h-[160px]">
+              <CardContent className="p-4 flex flex-col items-center sm:p-6 justify-center text-center space-y-4 min-h-[160px]">
                 <div 
                   className="w-16 h-16 rounded-full flex items-center justify-center font-bold text-xl shadow-inner"
                   style={{ backgroundColor: color, color: textColor }}
@@ -95,7 +95,7 @@ function ManufacturerView({ manufacturer, onBack, onSelect }: { manufacturer: st
   const color = BRAND_COLORS[manufacturer] || '#444';
 
   return (
-    <div className="p-6 md:p-8 space-y-6 animate-in slide-in-from-right-4 duration-300">
+    <div className="p-4 pb-24 md:p-8 space-y-6 animate-in slide-in-from-right-4 duration-300">
       <div className="flex items-center gap-4">
         <Button variant="ghost" size="icon" onClick={onBack} className="shrink-0">
           <ChevronLeft className="w-5 h-5" />
@@ -116,7 +116,7 @@ function ManufacturerView({ manufacturer, onBack, onSelect }: { manufacturer: st
             className="cursor-pointer hover:bg-card/80 transition-colors border-border/50 group"
             onClick={() => onSelect(crane.id)}
           >
-            <CardContent className="p-5 flex items-center justify-between">
+            <CardContent className="p-4 flex items-center justify-between sm:p-5">
               <div>
                 <h3 className="font-bold text-lg group-hover:text-primary transition-colors">{crane.model}</h3>
                 <div className="text-sm text-muted-foreground flex items-center gap-2 mt-1">
@@ -142,7 +142,7 @@ function CraneDetailView({ manufacturer, craneId, onBack }: { manufacturer: stri
   if (!crane) return <div className="p-8">Crane not found</div>;
 
   return (
-    <div className="p-6 md:p-8 space-y-6 animate-in slide-in-from-right-4 duration-300">
+    <div className="p-4 pb-24 md:p-8 space-y-6 animate-in slide-in-from-right-4 duration-300">
       <div className="flex items-center gap-4 mb-2">
         <Button variant="ghost" size="icon" onClick={onBack} className="shrink-0">
           <ChevronLeft className="w-5 h-5" />
@@ -171,12 +171,12 @@ function CraneDetailView({ manufacturer, craneId, onBack }: { manufacturer: stri
               {docs.length > 0 ? (
                 <div className="space-y-3">
                   {docs.map(doc => (
-                    <div key={doc.id} className="flex items-start justify-between p-3 rounded-lg bg-secondary/30 border border-border/50 group">
+                    <div key={doc.id} className="flex flex-col gap-3 p-3 rounded-lg sm:flex-row sm:items-start sm:justify-between bg-secondary/30 border border-border/50 group">
                       <div>
                         <div className="font-semibold text-sm group-hover:text-primary transition-colors">{doc.title}</div>
                         <div className="text-xs text-muted-foreground">{doc.type} • {doc.system}</div>
                       </div>
-                      <Button size="sm" variant="secondary" onClick={() => navigate(manualDetailHref(doc.id, { from: `/maintenance/${encodeURIComponent(manufacturer)}/${encodeURIComponent(craneId)}` }))}>
+                      <Button size="sm" variant="secondary" className="w-full sm:w-auto" onClick={() => navigate(manualDetailHref(doc.id, { from: `/maintenance/${encodeURIComponent(manufacturer)}/${encodeURIComponent(craneId)}` }))}>
                         Open <ExternalLink className="w-3 h-3 ml-2" />
                       </Button>
                     </div>
