@@ -12,7 +12,7 @@ import { Input } from '@/components/ui/input';
 import { ArrowRight, BookOpen, ChevronRight, Clock3, ExternalLink, FileText, Filter, Layers3, Search, Star, Truck, Wrench, X } from 'lucide-react';
 import { Link, useLocation } from 'wouter';
 import { FLEET } from '@/data/craneFleet';
-import { availableCategories, filterManuals, manufacturerGroups, systemGroups, groupExamples, groupDescription, modelGroups, manualModels, manualCategories } from '../../../api-server/src/lib/catalog/manualLibrary';
+import { availableCategories, filterManuals, manufacturerGroups, subsystemGroups, groupExamples, groupDescription, modelGroups, manualModels, manualCategories, manualSubsystem } from '../../../api-server/src/lib/catalog/manualLibrary';
 import { useSearch } from 'wouter';
 
 type DocumentCardProps = {
@@ -30,6 +30,7 @@ function DocumentCard({ doc, favourite, onSelect, onOpen, onToggleFavourite }: D
   };
   const models = manualModels(doc, FLEET);
   const type = doc.documentType ?? manualCategories(doc).join(' / ');
+  const subsystem = manualSubsystem(doc);
 
   return (
     <article
@@ -42,7 +43,7 @@ function DocumentCard({ doc, favourite, onSelect, onOpen, onToggleFavourite }: D
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] font-bold uppercase tracking-[0.12em]">
-            <span style={{ color: SYSTEM_COLORS[doc.system] }}>{SYSTEM_ICONS[doc.system]} · {doc.system}</span>
+            <span style={{ color: SYSTEM_COLORS[doc.system] }}>{SYSTEM_ICONS[doc.system]} · {subsystem ?? doc.system}</span>
             <span className="text-muted-foreground">·</span>
             <span className="text-muted-foreground">{type}</span>
           </div>
@@ -131,7 +132,7 @@ export default function DocsPage() {
 
   const browsingSystems = system === 'browse';
   const groups = browsingSystems
-    ? systemGroups(filteredDocs)
+    ? subsystemGroups(filteredDocs)
     : manufacturer
       ? modelGroups(filteredDocs, FLEET)
       : manufacturerGroups(filteredDocs);
@@ -149,7 +150,7 @@ export default function DocsPage() {
       : manufacturer
         ? 'Choose a model in ' + manufacturer
         : browsingSystems
-          ? 'Browse by system or job'
+          ? 'Browse by subsystem or job'
           : system
             ? 'Browse ' + system + ' manuals'
             : 'Choose a crane manufacturer';
@@ -160,13 +161,13 @@ export default function DocsPage() {
       : manufacturer
         ? 'Pick a model to narrow the list before opening a manual.'
         : browsingSystems
-          ? 'Use this when you know the job or technical system, but not the exact crane model.'
+          ? 'Use this when you know the job or subsystem, but not the exact crane model.'
           : system
             ? 'Manuals tagged to this technical system.'
-            : 'Start with the crane brand, or switch to System / job if you are troubleshooting a component.';
+            : 'Start with the crane brand, or switch to Subsystem / job if you are troubleshooting a component.';
 
   const groupDescriptionFor = (group: { label: string; count: number }) => {
-    if (!manufacturer) return groupDescription(filteredDocs, group.label, browsingSystems ? 'system' : 'manufacturer', FLEET);
+    if (!manufacturer) return groupDescription(filteredDocs, group.label, browsingSystems ? 'subsystem' : 'manufacturer', FLEET);
     const groupDocs = filteredDocs.filter(doc => {
       const models = manualModels(doc, FLEET);
       const fallback = manualCategories(doc).includes('Engine') ? 'Engine documents' : 'General / system documents';
@@ -235,7 +236,7 @@ export default function DocsPage() {
             </button>
             <button type="button" onClick={() => update({ system: 'browse', manufacturer: '', model: '' })} className="flex min-h-24 items-center gap-3 rounded-2xl border border-border bg-card p-4 text-left hover:border-primary">
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-secondary text-primary"><Wrench className="h-5 w-5" /></span>
-              <span><span className="block text-sm font-bold">Find by system / job</span><span className="mt-1 block text-xs text-muted-foreground">Electrical, hydraulic, engine…</span></span>
+              <span><span className="block text-sm font-bold">Find by subsystem / job</span><span className="mt-1 block text-xs text-muted-foreground">Electrical, hydraulic, engine…</span></span>
             </button>
             <Link href="/bookmarks" className="flex min-h-24 items-center gap-3 rounded-2xl border border-border bg-card p-4 hover:border-primary">
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-secondary text-primary"><Star className="h-5 w-5" /></span>
