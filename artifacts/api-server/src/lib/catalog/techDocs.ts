@@ -8,6 +8,7 @@
 import { MANUAL_EXPANSION_DOCS } from './manualExpansion';
 import { VERIFIED_MANUAL_DOCS } from './verifiedManuals';
 import { NEW_MANUAL_DOCS } from './newManuals';
+import { LTM1120_AT40_DOCS } from './ltm1120At40Docs';
 
 export type DocSystem =
   | 'LICCON 1'
@@ -21,6 +22,7 @@ export type DocSystem =
   | 'Liebherr'
   | 'Kobelco'
   | 'Hino'
+  | 'Allison'
   | 'Eaton'
   | 'SANY';
 
@@ -81,6 +83,7 @@ export const DOC_SYSTEMS: DocSystem[] = [
   'Liebherr',
   'Kobelco',
   'Hino',
+  'Allison',
   'Eaton',
   'SANY',
 ];
@@ -97,6 +100,7 @@ export const SYSTEM_COLORS: Record<DocSystem, string> = {
   Liebherr: '#F7BE21',
   Kobelco: '#0067B1',
   Hino: '#C62828',
+  Allison: '#E46B1A',
   Eaton: '#005EB8',
   SANY: '#E31E24',
 };
@@ -113,6 +117,7 @@ export const SYSTEM_ICONS: Record<DocSystem, string> = {
   Liebherr: 'LH',
   Kobelco: 'KB',
   Hino: 'HI',
+  Allison: 'AL',
   Eaton: 'EA',
   SANY: 'SY',
 };
@@ -1277,7 +1282,7 @@ export const EXISTING_TECH_DOCS: TechDoc[] = [
 
 // Keep the raw catalogue object identity stable for existing consumers. Page targets are
 // resolved from explicit section metadata by sectionPdfPage() without rewriting records.
-export const TECH_DOCS: TechDoc[] = [...EXISTING_TECH_DOCS, ...NEW_MANUAL_DOCS];
+export const TECH_DOCS: TechDoc[] = [...EXISTING_TECH_DOCS, ...NEW_MANUAL_DOCS, ...LTM1120_AT40_DOCS];
 
 function explicitPdfPage(ref: string, pages?: number): number | undefined {
   const match = /^\s*(?:PDF\s+)?p\.\s*(\d+)\s*$/i.exec(ref);
