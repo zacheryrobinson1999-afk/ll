@@ -95,6 +95,20 @@ export const FLEET: CraneModel[] = [
       '6-axle 350 t all-terrain with innovative Y-guying system and optional luffing jib. TY15° guying system for superior lifting performance.',
   },
   {
+    id: 'sl-ltm1120-4-2',
+    category: 'Slewer',
+    manufacturer: 'Liebherr',
+    model: 'LTM 1120-4.2',
+    units: [],
+    maxCapacity: 120,
+    maxBoom: 66,
+    maxRadius: 64,
+    axles: 4,
+    maxTravel: false,
+    notes:
+      '120 t four-axle all-terrain crane with a 66 m telescopic boom and 64 m maximum radius. Verify the current load chart and machine configuration before any lift.',
+  },
+  {
     id: 'sl-gmk6450',
     category: 'Slewer',
     manufacturer: 'Grove',
