@@ -23,6 +23,20 @@ type DocumentCardProps = {
   onToggleFavourite: (id: string) => void;
 };
 
+const AUXILIARY_SHORTCUTS = [
+  { label: 'Engine', value: 'Engine', hint: 'Diesel engines and service' },
+  { label: 'Driveline', value: 'Drivetrain', hint: 'Transfer cases and driveshafts' },
+  { label: 'Transmission', value: 'Transmission', hint: 'Gearboxes and automated manuals' },
+  { label: 'Hydraulics', value: 'Hydraulics', hint: 'Pumps and hydraulic systems' },
+  { label: 'Electrical', value: 'Electrical', hint: 'Wiring and circuits' },
+  { label: 'Brakes & air', value: 'Brakes & Pneumatics', hint: 'ABS and pneumatic systems' },
+  { label: 'Crane controls', value: 'Crane controls', hint: 'LICCON, LMI, ECOS and CCS' },
+] as const;
+
+function displaySubsystemName(value: string): string {
+  return value === 'Drivetrain' ? 'Driveline' : value;
+}
+
 function DocumentCard({ doc, favourite, onSelect, onOpen, onToggleFavourite }: DocumentCardProps) {
   const toggleFavourite = (event: MouseEvent<HTMLButtonElement>) => {
     event.stopPropagation();
@@ -117,6 +131,7 @@ export default function DocsPage() {
   const saved = bookmarkedManuals(TECH_DOCS, bookmarks);
   const { favouriteIds, toggleFavourite } = useDocumentLibrary();
   const categories = useMemo(() => availableCategories(TECH_DOCS), []);
+  const subsystemCounts = useMemo(() => new Map(subsystemGroups(TECH_DOCS).map(group => [group.label, group.count] as const)), []);
 
   const update = (values: Record<string, string>, replace = false) => {
     const next = new URLSearchParams(query);
@@ -151,24 +166,26 @@ export default function DocsPage() {
       ? 'Manuals for ' + model
       : manufacturer
         ? 'Choose a model in ' + manufacturer
-        : browsingSystems
-          ? 'Browse by subsystem or job'
-          : system
-            ? 'Browse ' + system + ' manuals'
-            : 'Choose a crane manufacturer';
+        : subsystem
+          ? 'Browse ' + displaySubsystemName(subsystem) + ' documents'
+          : browsingSystems
+            ? 'Browse auxiliary documents'
+            : system
+              ? 'Browse ' + system + ' manuals'
+              : 'Choose a crane manufacturer';
   const stageDescription = searching
     ? 'Search matches titles, models, systems, document numbers, descriptions, and indexed sections.'
     : model
       ? 'Open the manual you need, or go back to the model list.'
       : manufacturer
         ? 'Pick a model to narrow the list before opening a manual.'
-        : browsingSystems
-          ? 'Use this when you know the job or subsystem, but not the exact crane model.'
-          : subsystem
-            ? 'Manuals grouped under this subsystem.'
+        : subsystem
+          ? 'Auxiliary references grouped for this work area, separate from crane manufacturer headings.'
+          : browsingSystems
+            ? 'Choose a work area such as engine, driveline, transmission, hydraulics, controls, electrical, or brakes.'
             : system
               ? 'Manuals tagged to this technical system.'
-              : 'Start with the crane brand, or switch to Subsystem / job if you are troubleshooting a component.';
+              : 'Start with the crane brand, or open Auxiliary documents for engine, driveline, and system references.';
 
   const groupDescriptionFor = (group: { label: string; count: number }) => {
     if (!manufacturer) return groupDescription(filteredDocs, group.label, browsingSystems ? 'subsystem' : 'manufacturer', FLEET);
@@ -226,7 +243,7 @@ export default function DocsPage() {
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <span className="mr-1 text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">Browse</span>
           <Button variant={!browsingSystems ? 'secondary' : 'outline'} className="min-h-10" onClick={() => update({ system: '', subsystem: '', manufacturer: '', model: '' })}><Truck className="h-4 w-4" /> By machine</Button>
-          <Button variant={browsingSystems ? 'secondary' : 'outline'} className="min-h-10" onClick={() => update({ system: 'browse', subsystem: '', manufacturer: '', model: '' })}><Wrench className="h-4 w-4" /> Subsystem / job</Button>
+          <Button variant={browsingSystems ? 'secondary' : 'outline'} className="min-h-10" onClick={() => update({ system: 'browse', subsystem: '', manufacturer: '', model: '' })}><Wrench className="h-4 w-4" /> Auxiliary / job</Button>
           {activeFilterCount > 0 && <Button variant="ghost" className="ml-auto min-h-10 text-muted-foreground" onClick={clearFilters}><Filter className="h-4 w-4" /> Clear ({activeFilterCount})</Button>}
         </div>
       </div>
@@ -240,12 +257,33 @@ export default function DocsPage() {
             </button>
             <button type="button" onClick={() => update({ system: 'browse', manufacturer: '', model: '' })} className="flex min-h-24 items-center gap-3 rounded-2xl border border-border bg-card p-4 text-left hover:border-primary">
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-secondary text-primary"><Wrench className="h-5 w-5" /></span>
-              <span><span className="block text-sm font-bold">Find by subsystem / job</span><span className="mt-1 block text-xs text-muted-foreground">Electrical, hydraulic, engine…</span></span>
+              <span><span className="block text-sm font-bold">Auxiliary documents</span><span className="mt-1 block text-xs text-muted-foreground">Engine, driveline, transmission, controls…</span></span>
             </button>
             <Link href="/bookmarks" className="flex min-h-24 items-center gap-3 rounded-2xl border border-border bg-card p-4 hover:border-primary">
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-secondary text-primary"><Star className="h-5 w-5" /></span>
               <span><span className="block text-sm font-bold">Open saved manuals</span><span className="mt-1 block text-xs text-muted-foreground">Your bookmarks and favourites</span></span>
             </Link>
+          </section>
+
+          <section aria-label="Auxiliary documents" className="rounded-2xl border border-primary/30 bg-primary/5 p-4 sm:p-5">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[0.16em] text-primary">Auxiliary documents</p>
+                <h2 className="mt-1 text-xl font-bold">Engine, driveline & system references</h2>
+                <p className="mt-1 max-w-3xl text-sm leading-relaxed text-muted-foreground">These manuals are separated from crane-maker headings, so component references are easier to find.</p>
+              </div>
+              <Button variant="outline" className="min-h-10" onClick={() => update({ system: 'browse', subsystem: '', manufacturer: '', model: '' })}>View all auxiliary</Button>
+            </div>
+            <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7">
+              {AUXILIARY_SHORTCUTS.filter(item => subsystemCounts.has(item.value)).map(item => {
+                const count = subsystemCounts.get(item.value) ?? 0;
+                return <button key={item.value} type="button" onClick={() => update({ system: 'browse', subsystem: item.value, manufacturer: '', model: '' })} className="min-h-24 rounded-xl border border-border bg-card p-3 text-left transition-colors hover:border-primary focus-visible:outline focus-visible:outline-primary">
+                  <span className="block text-sm font-bold">{item.label}</span>
+                  <span className="mt-1 block text-xs font-bold uppercase tracking-[0.1em] text-primary">{count} {count === 1 ? 'manual' : 'manuals'}</span>
+                  <span className="mt-2 block text-xs leading-relaxed text-muted-foreground">{item.hint}</span>
+                </button>;
+              })}
+            </div>
           </section>
 
           {recents.length > 0 && <section className="space-y-3" aria-label="Recently opened"><div className="flex items-end justify-between gap-3"><div><p className="text-xs font-bold uppercase tracking-[0.16em] text-primary">Pick up where you left off</p><h2 className="mt-1 text-xl font-bold">Recently opened</h2></div></div><div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{recents.slice(0, 3).map(({ doc, openedAt }) => <ManualShortcut key={doc.id} doc={doc} openedAt={openedAt} />)}</div></section>}
@@ -258,7 +296,7 @@ export default function DocsPage() {
       {!searching && (manufacturer || model || system || subsystem) && (
         <nav aria-label="Manual library breadcrumb" className="flex flex-wrap items-center gap-1 text-sm">
           <Button variant="ghost" className="min-h-10 px-2" onClick={clearFilters}>Manuals</Button>
-          {(system || subsystem) && <><ChevronRight className="h-4 w-4 text-muted-foreground" /><Button variant="ghost" className="min-h-10 px-2" onClick={() => update({ system: 'browse', subsystem: '', manufacturer: '', model: '' })}>{subsystem || (system === 'browse' ? 'Subsystem / job' : system)}</Button></>}
+          {(system || subsystem) && <><ChevronRight className="h-4 w-4 text-muted-foreground" /><Button variant="ghost" className="min-h-10 px-2" onClick={() => update({ system: 'browse', subsystem: '', manufacturer: '', model: '' })}>{subsystem ? displaySubsystemName(subsystem) : (system === 'browse' ? 'Auxiliary / job' : system)}</Button></>}
           {manufacturer && <><ChevronRight className="h-4 w-4 text-muted-foreground" /><Button variant="ghost" className="min-h-10 px-2" onClick={() => update({ model: '', document: '' })}>{manufacturer}</Button></>}
           {model && <><ChevronRight className="h-4 w-4 text-muted-foreground" /><span aria-current="page" className="font-semibold">{model}</span></>}
         </nav>
@@ -282,7 +320,7 @@ export default function DocsPage() {
           </div>
         ) : showBrowseCards ? (
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-            {groups.map(group => <BrowseCard key={group.label} label={group.label} count={group.count} description={groupDescriptionFor(group)} examples={groupExamplesFor(group)} icon={browsingSystems ? 'system' : manufacturer ? 'model' : 'machine'} onClick={() => update(browsingSystems ? { system: '', subsystem: group.label } : manufacturer ? { model: group.label } : { manufacturer: group.label, model: '' })} />)}
+            {groups.map(group => <BrowseCard key={group.label} label={browsingSystems ? displaySubsystemName(group.label) : group.label} count={group.count} description={groupDescriptionFor(group)} examples={groupExamplesFor(group)} icon={browsingSystems ? 'system' : manufacturer ? 'model' : 'machine'} onClick={() => update(browsingSystems ? { system: '', subsystem: group.label } : manufacturer ? { model: group.label } : { manufacturer: group.label, model: '' })} />)}
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">{filteredDocs.map(doc => <DocumentCard key={doc.id} {...cardProps(doc)} />)}</div>
