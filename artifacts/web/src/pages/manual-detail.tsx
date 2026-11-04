@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'wouter';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { TECH_DOCS, docUrl } from '@/data/techDocs';
 import { FLEET } from '@/data/craneFleet';
 import { useBookmarks } from '@/hooks/useBookmarks';
@@ -7,6 +7,7 @@ import { useDocumentLibrary } from '@/hooks/useDocumentLibrary';
 import { BookmarkButton } from '@/components/bookmark-button';
 import { ManualShortcut } from '@/components/manual-shortcut';
 import { Button } from '@/components/ui/button';
+import { ExternalLink } from 'lucide-react';
 import { resolveManual, manualMetadata, relatedManuals, bookmarksInManual, manualDetailHref, manualNoteHref, manualReturnPath, sectionPdfPage, verifiedPdfPage } from '../../../api-server/src/lib/catalog/manualDetail';
 
 export default function ManualDetail({ id, query }: { id: string; query: string }) {
@@ -27,12 +28,25 @@ export default function ManualDetail({ id, query }: { id: string; query: string 
   const here = manualDetailHref(doc.id, { from });
   const [sectionQuery, setSectionQuery] = useState('');
   const visibleSections = useMemo(() => doc.sections.filter(item => `${item.ref} ${item.title} ${item.summary}`.toLocaleLowerCase().includes(sectionQuery.trim().toLocaleLowerCase())), [doc.sections, sectionQuery]);
+  useEffect(() => { window.scrollTo({ top: 0, left: 0, behavior: 'auto' }); }, [id, query]);
   const open = () => { recordViewed(doc.id); window.open(`${docUrl(doc)}${page ? `#page=${page}` : ''}`, '_blank', 'noopener,noreferrer'); };
   const originLabel = from.startsWith('/search') ? 'Search' : from.startsWith('/fleet') ? 'Fleet' : from.startsWith('/bookmarks') ? 'Bookmarks' : from.startsWith('/maintenance') ? 'Maintenance' : 'Manuals';
   return <div className="mx-auto max-w-5xl space-y-6 p-4 pb-28 sm:p-6 md:p-8">
     <nav aria-label="Manual breadcrumb" className="flex flex-wrap items-center gap-2 text-sm"><Button variant="outline" className="min-h-11" onClick={() => navigate(from)}>Back to {originLabel}</Button><Link href="/docs" className="p-2 text-primary">Manuals</Link><span>/</span><Link className="p-2 text-primary" href={`/docs?manufacturer=${encodeURIComponent(meta.manufacturer)}`}>{meta.manufacturer}</Link><span>/</span><span>Manual detail</span></nav>
     <header className="space-y-3"><p className="text-sm font-semibold text-primary">{meta.manufacturer} · {meta.type}</p><h1 className="break-words text-2xl font-bold leading-tight sm:text-3xl">{doc.title}</h1><p className="text-sm text-muted-foreground">{doc.subtitle}</p></header>
-    <div className="flex flex-wrap gap-3"><Button className="min-h-12" onClick={open}>Open PDF{page ? ` · page ${page}` : ''}</Button><BookmarkButton documentId={doc.id} /><Button asChild variant="outline" className="min-h-12"><Link href={manualNoteHref(doc.id, section, page)}>Add workshop note</Link></Button></div>
+    <section aria-label="Primary manual actions" className="sticky top-[72px] z-30 -mx-4 border-y border-primary/40 bg-primary/10 px-4 py-3 shadow-md backdrop-blur sm:static sm:mx-0 sm:rounded-2xl sm:border sm:p-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p className="text-xs font-bold uppercase tracking-[0.16em] text-primary">Start here</p>
+          <p className="mt-1 text-sm leading-relaxed text-muted-foreground">Open the full PDF before browsing indexed chapters.</p>
+        </div>
+        <div className="flex flex-wrap gap-2 sm:shrink-0">
+          <Button className="min-h-13 w-full bg-primary px-5 text-base font-extrabold shadow-lg hover:bg-primary/90 sm:w-auto" onClick={open}><ExternalLink className="h-4 w-4" /> Open PDF{page ? ' · page ' + page : ''}</Button>
+          <BookmarkButton documentId={doc.id} />
+          <Button asChild variant="outline" className="min-h-13 bg-background/80"><Link href={manualNoteHref(doc.id, section, page)}>Add workshop note</Link></Button>
+        </div>
+      </div>
+    </section>
     {(section || page) && <p className="rounded-lg border p-3 text-sm">Selected reference: {[section && `Section ${section}`, page && `Page ${page}`].filter(Boolean).join(' · ')}</p>}
     <section aria-label="Manual metadata" className="rounded-xl border border-border bg-card p-5"><dl className="grid gap-5 sm:grid-cols-2">
       <div><dt className="text-xs text-muted-foreground">System</dt><dd>{doc.system}</dd></div>
