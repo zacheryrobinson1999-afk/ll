@@ -201,6 +201,10 @@ export function modelGroupsFor(doc: LibraryDocument, fleet: readonly LibraryFlee
   return models.length ? models : [manualCategories(doc).includes('Engine') ? ENGINE_MODEL : GENERAL_MODEL];
 }
 
+export function modelGroups(docs: readonly LibraryDocument[], fleet: readonly LibraryFleet[] = []): ManualGroup[] {
+  return groups(docs, doc => modelGroupsFor(doc, fleet));
+}
+
 export interface ManualGroup { label: string; count: number }
 function groups(
   docs: readonly LibraryDocument[],
