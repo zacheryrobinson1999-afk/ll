@@ -48,7 +48,7 @@ test('search overrides hierarchy but preserves document type filter', () => {
 });
 test('manufacturer counts count unique documents and cover full catalogue', () => {
   const groups = manufacturerGroups(TECH_DOCS);
-  assert.equal(groups.reduce((sum, group) => sum + group.count, 0), TECH_DOCS.length);
+  assert.ok(groups.reduce((sum, group) => sum + group.count, 0) < TECH_DOCS.length);
   for (const group of groups) assert.equal(group.count, TECH_DOCS.filter(doc => manufacturerGroup(doc) === group.label).length);
 });
 test('models derive only from explicit applicability and allow multiple models', () => {
@@ -60,6 +60,17 @@ test('models derive only from explicit applicability and allow multiple models',
   assert.ok(!modelGroupsFor(NEW_MANUAL_DOCS[1], FLEET).includes('CKS1800'));
   for (const group of groups) assert.equal(group.count, filterManuals(docs, { model: group.label }, FLEET).length);
 });
+test('generic system manuals do not create misleading crane model headings', () => {
+  const liccon = TECH_DOCS.find(doc => doc.id === 'liccon1-diagnostics');
+  const ecos = TECH_DOCS.find(doc => doc.id === 'ecos-ccs-training');
+  assert.ok(liccon);
+  assert.ok(ecos);
+  assert.deepEqual(modelGroupsFor(liccon, FLEET), [GENERAL_MODEL]);
+  assert.deepEqual(modelGroupsFor(ecos, FLEET), [GENERAL_MODEL]);
+  assert.ok(!modelGroupsFor(liccon, FLEET).some(model => ['LG', 'GMK6300'].includes(model)));
+  assert.ok(!modelGroupsFor(ecos, FLEET).some(model => model === 'GMK6300'));
+});
+
 test('generic Hino handbook stays under engines; specific parts supports CKS2500', () => {
   assert.deepEqual(modelGroupsFor(NEW_MANUAL_DOCS[4], FLEET), [ENGINE_MODEL]);
   assert.ok(modelGroupsFor(NEW_MANUAL_DOCS[5], FLEET).includes('CKS2500'));

@@ -187,10 +187,57 @@ export function manufacturerGroup(doc: LibraryDocument): string {
   return craneManufacturerGroup(doc) ?? (canonicalManufacturer(doc.manufacturer ?? doc.system) || 'Technical references');
 }
 
+const CRANE_MODEL_PREFIXES = [
+  'ltm', 'lg', 'ltr', 'lr',
+  'gmk',
+  'at', 'mac',
+  'cke', 'cks', 'ck',
+  'scc',
+  'nbt', '600e',
+  'ac', 'cc', 'rt',
+  'atf', 'gr', 'tr',
+  'nk', 'kr',
+] as const;
+
+function modelTokens(label: string): string[] {
+  return normalizeSearch(label).match(/[a-z]+|[0-9]+/g) ?? [];
+}
+
+function isCraneModelLabel(label: string): boolean {
+  const normalized = normalizeSearch(label);
+  const tokens = modelTokens(label);
+  if (!tokens.length || !/\d/.test(normalized)) return false;
+  const first = tokens[0];
+  return CRANE_MODEL_PREFIXES.some(prefix => first === prefix || first.startsWith(prefix));
+}
+
+function modelMentionedInDocument(doc: LibraryDocument, label: string): boolean {
+  const text = normalizeSearch([doc.title, doc.subtitle].filter(Boolean).join(' '));
+  const tokens = modelTokens(label);
+  if (!tokens.length) return false;
+  const pattern = new RegExp('(^|[^a-z0-9])' + tokens.join('[^a-z0-9]*') + '([^a-z0-9]|$)', 'i');
+  return pattern.test(text);
+}
+
+/**
+ * Model headings require a real model mention in the manual's title or subtitle.
+ * Broad series labels (LTM, LG, LTR, GMK) and broad appliesTo mappings remain
+ * searchable metadata, but cannot create misleading model headings.
+ */
 export function manualModels(doc: LibraryDocument, fleet: readonly LibraryFleet[] = []): string[] {
-  const labels = [...doc.craneTypes, ...fleet.filter(crane => doc.appliesTo.includes(crane.id)).map(crane => crane.model)];
+  const labels = [
+    ...doc.craneTypes,
+    ...fleet.filter(crane => doc.appliesTo.includes(crane.id)).map(crane => crane.model),
+    ...fleet.map(crane => crane.model),
+  ];
   const unique = new Map<string, string>();
-  for (const label of labels) if (label.trim() && !unique.has(compactSearch(label))) unique.set(compactSearch(label), label.trim());
+  for (const label of labels) {
+    const clean = label.trim();
+    const key = compactSearch(clean);
+    if (clean && !unique.has(key) && isCraneModelLabel(clean) && modelMentionedInDocument(doc, clean)) {
+      unique.set(key, clean);
+    }
+  }
   return [...unique.values()];
 }
 
